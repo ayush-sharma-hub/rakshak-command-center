@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakshak | Scenario Simulator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+    
+    <!-- SIDEBAR -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 p-3 gap-2">
+        <div class="p-3 mb-4 flex items-center gap-3 border-b border-slate-800">
+            <i class="fa-solid fa-shield-halved text-indigo-500 text-2xl"></i>
+            <span class="font-bold text-lg tracking-widest">RAKSHAK</span>
+        </div>
+        <a href="dashboard.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a>
+        <a href="map.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-map-location-dot w-6"></i> Tactical Map</a>
+        <a href="simulator.html" class="p-3 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-xl font-bold text-sm"><i class="fa-solid fa-flask-vial w-6"></i> Simulator</a>
+        <a href="evacuation.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-route w-6"></i> Evacuation Hub</a>
+        <a href="alerts.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-tower-broadcast w-6"></i> Alert Center</a>
+    </aside>
+
+    <div class="flex-1 overflow-y-auto p-6 md:p-8">
+        <h1 class="text-2xl font-bold mb-6 text-white"><i class="fa-solid fa-sliders text-indigo-400 mr-2"></i> Disaster Sandbox Injection</h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Target City</label>
+                <select id="sim-region" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 mb-6"></select>
+
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Rainfall Intensity (<span id="sim-rain-val" class="text-cyan-400">12</span> mm/hr)</label>
+                <input type="range" id="sim-rain" min="0" max="200" value="12" class="w-full accent-indigo-500 mb-6" oninput="document.getElementById('sim-rain-val').textContent = this.value">
+
+                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Soil Saturation</label>
+                <select id="sim-soil" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 mb-6">
+                    <option value="Normal">Normal (High Drainage)</option>
+                    <option value="Wet">Wet (Reduced Absorption)</option>
+                    <option value="Saturated">Saturated (Zero Absorption)</option>
+                </select>
+
+                <div class="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-xl mb-6">
+                    <div>
+                        <div class="text-sm font-bold">Cloudburst Anomaly</div>
+                        <div class="text-xs text-slate-400">Triggers extreme flash surge</div>
+                    </div>
+                    <input type="checkbox" id="sim-cloudburst" class="w-5 h-5 accent-indigo-600 rounded">
+                </div>
+
+                <button onclick="executeSimulation()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-500/30">
+                    <i class="fa-solid fa-play mr-2"></i> OVERRIDE SYSTEM STATE
+                </button>
+            </div>
+
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-center items-center text-center">
+                <div class="text-slate-400 text-sm font-bold uppercase tracking-widest mb-4">Live Sandbox Result</div>
+                <div id="sim-score" class="text-7xl font-black text-white">--</div>
+                <div id="sim-badge" class="mt-4 px-6 py-2 rounded-full font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700">AWAITING PAYLOAD</div>
+                <p id="sim-exp" class="mt-6 text-sm text-slate-400 bg-slate-950 p-4 rounded-xl border border-slate-800 w-full">Select a city and adjust parameters to simulate disaster metrics across the network.</p>
+                <a href="evacuation.html" class="mt-6 text-indigo-400 text-sm hover:text-indigo-300 font-bold">View Evacuation Hub ➔</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const select = document.getElementById('sim-region');
+            const sorted = [...ukCities].sort((a,b) => a.name.localeCompare(b.name));
+            sorted.forEach(c => {
+                let opt = document.createElement('option');
+                opt.value = c.name; opt.textContent = `${c.name} (Base Elev: ${c.elevation}m, Slope: ${c.slope}°)`;
+                select.appendChild(opt);
+            });
+        });
+
+        async function executeSimulation() {
+            const cityName = document.getElementById('sim-region').value;
+            const cityData = ukCities.find(c => c.name === cityName);
+            
+            const payload = {
+                cityName: cityName,
+                rainfall: document.getElementById('sim-rain').value,
+                slope: cityData.slope,
+                elevation: cityData.elevation,
+                population: 15000, // Base proxy pop
+                soil: document.getElementById('sim-soil').value,
+                cloudburst: document.getElementById('sim-cloudburst').checked
+            };
+
+            const res = await fetch('/api/simulate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+
+            if(data.success) {
+                document.getElementById('sim-score').textContent = data.state.risk.score;
+                document.getElementById('sim-exp').textContent = data.state.risk.explanation;
+                
+                const b = document.getElementById('sim-badge');
+                b.textContent = data.state.risk.level;
+                b.className = "mt-4 px-6 py-2 rounded-full font-bold text-sm border ";
+                if(data.state.risk.level === 'CRITICAL') b.classList.add("bg-red-500/20", "text-red-400", "border-red-500/30", "animate-pulse");
+                else if(data.state.risk.level === 'WARNING') b.classList.add("bg-orange-500/20", "text-orange-400", "border-orange-500/30");
+                else b.classList.add("bg-yellow-500/20", "text-yellow-400", "border-yellow-500/30");
+            }
+        }
+    </script>
+</body>
+</html>

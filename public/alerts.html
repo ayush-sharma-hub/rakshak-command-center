@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakshak | Incident Communications</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+    
+    <!-- SIDEBAR -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 p-3 gap-2">
+        <div class="p-3 mb-4 flex items-center gap-3 border-b border-slate-800">
+            <i class="fa-solid fa-shield-halved text-indigo-500 text-2xl"></i>
+            <span class="font-bold text-lg tracking-widest">RAKSHAK</span>
+        </div>
+        <a href="dashboard.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a>
+        <a href="map.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-map-location-dot w-6"></i> Tactical Map</a>
+        <a href="simulator.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-flask-vial w-6"></i> Simulator</a>
+        <a href="evacuation.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-route w-6"></i> Evacuation Hub</a>
+        <a href="alerts.html" class="p-3 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-xl font-bold text-sm"><i class="fa-solid fa-tower-broadcast w-6"></i> Alert Center</a>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+        <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between shrink-0">
+            <div class="text-emerald-400 font-bold text-sm flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block animate-pulse"></span> BROADCAST NETWORK ONLINE
+            </div>
+            <div id="clock" class="font-mono text-sm text-slate-400 hidden sm:block">00:00:00</div>
+        </header>
+
+        <main class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6 max-w-5xl mx-auto w-full">
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-white flex items-center gap-3">
+                        <i class="fa-solid fa-tower-broadcast text-indigo-400"></i> Incident Communication Center
+                    </h1>
+                    <p class="text-sm text-slate-400 mt-1">Live automated system alerts and AI-synthesized public broadcasts.</p>
+                </div>
+                <button onclick="synthesizeAlert()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-3 px-5 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.4)] transition flex items-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Synthesize Emergency Broadcast
+                </button>
+            </div>
+
+            <!-- AI SYNTHESIZED BROADCAST BOX -->
+            <div id="ai-broadcast" class="hidden bg-slate-900 border border-indigo-500/50 p-6 rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.15)] fade-in">
+                <div class="flex justify-between items-center text-xs mb-4 pb-2 border-b border-slate-800">
+                    <span class="font-bold text-indigo-400 uppercase tracking-widest"><i class="fa-solid fa-robot mr-2"></i> Multilingual AI Synthesis Active</span>
+                    <span class="text-slate-500 bg-slate-950 px-3 py-1 rounded">Target: <span id="ai-target-city" class="text-white font-bold">--</span></span>
+                </div>
+                
+                <div class="space-y-4 text-sm leading-relaxed" id="ai-messages">
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                        <b class="text-indigo-400">ENGLISH:</b> <span id="msg-en" class="text-slate-200"></span>
+                    </div>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                        <b class="text-orange-400">HINDI:</b> <span id="msg-hi" class="text-slate-200 font-medium"></span>
+                    </div>
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                        <b class="text-emerald-400">GARHWALI:</b> <span id="msg-gr" class="text-slate-200 font-medium"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- LIVE ALERT LOG CONTAINER -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
+                <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                    <span class="text-sm font-bold uppercase tracking-widest text-slate-400">Live Incident Feed</span>
+                    <span class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded border border-slate-700"><i class="fa-solid fa-rotate animate-spin mr-1"></i> Auto-Sync</span>
+                </div>
+                
+                <div class="p-5 flex flex-col gap-4" id="alert-feed">
+                    <!-- Alerts will be injected here automatically by JS -->
+                    <div class="text-center py-8 text-slate-500">
+                        <i class="fa-solid fa-check-circle text-4xl mb-3 text-emerald-500/50"></i>
+                        <p>No critical system alerts found.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="/app.js"></script>
+    <script>
+        let latestCity = "All Regions";
+        let latestRisk = "SAFE";
+
+        // LIVE POLLING: Fetch Alerts from backend every 2 seconds
+        async function fetchLiveAlerts() {
+            try {
+                const timestamp = new Date().getTime();
+                const res = await fetch(`/api/state?t=${timestamp}`, { cache: 'no-store' });
+                const data = await res.json();
+                
+                latestCity = data.simulatedCity || "All Regions";
+                latestRisk = data.risk.level;
+
+                const feed = document.getElementById('alert-feed');
+                
+                // If there are alerts, render them
+                if (data.alerts && data.alerts.length > 0) {
+                    feed.innerHTML = ''; // Clear empty state
+                    
+                    data.alerts.forEach(alert => {
+                        // Check if it's an SOS or CRITICAL alert to set colors
+                        let colorBorder = 'border-amber-500/30';
+                        let colorBg = 'bg-amber-500/10';
+                        let colorText = 'text-amber-400';
+                        let icon = 'fa-triangle-exclamation';
+
+                        if (alert.type === 'FLOOD' || alert.type === 'SOS' || alert.msg.includes('CRITICAL')) {
+                            colorBorder = 'border-red-500/40';
+                            colorBg = 'bg-red-500/10';
+                            colorText = 'text-red-400';
+                        }
+                        if (alert.type === 'SOS') icon = 'fa-satellite-dish';
+
+                        const alertHTML = `
+                            <div class="p-4 rounded-xl border ${colorBorder} ${colorBg} flex justify-between items-start transition-all fade-in shadow-inner">
+                                <div>
+                                    <span class="text-xs font-bold ${colorText} uppercase tracking-widest block mb-1">
+                                        <i class="fa-solid ${icon} mr-1"></i> ${alert.type} ALERT
+                                    </span>
+                                    <p class="text-sm text-white font-medium">${alert.msg}</p>
+                                    <span class="text-[11px] text-slate-400 mt-2 block font-mono">
+                                        <i class="fa-solid fa-location-crosshairs mr-1"></i> Target: ${alert.zone} &nbsp;|&nbsp; Time: ${alert.time}
+                                    </span>
+                                </div>
+                                <span class="px-3 py-1 bg-slate-950/50 ${colorText} border border-current rounded text-[10px] font-bold shadow">
+                                    ${alert.type}
+                                </span>
+                            </div>
+                        `;
+                        feed.innerHTML += alertHTML;
+                    });
+                }
+            } catch(e) {
+                console.log("Waiting for backend sync...");
+            }
+        }
+
+        // Start polling
+        setInterval(fetchLiveAlerts, 2000);
+        document.addEventListener('DOMContentLoaded', fetchLiveAlerts);
+
+        // AI BROADCAST GENERATOR
+        function synthesizeAlert() {
+            const box = document.getElementById('ai-broadcast');
+            box.classList.remove('hidden');
+            
+            const btn = document.querySelector('button');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Generating via LLM...';
+            btn.disabled = true;
+
+            // Generate contextual messages based on live data
+            setTimeout(() => {
+                document.getElementById('ai-target-city').textContent = latestCity;
+                
+                if (latestRisk === 'CRITICAL') {
+                    document.getElementById('msg-en').textContent = `FLASH ADVISORY: Imminent hazard detected in ${latestCity} sector. Evacuation protocol initiated. All residents must proceed to SDRF shelters immediately.`;
+                    document.getElementById('msg-hi').textContent = `आपातकालीन चेतावनी: ${latestCity} क्षेत्र में गंभीर खतरा है। निकासी प्रोटोकॉल शुरू कर दिया गया है। सभी नागरिक तुरंत एसडीआरएफ (SDRF) आश्रयों में जाएं।`;
+                    document.getElementById('msg-gr').textContent = `सावधान रया: ${latestCity} क्षेत्र मा भारी खतरा च। अपणी जगह छोड़ीक तुरंत सुरक्षित शरण मा जावा।`;
+                } else if (latestRisk === 'WARNING') {
+                    document.getElementById('msg-en').textContent = `WARNING: Weather systems deteriorating in ${latestCity}. Avoid low-lying areas and monitor official channels.`;
+                    document.getElementById('msg-hi').textContent = `चेतावनी: ${latestCity} में मौसम खराब हो रहा है। निचले इलाकों से बचें और सतर्क रहें।`;
+                    document.getElementById('msg-gr').textContent = `चेतावनी: ${latestCity} मा मौसम खराब ह्वै ग्या। नीचा इलाका छोड़ द्या अर सतर्क रया।`;
+                } else {
+                    document.getElementById('msg-en').textContent = `ROUTINE UPDATE: All telemetry for ${latestCity} is within safe parameters. No emergency actions required.`;
+                    document.getElementById('msg-hi').textContent = `सामान्य अपडेट: ${latestCity} के लिए सभी पैरामीटर सुरक्षित हैं। किसी आपातकालीन कार्रवाई की आवश्यकता नहीं है।`;
+                    document.getElementById('msg-gr').textContent = `सामान्य जानकारी: ${latestCity} मा सब कुछ ठीक च। डरण्या क्वी बात नी च।`;
+                }
+
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }, 1500);
+        }
+    </script>
+</body>
+</html>

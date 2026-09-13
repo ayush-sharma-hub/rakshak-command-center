@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakshak | Command Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/app.js" defer></script>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+    
+    <!-- SIDE NAVIGATION -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="font-black tracking-widest text-lg text-white">RAKSHAK</span>
+            </div>
+            <span class="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-indigo-400 font-mono">v2.4</span>
+        </div>
+
+        <nav class="flex-1 p-3 flex flex-col gap-1.5 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-semibold text-sm">
+                <i class="fa-solid fa-chart-pie w-4"></i> Dashboard
+            </a>
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-map-location-dot w-4"></i> Tactical Map
+            </a>
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-flask-vial w-4"></i> Sandbox Simulator
+            </a>
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-route w-4"></i> Evacuation Hub
+            </a>
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-tower-broadcast w-4"></i> Alert Center
+            </a>
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-microphone-lines w-4"></i> Voice AI Assistant
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <div>
+                <div class="font-bold text-slate-200">UK Command</div>
+                <div class="text-[10px] text-emerald-400">Relay Active</div>
+            </div>
+            <a href="index.html" class="p-2 hover:text-rose-400 transition" title="Logout"><i class="fa-solid fa-power-off"></i></a>
+        </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+        <!-- GLOBAL TOPBAR -->
+        <header class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 flex items-center justify-between shrink-0">
+            <div id="global-status" class="text-emerald-400 font-bold text-sm flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> SYSTEM NORMAL &bull; STATE MONITORING
+            </div>
+            <div class="flex items-center gap-4">
+                <button onclick="sendSOS()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2 px-3.5 rounded-lg shadow-lg shadow-rose-600/30 transition flex items-center gap-2">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i> SEND GPS SOS
+                </button>
+                <div id="clock" class="font-mono text-sm text-slate-400 hidden sm:block">00:00:00</div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD BODY -->
+        <main class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6">
+            <!-- BANNER -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/40 border border-slate-800 p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-white">Uttarakhand Emergency Response System</h1>
+                    <p class="text-sm text-slate-400 mt-1">Real-time topographical sensor feeds and automated flash-hazard prediction engine.</p>
+                </div>
+                <a href="map.html" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg transition flex items-center gap-2">
+                    <span>Deploy Tactical Map</span>
+                    <i class="fa-solid fa-arrow-right"></i>
+                </a>
+            </div>
+
+            <!-- KEY NUMBERS -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Monitored Sectors</span>
+                    <div class="text-3xl font-extrabold text-white mt-1">37</div>
+                    <span class="text-[11px] text-slate-400 mt-1 block">Pilgrimage & Border Axis</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl border-l-4 border-l-rose-500">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">High Risk Zones</span>
+                    <div class="text-3xl font-extrabold text-rose-400 mt-1">8</div>
+                    <span class="text-[11px] text-slate-400 mt-1 block">Kedarnath, Rambara, Joshimath</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl border-l-4 border-l-amber-500">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Active Watch Protocols</span>
+                    <div class="text-3xl font-extrabold text-amber-400 mt-1">14</div>
+                    <span class="text-[11px] text-slate-400 mt-1 block">Sustained precipitation warnings</span>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 p-5 rounded-2xl border-l-4 border-l-emerald-500">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Operational Shelters</span>
+                    <div class="text-3xl font-extrabold text-emerald-400 mt-1">28 / 28</div>
+                    <span class="text-[11px] text-slate-400 mt-1 block">State emergency shelters online</span>
+                </div>
+            </div>
+
+            <!-- DEEP ARCHITECTURE EXPLANATION -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl lg:col-span-2 space-y-4">
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="fa-solid fa-microchip text-indigo-400"></i> AI Risk Logic Formulation
+                    </h2>
+                    <p class="text-sm text-slate-300 leading-relaxed">
+                        Project Rakshak avoids opaque black-box evaluations. The decision-support engine isolates topographical vulnerability variables against dynamic satellite feeds:
+                    </p>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                            <div class="text-xs font-bold text-indigo-400 uppercase mb-1">Topography Weight (55%)</div>
+                            <div class="text-xs text-slate-400">Evaluates slope angle (&deg;) & elevation (m) to calculate gravitational debris run-off velocity.</div>
+                        </div>
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
+                            <div class="text-xs font-bold text-cyan-400 uppercase mb-1">Atmospheric Multiplier (45%)</div>
+                            <div class="text-xs text-slate-400">Calculates precipitation intensity (mm/hr) multiplied by localized soil moisture absorption curves.</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-slate-900 border border-slate-800 p-6 rounded-2xl flex flex-col justify-between">
+                    <div>
+                        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Quick Actions</h3>
+                        <div class="flex flex-col gap-2">
+                            <a href="simulator.html" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-semibold flex items-center justify-between transition">
+                                <span>Simulate Cloudburst in Joshimath</span>
+                                <i class="fa-solid fa-chevron-right text-slate-500"></i>
+                            </a>
+                            <a href="evacuation.html" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-semibold flex items-center justify-between transition">
+                                <span>Review Kedarnath Evacuation Route</span>
+                                <i class="fa-solid fa-chevron-right text-slate-500"></i>
+                            </a>
+                            <a href="alerts.html" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-xl text-xs font-semibold flex items-center justify-between transition">
+                                <span>Broadcast Multilingual Alert</span>
+                                <i class="fa-solid fa-chevron-right text-slate-500"></i>
+                            </a>
+                        </div>
+                    </div>
+                    <div class="mt-4 pt-4 border-t border-slate-800 text-[11px] text-slate-500">
+                        SDMA Emergency Hotline: 1070 / 112
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>

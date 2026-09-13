@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rakshak | Voice AI Assistant</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="/app.js" defer></script>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+    
+    <!-- SIDEBAR -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
+        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <span class="font-black tracking-widest text-lg text-white">RAKSHAK</span>
+            </div>
+            <span class="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-indigo-400 font-mono">v2.4</span>
+        </div>
+
+        <nav class="flex-1 p-3 flex flex-col gap-1.5 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-chart-pie w-4"></i> Dashboard
+            </a>
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-map-location-dot w-4"></i> Tactical Map
+            </a>
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-flask-vial w-4"></i> Sandbox Simulator
+            </a>
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-route w-4"></i> Evacuation Hub
+            </a>
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
+                <i class="fa-solid fa-tower-broadcast w-4"></i> Alert Center
+            </a>
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-semibold text-sm">
+                <i class="fa-solid fa-microphone-lines w-4"></i> Voice AI Assistant
+            </a>
+        </nav>
+
+        <div class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
+            <div>
+                <div class="font-bold text-slate-200">UK Command</div>
+                <div class="text-[10px] text-emerald-400">Relay Active</div>
+            </div>
+            <a href="index.html" class="p-2 hover:text-rose-400 transition"><i class="fa-solid fa-power-off"></i></a>
+        </div>
+    </aside>
+
+    <!-- CONTENT -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+        <header class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 flex items-center justify-between shrink-0">
+            <div id="global-status" class="text-emerald-400 font-bold text-sm flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> VOICE ENGINE READY
+            </div>
+            <div id="clock" class="font-mono text-sm text-slate-400 hidden sm:block">00:00:00</div>
+        </header>
+
+        <main class="flex-1 p-6 md:p-8 overflow-y-auto space-y-4 max-w-4xl mx-auto w-full flex flex-col">
+            <div>
+                <h1 class="text-2xl font-bold text-white flex items-center gap-3">
+                    <i class="fa-solid fa-robot text-indigo-400"></i> Rakshak Voice Operator
+                </h1>
+                <p class="text-sm text-slate-400 mt-1">Speak or type queries such as "What is the status?", "Check Kedarnath", or "Send SOS".</p>
+            </div>
+
+            <!-- CHAT TERMINAL -->
+            <div class="flex-1 min-h-[350px] bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col overflow-hidden">
+                <div id="chat-stream" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl max-w-md text-xs text-slate-300">
+                        Hello Operator. I am Rakshak AI. You can issue voice commands using the microphone or type status queries below.
+                    </div>
+                </div>
+
+                <div class="pt-4 border-t border-slate-800 flex gap-2">
+                    <button onclick="toggleVoice()" id="mic-btn" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center transition border border-slate-700 shrink-0">
+                        <i class="fa-solid fa-microphone"></i>
+                    </button>
+                    <input type="text" id="chat-input" placeholder="Type command (e.g. status, kedarnath, sos)..."
+                           class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 text-xs text-white focus:outline-none focus:border-indigo-500"
+                           onkeydown="if(event.key==='Enter') sendChat()">
+                    <button onclick="sendChat()" class="px-5 bg-indigo-600 hover:bg-indigo-500 font-bold text-xs rounded-xl text-white transition">
+                        TRANSMIT
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function sendChat(forcedText = null) {
+            const input = document.getElementById('chat-input');
+            const text = forcedText || input.value.trim();
+            if (!text) return;
+
+            const stream = document.getElementById('chat-stream');
+            stream.innerHTML += `
+                <div class="bg-indigo-600 text-white p-3 rounded-2xl max-w-md ml-auto text-xs font-medium">
+                    ${text}
+                </div>`;
+            input.value = '';
+
+            setTimeout(async () => {
+                let reply = "Monitoring telemetry streams. Please specify a sector name or query.";
+                const lower = text.toLowerCase();
+
+                if (lower.includes('status') || lower.includes('risk')) {
+                    try {
+                        const res = await fetch('/api/state');
+                        const s = await res.json();
+                        reply = `Current overall system status is ${s.risk.level} with risk index ${s.risk.score}/100. ${s.risk.explanation}`;
+                    } catch (e) {
+                        reply = "Central telemetry online. No critical state alerts active.";
+                    }
+                } else if (lower.includes('sos') || lower.includes('emergency')) {
+                    reply = "Triggering emergency GPS beacon now...";
+                    sendSOS();
+                } else if (lower.includes('kedarnath') || lower.includes('joshimath')) {
+                    reply = `Sector telemetry flagged for elevated monitoring. Geotechnical sensors active along that corridor.`;
+                }
+
+                stream.innerHTML += `
+                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl max-w-md text-xs text-slate-300">
+                        ${reply}
+                    </div>`;
+                stream.scrollTop = stream.scrollHeight;
+            }, 600);
+        }
+
+        function toggleVoice() {
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (!SpeechRec) {
+                alert('Web Speech API is not supported on this browser.');
+                return;
+            }
+
+            const rec = new SpeechRec();
+            const btn = document.getElementById('mic-btn');
+            btn.classList.add('bg-rose-600', 'animate-pulse');
+
+            rec.onresult = (e) => sendChat(e.results[0][0].transcript);
+            rec.onend = () => btn.classList.remove('bg-rose-600', 'animate-pulse');
+            rec.start();
+        }
+    </script>
+</body>
+</html>
