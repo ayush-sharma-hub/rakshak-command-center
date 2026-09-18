@@ -189,11 +189,16 @@
                     </div>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
-                    <span class="text-[10px] text-emerald-400 font-mono"><i class="fa-solid fa-satellite"></i> Ready for cellular push</span>
-                    <button onclick="pushAlertToTowers()" id="push-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg">
-                        <i class="fa-solid fa-paper-plane mr-1.5"></i> Transmit to Mobile Towers
-                    </button>
+                <div class="mt-4 pt-3 border-t border-slate-800 flex flex-wrap justify-between items-center gap-2">
+                    <span class="text-[10px] text-emerald-400 font-mono"><i class="fa-solid fa-satellite"></i> Cellular Towers & Smartphone WebPush Armed</span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="broadcastInstantPhoneTest()" id="test-push-btn" class="px-3 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg flex items-center gap-1.5" title="Instantly trigger siren & SOS vibration on your phone">
+                            <i class="fa-solid fa-mobile-screen-button"></i> ⚡ Test My Phone Now
+                        </button>
+                        <button onclick="pushAlertToTowers()" id="push-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg">
+                            <i class="fa-solid fa-paper-plane mr-1.5"></i> Transmit Broadcast
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -352,6 +357,38 @@
             const utter = new SpeechSynthesisUtterance(text);
             utter.rate = 0.95;
             window.speechSynthesis.speak(utter);
+        function showAlertToast(msg) {
+            let toast = document.getElementById('broadcast-toast');
+            if (!toast) {
+                toast = document.createElement('div');
+                toast.id = 'broadcast-toast';
+                toast.className = 'fixed bottom-4 right-4 z-50 bg-emerald-900/95 border border-emerald-500 text-white px-4 py-2.5 rounded-xl shadow-2xl text-xs font-bold flex items-center gap-2 transition-all transform duration-300';
+                document.body.appendChild(toast);
+            }
+            toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i> <span>${msg}</span>`;
+            setTimeout(() => { if (toast) toast.remove(); }, 4000);
+        }
+
+        async function broadcastInstantPhoneTest() {
+            const btn = document.getElementById('test-push-btn');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse mr-1"></i> Dispatched to Phone!';
+            }
+            try {
+                const res = await fetch('/api/alerts/phone-test', { method: 'POST' });
+                const d = await res.json();
+                fetchLiveAlerts();
+                showAlertToast(`Test Alert #${d.incident_id || 'OK'} dispatched to connected smartphones!`);
+            } catch(e) {
+                console.warn("Phone test error:", e);
+            }
+            setTimeout(() => {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-mobile-screen-button mr-1"></i> ⚡ Test My Phone Now';
+                }
+            }, 2500);
         }
 
         async function pushAlertToTowers() {
@@ -383,6 +420,7 @@
                 });
                 const data = await res.json();
                 fetchLiveAlerts();
+                showAlertToast(`Disaster Broadcast #${data.incident_id || 'SEOC'} transmitted across all cell towers and phones!`);
             } catch(e) {
                 console.warn('Broadcast transmission error:', e);
             }

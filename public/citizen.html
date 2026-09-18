@@ -333,6 +333,12 @@
             checkNotificationStatus();
             loadNearbyRadar();
             setInterval(loadNearbyRadar, 6000);
+
+            // Auto-start emergency alert polling if permissions are already armed
+            if (("Notification" in window) && (Notification.permission === 'granted' || localStorage.getItem('rakshak_notifications_enabled') === 'true')) {
+                localStorage.setItem('rakshak_notifications_enabled', 'true');
+                if (typeof startAlertPolling === 'function') startAlertPolling();
+            }
         });
 
         // 1. Live GPS Acquisition
@@ -367,6 +373,8 @@
             if (Notification.permission === 'granted') {
                 btn.className = "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold";
                 label.textContent = "Alerts Active";
+                const radarInfo = document.getElementById('radar-live-status');
+                if (radarInfo) radarInfo.textContent = "Radar Armed & Syncing Every 2.5s";
             }
         }
 
@@ -389,27 +397,43 @@
         function triggerNativeAlert(title, body) {
             // Distinct Morse SOS Distress Vibration (Cannot be confused with casual messages)
             if ("vibrate" in navigator) {
-                navigator.vibrate(EMERGENCY_SOS_VIBRATION);
+                try { navigator.vibrate(EMERGENCY_SOS_VIBRATION); } catch(e){}
             }
             // Tactical Emergency Siren
             if (typeof RakshakAudio !== 'undefined') {
                 try { RakshakAudio.initCtx(); RakshakAudio.playAlert(); } catch(e){}
             }
-            // Native OS Notification
-            if ("Notification" in window && Notification.permission === 'granted') {
+            // Visual floating banner on screen
+            if (typeof showOnScreenAlertBanner === 'function') {
+                showOnScreenAlertBanner({ title, body, url: '/map.html' });
+            }
+
+            // Native OS Notification via ServiceWorker (Required on Android Chrome) with fallback
+            const notifOpts = {
+                body: body,
+                icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                vibrate: EMERGENCY_SOS_VIBRATION,
+                requireInteraction: true,
+                tag: 'seoc-alert-' + Date.now(),
+                renotify: true,
+                data: { url: '/map.html' }
+            };
+
+            if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification(title, notifOpts);
+                }).catch(() => {
+                    if ("Notification" in window && Notification.permission === 'granted') {
+                        try { new Notification(title, notifOpts); } catch (e) {}
+                    }
+                });
+            } else if ("Notification" in window && Notification.permission === 'granted') {
                 try {
-                    new Notification(title, {
-                        body: body,
-                        icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                        badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                        vibrate: EMERGENCY_SOS_VIBRATION,
-                        requireInteraction: true
-                    });
+                    new Notification(title, notifOpts);
                 } catch (e) {
                     console.warn("Notification error:", e);
                 }
-            } else {
-                alert(`${title}\n\n${body}`);
             }
         }
 

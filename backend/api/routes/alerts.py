@@ -9,10 +9,12 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 
 from backend.core.database import get_db
+from backend.core.push_service import get_vapid_public_key, send_push_to_all
 from backend.services.gemini_service import generate_broadcast
 from backend.services.weather_api import fetch_weather, fetch_all_weather
 
 router = APIRouter(prefix="/api", tags=["Alerts & Broadcasts"])
+
 
 
 class BroadcastRequest(BaseModel):
@@ -101,24 +103,6 @@ async def get_all_weather():
     return await asyncio.to_thread(fetch_all_weather)
 
 
-@router.post("/alerts/phone-test")
-def trigger_phone_test(city: Optional[str] = "Kedarnath Mandakini Basin"):
-    """
-    Generates an emergency crisis payload for testing real smartphone alerts,
-    including haptic vibration patterns and high-decibel tactical sirens.
-    """
-    now = datetime.now(timezone.utc).isoformat()
-    return {
-        "success": True,
-        "title": "🚨 SEOC CRITICAL EMERGENCY: FLASH FLOOD ALERT",
-        "body": f"Urgent Evacuation Warning: Cloudburst detected upstream of {city}! Runoff velocity 45 km/h. Move to designated high ground immediately!",
-        "vibrate_pattern": [300, 100, 300, 100, 300, 300, 700, 150, 700, 150, 700, 300, 300, 100, 300, 100, 300],
-        "audio_siren": True,
-        "timestamp": now,
-        "emergency_helpline": "1070 (Disaster Call) / 112 (Police & SDRF)"
-    }
-
-
 class BroadcastPublishRequest(BaseModel):
     city: str
     message: str
@@ -161,6 +145,7 @@ def publish_broadcast(payload: BroadcastPublishRequest):
         95 if payload.risk_level.upper() == "CRITICAL" else 75,
         now
     ))
+    incident_id = c.lastrowid
 
     c.execute("""
         INSERT INTO broadcasts (target_city, risk_level, msg_english, channels, operator_id, created_at)
@@ -176,6 +161,14 @@ def publish_broadcast(payload: BroadcastPublishRequest):
     conn.commit()
     conn.close()
 
+    # Trigger background WebPush to all registered smartphones
+    send_push_to_all(
+        title=f"🚨 SEOC DISASTER ALERT [{payload.risk_level.upper()}]",
+        body=f"{payload.message} (Zone: {payload.city})",
+        url="/map.html",
+        priority=payload.risk_level.upper()
+    )
+
     return {
         "success": True,
         "authorized_by": payload.operator_id,
@@ -183,7 +176,49 @@ def publish_broadcast(payload: BroadcastPublishRequest):
         "timestamp": now,
         "city": payload.city,
         "risk_level": payload.risk_level,
-        "body": payload.message
+        "body": payload.message,
+        "incident_id": incident_id
+    }
+
+
+@router.get("/alerts/vapid-public-key")
+def get_vapid_key():
+    """Returns the base64url encoded VAPID public key for web push subscriptions."""
+    return {"public_key": get_vapid_public_key()}
+
+
+@router.post("/alerts/phone-test")
+def test_phone_alert():
+    """Generate a test disaster broadcast and push directly to connected smartphones."""
+    now = datetime.now(timezone.utc).isoformat()
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        INSERT INTO incidents (type, msg, zone, priority, risk_score, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        "BROADCAST_TEST",
+        "Urgent Flash Flood Warning (Hardware & Audio Test): Cloudburst runoff simulation. Evacuate to high ground immediately!",
+        "Kedarnath Mandakini Corridor",
+        "CRITICAL",
+        95,
+        now
+    ))
+    incident_id = c.lastrowid
+    conn.commit()
+    conn.close()
+
+    title = "🚨 SEOC FLASH FLOOD ALERT (TEST)"
+    body = "Urgent: Cloudburst detected upstream! Runoff velocity 48 km/h. Evacuate to higher elevation immediately!"
+    send_push_to_all(title, body, url="/map.html", priority="CRITICAL")
+
+    return {
+        "success": True,
+        "incident_id": incident_id,
+        "title": title,
+        "body": body,
+        "timestamp": now,
+        "message": "Test broadcast dispatched across all connected mobile devices."
     }
 
 
@@ -210,17 +245,24 @@ def subscribe_push(payload: PushSubscriptionPayload):
 
 
 @router.get("/alerts/latest")
-def get_latest_alerts(since: Optional[str] = None):
+def get_latest_alerts(after_id: Optional[int] = None, since: Optional[str] = None):
     """Lightweight polling endpoint for smartphone client notifications."""
     conn = get_db()
-    if since:
+    if after_id is not None:
         rows = conn.execute(
-            "SELECT * FROM incidents WHERE created_at > ? ORDER BY created_at DESC LIMIT 10",
-            (since,)
+            "SELECT * FROM incidents WHERE id > ? ORDER BY id ASC LIMIT 20",
+            (after_id,)
+        ).fetchall()
+    elif since:
+        clean_since = since.replace("Z", "+00:00")
+        rows = conn.execute(
+            "SELECT * FROM incidents WHERE created_at > ? OR created_at > ? ORDER BY id DESC LIMIT 10",
+            (clean_since, since)
         ).fetchall()
     else:
         rows = conn.execute(
-            "SELECT * FROM incidents ORDER BY created_at DESC LIMIT 5"
+            "SELECT * FROM incidents ORDER BY id DESC LIMIT 5"
         ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
+

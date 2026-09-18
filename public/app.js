@@ -127,50 +127,81 @@ window.syncNavAuth = syncNavAuth;
 // =========================================================================
 // 0.1 PERSISTENT CITIZEN NOTIFICATIONS ENGINE ("EK BAR PERMISSION -> HAR BAAR ALERT")
 // =========================================================================
-let lastKnownAlertTime = localStorage.getItem('rakshak_last_alert_time') || new Date(Date.now() - 120000).toISOString();
-
+// ─── HIGH-RELIABILITY SMARTPHONE PUSH & DISASTER RADAR ENGINE ─────────────
 const EMERGENCY_SOS_VIBRATION = [300, 100, 300, 100, 300, 300, 700, 150, 700, 150, 700, 300, 300, 100, 300, 100, 300];
+
+// Register service worker early on all pages
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW reg info:', err));
+}
+
+function urlB64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = window.atob(base64);
+    const outputArray = new Uint8Array(rawData.length);
+    for (let i = 0; i < rawData.length; ++i) {
+        outputArray[i] = rawData.charCodeAt(i);
+    }
+    return outputArray;
+}
+
+async function syncPushSubscriptionToServer() {
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        const vRes = await fetch('/api/alerts/vapid-public-key');
+        if (!vRes.ok) return;
+        const { public_key } = await vRes.json();
+        if (!public_key) return;
+
+        let sub = await reg.pushManager.getSubscription();
+        if (!sub) {
+            sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlB64ToUint8Array(public_key)
+            });
+        }
+        const subJson = sub.toJSON();
+        await fetch('/api/alerts/subscribe-push', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                endpoint: sub.endpoint,
+                p256dh: subJson.keys ? subJson.keys.p256dh : null,
+                auth: subJson.keys ? subJson.keys.auth : null,
+                device_info: navigator.userAgent
+            })
+        });
+        console.log("Smartphone registered with SEOC WebPush server.");
+    } catch (e) {
+        console.log("Push subscription sync (local fallback active):", e);
+    }
+}
 
 async function requestCitizenNotificationPermission() {
     if (!("Notification" in window)) {
-        alert("Web Notifications are not supported by this browser.");
+        alert("Web Notifications are not supported by this mobile browser.");
         return false;
     }
     try {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
             localStorage.setItem('rakshak_notifications_enabled', 'true');
-            if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
+            if ("vibrate" in navigator) navigator.vibrate([300, 100, 300, 100, 300]);
             if (window.RakshakAudio) {
                 try { RakshakAudio.initCtx(); RakshakAudio.playConfirm(); } catch(e){}
             }
 
-            try {
-                new Notification("✅ SEOC Uttarakhand Alert Radar Armed", {
-                    body: "Your phone is now permanently linked to receive instant flash flood & cloudburst alerts!",
-                    icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                    badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                    vibrate: [300, 100, 300, 100, 300]
-                });
-            } catch(e) {}
+            // Sync WebPush VAPID key
+            syncPushSubscriptionToServer();
 
-            // Auto-register Service Worker Push for background wake-up
-            if ('serviceWorker' in navigator) {
-                navigator.serviceWorker.ready.then(async (reg) => {
-                    try {
-                        const sub = await reg.pushManager.getSubscription();
-                        const endpoint = sub ? sub.endpoint : ('device-sim-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7));
-                        fetch('/api/alerts/subscribe-push', {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify({
-                                endpoint: endpoint,
-                                device_info: navigator.userAgent
-                            })
-                        }).catch(() => {});
-                    } catch (err) {}
-                }).catch(() => {});
-            }
+            triggerPhonePushAlert({
+                title: "✅ SEOC Uttarakhand Alert Radar Armed",
+                body: "Your phone is now permanently linked to receive instant flash flood & cloudburst alerts!",
+                url: "/map.html",
+                tag: "armed-status"
+            });
 
             updateNotificationStatusUI();
             startAlertPolling();
@@ -199,7 +230,7 @@ function updateNotificationStatusUI() {
     const badges = document.querySelectorAll('.citizen-notif-status');
     badges.forEach(b => {
         if (isEnabled) {
-            b.innerHTML = '<i class="fa-solid fa-bell text-emerald-400 mr-1.5"></i> <span class="text-emerald-400 font-bold">Alerts Active (Phone Armed)</span>';
+            b.innerHTML = '<i class="fa-solid fa-bell text-emerald-400 mr-1.5 animate-pulse"></i> <span class="text-emerald-400 font-bold">Alerts Active (Phone Armed)</span>';
             b.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-300');
             b.classList.add('bg-emerald-500/20', 'border-emerald-500/30', 'text-emerald-300');
         } else {
@@ -212,67 +243,127 @@ function updateNotificationStatusUI() {
 window.updateNotificationStatusUI = updateNotificationStatusUI;
 
 let alertPollTimer = null;
+let lastKnownAlertId = parseInt(localStorage.getItem('rakshak_last_alert_id') || '0', 10);
+let alertRadarInitialized = localStorage.getItem('rakshak_radar_init') === 'true';
+
 function startAlertPolling() {
     if (alertPollTimer) return;
     checkNewAlerts();
-    alertPollTimer = setInterval(checkNewAlerts, 3500);
+    alertPollTimer = setInterval(checkNewAlerts, 2500);
 }
+window.startAlertPolling = startAlertPolling;
 
 async function checkNewAlerts() {
     if (!isCitizenNotificationEnabled()) return;
     try {
-        const res = await fetch(`/api/alerts/latest?since=${encodeURIComponent(lastKnownAlertTime)}`);
+        let url = '/api/alerts/latest';
+        if (alertRadarInitialized && lastKnownAlertId > 0) {
+            url += `?after_id=${lastKnownAlertId}`;
+        }
+        const res = await fetch(url);
         if (!res.ok) return;
         const alerts = await res.json();
-        if (alerts && alerts.length > 0) {
-            alerts.forEach(al => {
+        if (!alerts || alerts.length === 0) return;
+
+        // First time initializing radar: record highest alert ID to avoid spamming old alarms
+        if (!alertRadarInitialized) {
+            const maxId = Math.max(...alerts.map(a => a.id || 0), 0);
+            lastKnownAlertId = maxId;
+            localStorage.setItem('rakshak_last_alert_id', String(maxId));
+            localStorage.setItem('rakshak_radar_init', 'true');
+            alertRadarInitialized = true;
+            return;
+        }
+
+        // New alerts arrived!
+        let maxId = lastKnownAlertId;
+        alerts.forEach(al => {
+            if (al.id && al.id > lastKnownAlertId) {
                 triggerPhonePushAlert({
                     title: `🚨 SEOC DISASTER ALERT [${al.priority || 'CRITICAL'}]`,
                     body: `${al.msg || 'Flash flood warning issued'} — Zone: ${al.zone || 'Catchment Basin'}. Evacuate to higher elevation!`,
                     url: '/map.html',
                     tag: 'alert-' + al.id
                 });
-                if (al.created_at && al.created_at > lastKnownAlertTime) {
-                    lastKnownAlertTime = al.created_at;
-                    localStorage.setItem('rakshak_last_alert_time', lastKnownAlertTime);
-                }
-            });
+                if (al.id > maxId) maxId = al.id;
+            }
+        });
+        if (maxId > lastKnownAlertId) {
+            lastKnownAlertId = maxId;
+            localStorage.setItem('rakshak_last_alert_id', String(maxId));
         }
-    } catch(e) {}
+    } catch(e) {
+        console.warn("Alert check error:", e);
+    }
+}
+
+function showOnScreenAlertBanner(opts) {
+    let banner = document.getElementById('floating-disaster-banner');
+    if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'floating-disaster-banner';
+        banner.className = "fixed top-3 inset-x-3 md:max-w-md md:left-auto md:right-4 z-50 bg-rose-950/95 border-2 border-rose-500 text-white p-4 rounded-2xl shadow-[0_0_30px_rgba(225,29,72,0.8)] backdrop-blur-md flex flex-col gap-2 transition-all transform duration-300";
+        document.body.appendChild(banner);
+    }
+    banner.innerHTML = `
+        <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+                <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
+                <span class="font-black text-rose-300 text-xs tracking-wider uppercase">${opts.title || '🚨 EMERGENCY DISASTER WARNING'}</span>
+            </div>
+            <button onclick="document.getElementById('floating-disaster-banner').remove()" class="text-slate-400 hover:text-white text-xs p-1">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <p class="text-xs font-semibold text-slate-100 leading-snug">${opts.body || 'Evacuate to higher ground immediately!'}</p>
+        <div class="flex items-center justify-between pt-1 border-t border-rose-800/60 text-[10px] font-mono">
+            <a href="${opts.url || '/map.html'}" class="text-amber-300 underline font-bold">🗺️ View Safe Evacuation Map</a>
+            <span class="text-rose-400">SOS VIBRATION ARMED</span>
+        </div>
+    `;
 }
 
 function triggerPhonePushAlert(opts) {
     // 1. High-Urgency Morse Code SOS Vibration: 3 Short, 3 Long, 3 Short
     if ("vibrate" in navigator) {
-        navigator.vibrate(EMERGENCY_SOS_VIBRATION);
+        try { navigator.vibrate(EMERGENCY_SOS_VIBRATION); } catch(e){}
     }
-    // 2. High-Decibel Tactical Emergency Siren
+
+    // 2. High-Decibel Tactical Emergency Siren Audio
     if (window.RakshakAudio) {
         try { RakshakAudio.initCtx(); RakshakAudio.playAlert(); } catch(e){}
     }
-    // 3. Pinned, High-Priority System Notification (Does not disappear automatically)
-    if ("Notification" in window && Notification.permission === 'granted') {
-        try {
-            const notif = new Notification(opts.title || "🚨 RAKSHAK EMERGENCY WARNING", {
-                body: opts.body || "Urgent flash flood advisory! Move to designated high ground immediately.",
-                icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                vibrate: EMERGENCY_SOS_VIBRATION,
-                requireInteraction: true, // Pinned to lockscreen until user taps/swipes
-                silent: false,
-                tag: opts.tag || ('rakshak-disaster-' + Date.now())
-            });
-            notif.onclick = function() {
-                window.focus();
-                if (opts.url) window.location.href = opts.url;
-                notif.close();
-            };
-        } catch(e) {
-            console.warn("Desktop notification display error:", e);
-        }
+
+    // 3. Visual In-App Disaster Banner
+    try { showOnScreenAlertBanner(opts); } catch(e){}
+
+    // 4. Native OS Notification (Supports Android Chrome via ServiceWorker + Desktop via new Notification)
+    const title = opts.title || "🚨 RAKSHAK EMERGENCY WARNING";
+    const notifOptions = {
+        body: opts.body || "Urgent flash flood advisory! Move to designated high ground immediately.",
+        icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+        badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+        vibrate: EMERGENCY_SOS_VIBRATION,
+        requireInteraction: true,
+        tag: opts.tag || ('rakshak-disaster-' + Date.now()),
+        renotify: true,
+        data: { url: opts.url || '/map.html' }
+    };
+
+    if ('serviceWorker' in navigator && navigator.serviceWorker.ready) {
+        navigator.serviceWorker.ready.then(reg => {
+            reg.showNotification(title, notifOptions);
+        }).catch(() => {
+            if ("Notification" in window && Notification.permission === 'granted') {
+                try { new Notification(title, notifOptions); } catch(e){}
+            }
+        });
+    } else if ("Notification" in window && Notification.permission === 'granted') {
+        try { new Notification(title, notifOptions); } catch(e){}
     }
 }
 window.triggerPhonePushAlert = triggerPhonePushAlert;
+
 
 
 // 1. TACTICAL WEB AUDIO ENGINE (Zero external dependencies)
@@ -732,6 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // 8. Persistent Citizen Notifications (Ek bar permission -> permanent background radar)
     if (("Notification" in window) && (Notification.permission === 'granted' || localStorage.getItem('rakshak_notifications_enabled') === 'true')) {
         localStorage.setItem('rakshak_notifications_enabled', 'true');
+        syncPushSubscriptionToServer();
         startAlertPolling();
     }
     updateNotificationStatusUI();
