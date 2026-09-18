@@ -776,10 +776,11 @@ async function syncBackendStatus() {
         // 1. Global Status Bar
         const globalStatus = document.getElementById('global-status');
         if (globalStatus) {
-            if (state.risk.level === 'CRITICAL') {
+            const level = state.risk ? state.risk.level : 'SAFE';
+            if (level === 'CRITICAL') {
                 globalStatus.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-rose-500 animate-ping mr-2 inline-block"></span> CRITICAL: EVACUATION DISPATCH ACTIVE`;
                 globalStatus.className = 'text-rose-400 font-bold flex items-center text-xs md:text-sm';
-            } else if (state.risk.level === 'WARNING') {
+            } else if (level === 'WARNING' || level === 'HIGH') {
                 globalStatus.innerHTML = `<span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-2 inline-block"></span> WARNING: BASIN WATCH LEVEL 2`;
                 globalStatus.className = 'text-amber-400 font-bold flex items-center text-xs md:text-sm';
             } else {
@@ -789,7 +790,7 @@ async function syncBackendStatus() {
         }
 
         // 2. Render Citizen SOS Signals (if SOS container exists)
-        renderLiveSOSList(state.sosSignals);
+        renderLiveSOSList(state.sosSignals || state.activeSOS);
 
         // 3. Render River Basins (if River container exists)
         renderRiverBasins(state.riverBasins);
@@ -804,13 +805,18 @@ function renderRiverBasins(basins) {
     if (!container || !basins) return;
 
     container.innerHTML = basins.map(b => {
-        const percent = Math.min(100, Math.round((b.currentLevel / b.dangerLevel) * 100));
+        const curr = parseFloat(b.current_level ?? b.currentLevel ?? 0);
+        const dang = parseFloat(b.danger_level ?? b.dangerLevel ?? 100);
+        const percent = Math.min(100, Math.round((curr / dang) * 100));
+        const status = b.status || 'SAFE';
+        const trend = b.trend || 'Steady';
+
         let badgeColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
         let barColor = 'bg-emerald-500';
-        if (b.status === 'WARNING') {
+        if (status === 'WARNING') {
             badgeColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
             barColor = 'bg-amber-500';
-        } else if (b.status === 'CRITICAL') {
+        } else if (status === 'CRITICAL' || status === 'DANGER') {
             badgeColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
             barColor = 'bg-rose-500';
         }
@@ -820,14 +826,14 @@ function renderRiverBasins(basins) {
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <span class="text-xs font-bold text-white block">${b.river}</span>
-                        <span class="text-[10px] text-slate-400">Danger Mark: ${b.dangerLevel}m</span>
+                        <span class="text-[10px] text-slate-400">Danger Mark: ${dang}m</span>
                     </div>
-                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${badgeColor}">${b.status}</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${badgeColor}">${status}</span>
                 </div>
                 <div class="mt-2">
                     <div class="flex justify-between text-xs font-mono mb-1">
-                        <span class="text-white font-bold">${b.currentLevel} m</span>
-                        <span class="text-slate-400">${b.trend}</span>
+                        <span class="text-white font-bold">${curr.toFixed(1)} m</span>
+                        <span class="text-slate-400">${trend}</span>
                     </div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                         <div class="${barColor} h-full" style="width: ${percent}%"></div>
@@ -853,21 +859,27 @@ function renderLiveSOSList(sosSignals) {
     }
 
     container.innerHTML = sosSignals.map(sos => {
+        const caller = sos.caller_name ?? sos.callerName ?? 'Civilian Caller';
+        const loc = sos.location_name ?? sos.locationName ?? 'Sector Point';
+        const assigned = sos.assigned_unit ?? sos.assignedUnit ?? 'Unassigned';
+        const timeVal = sos.time ?? (sos.created_at ? sos.created_at.split('T')[1].slice(0, 5) : 'Recent');
+        const phone = sos.phone || '1077';
+
         let statusBadge = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
         if (sos.status === 'DISPATCHED') statusBadge = 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
         if (sos.status === 'EN ROUTE') statusBadge = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
-        if (sos.status === 'RESOLVED') statusBadge = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        if (sos.status === 'CLEARED' || sos.status === 'RESOLVED') statusBadge = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
 
         return `
             <div class="p-4 rounded-xl bg-slate-950 border border-slate-800/90 hover:border-slate-700 transition flex flex-col gap-2.5">
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="flex items-center gap-2">
-                            <span class="font-bold text-white text-xs">${sos.callerName}</span>
-                            <span class="text-[10px] font-mono text-slate-400">${sos.time}</span>
+                            <span class="font-bold text-white text-xs">${caller}</span>
+                            <span class="text-[10px] font-mono text-slate-400">${timeVal}</span>
                         </div>
                         <div class="text-[11px] text-indigo-400 font-medium mt-0.5">
-                            <i class="fa-solid fa-location-dot mr-1"></i> ${sos.locationName}
+                            <i class="fa-solid fa-location-dot mr-1"></i> ${loc}
                         </div>
                     </div>
                     <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${statusBadge}">${sos.status}</span>
@@ -876,7 +888,7 @@ function renderLiveSOSList(sosSignals) {
                     ${sos.details}
                 </p>
                 <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[11px]">
-                    <span class="text-slate-400">Assigned: <b class="text-slate-200">${sos.assignedUnit}</b></span>
+                    <span class="text-slate-400">Assigned: <b class="text-slate-200">${assigned}</b></span>
                     <div class="flex gap-2">
                         ${sos.status === 'PENDING' ? `
                             <button onclick="dispatchRescueTeam('${sos.id}', 'SDRF High Altitude Unit')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold text-[10px] shadow transition">
@@ -887,7 +899,7 @@ function renderLiveSOSList(sosSignals) {
                                 <i class="fa-solid fa-check mr-1"></i> Mark Cleared
                             </button>
                         `}
-                        <a href="tel:${sos.phone}" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] transition">
+                        <a href="tel:${phone}" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] transition">
                             <i class="fa-solid fa-phone mr-1"></i> Call Back
                         </a>
                     </div>

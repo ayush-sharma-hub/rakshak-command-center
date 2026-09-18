@@ -261,7 +261,8 @@
                     try {
                         const res = await fetch('/api/state');
                         const s = await res.json();
-                        reply = `SEOC MASTER STATUS: Current state alert level is ${s.risk.level} with composite hazard index ${s.risk.score}/100. ${s.risk.explanation}`;
+                        const r = s.risk || { level: 'SAFE', score: 18, explanation: 'All monitored hill sectors nominal.' };
+                        reply = `SEOC MASTER STATUS: Current state alert level is ${r.level} with composite hazard index ${r.score}/100. ${r.explanation}`;
                     } catch (e) {
                         reply = "SEOC state link nominal. Satellite telemetry active across 25 hill sectors.";
                     }

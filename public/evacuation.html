@@ -275,7 +275,7 @@
                 const res = await fetch(`/api/state?t=${timestamp}`, { cache: 'no-store' });
                 const data = await res.json();
 
-                if (data.simulatedCity && data.risk.score > 75) {
+                if (data.simulatedCity && data.risk && data.risk.score > 75) {
                     document.getElementById('no-evac-state').classList.add('hidden');
                     document.getElementById('active-evac-state').classList.remove('hidden');
 

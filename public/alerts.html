@@ -277,31 +277,66 @@
         setInterval(fetchLiveAlerts, 2500);
         document.addEventListener('DOMContentLoaded', fetchLiveAlerts);
 
-        function synthesizeAlert() {
+        async function synthesizeAlert() {
             RakshakAudio.playConfirm();
             const box = document.getElementById('ai-broadcast');
             box.classList.remove('hidden');
 
-            document.getElementById('ai-target-city').textContent = latestCity;
+            const city = latestCity || "Kedarnath";
+            const risk = latestRisk || "WARNING";
+            document.getElementById('ai-target-city').textContent = city;
 
-            if (latestRisk === 'CRITICAL') {
-                document.getElementById('msg-en').textContent = `CRITICAL FLASH ADVISORY: Imminent debris runoff breached safety thresholds in ${latestCity}. Evacuation protocol is mandatory. Proceed immediately to designated forward SDRF base camp.`;
-                document.getElementById('msg-hi').textContent = `अत्यंत गंभीर चेतावनी: ${latestCity} घाटी में अचानक भारी सैलाब का खतरा है। सभी नागरिक तुरंत अपने घरों को छोड़ कर निकटतम SDRF राहत शिविर में पहुंचे।`;
-                document.getElementById('msg-gr').textContent = `सावधान रया: ${latestCity} घाटी मा भारी जलजलो अर गदेरा उफणना खतरा च। अपणी जगह छोड़ीक तुरंत सुरक्षित SDRF शिविर मा जावा।`;
-                document.getElementById('msg-km').textContent = `सतर्क रया: ${latestCity} क्षेत्र में भारी बरसात ले नदी नाला उफान में छू। सबे लोग सुरक्षित जगह में जा।`;
-            } else if (latestRisk === 'WARNING') {
-                document.getElementById('msg-en').textContent = `WEATHER WARNING: Heavy localized precipitation detected in ${latestCity}. Avoid low-lying riverbeds and heed mountain traffic police regulations.`;
-                document.getElementById('msg-hi').textContent = `चेतावनी: ${latestCity} में तीव्र बारिश के कारण भूस्खलन की संभावना है। नदी तटों से दूर रहें और राज्य नियंत्रण कक्ष के निर्देशों का पालन करें।`;
-                document.getElementById('msg-gr').textContent = `चेतावनी: ${latestCity} मा जोरदार बरखा ह्वैणी च। नदी-नालों का किनारा नि जावा अर सतर्क रया।`;
-                document.getElementById('msg-km').textContent = `चेतावनी: ${latestCity} में तेज बारिश हुन लागी रयी। नदी का किनारा न जाया।`;
-            } else {
-                document.getElementById('msg-en').textContent = `SEOC ROUTINE BULLETIN: All hydrological basins across ${latestCity} are operating within normal discharge parameters. Char Dham corridor routes are open.`;
-                document.getElementById('msg-hi').textContent = `सामान्य बुलेटिन: ${latestCity} के सभी नदी बेसिन और मार्ग सुरक्षित सीमा में हैं। यात्रा मार्ग सुचारू रूप से संचालित हैं।`;
-                document.getElementById('msg-gr').textContent = `सामान्य जानकारी: ${latestCity} मा सब कुछ ठीक-ठाक च। चार धाम यात्रा मार्ग सुचारू च।`;
-                document.getElementById('msg-km').textContent = `सामान्य जानकारी: ${latestCity} में सब ठीक छू। क्वी डर की बात नी छू।`;
-            }
+            // Set loading placeholders
+            document.getElementById('msg-en').textContent = "Generating AI broadcast with Gemini Intelligence...";
+            document.getElementById('msg-hi').textContent = "जेमिनी एआई द्वारा संदेश तैयार किया जा रहा है...";
+            document.getElementById('msg-gr').textContent = "सिंथेटिक गढ़वाली प्रसारण तैयार हुंदु च...";
+            document.getElementById('msg-km').textContent = "कुमाऊँनी प्रसारण तैयार हूण लागी रौ...";
 
             box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            try {
+                const res = await fetch('/api/broadcast/synthesize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        city: city,
+                        risk_level: risk,
+                        rainfall_mm: 120.0,
+                        slope_deg: 35.0
+                    })
+                });
+
+                if (res.ok) {
+                    const data = await res.json();
+                    const b = data.broadcast || {};
+                    if (b.english) document.getElementById('msg-en').textContent = b.english;
+                    if (b.hindi) document.getElementById('msg-hi').textContent = b.hindi;
+                    if (b.garhwali) document.getElementById('msg-gr').textContent = b.garhwali;
+                    if (b.kumaoni) document.getElementById('msg-km').textContent = b.kumaoni;
+                    RakshakAudio.playConfirm();
+                    return;
+                }
+            } catch (err) {
+                console.warn('Live AI synthesis fallback:', err);
+            }
+
+            // Reliable deterministic fallback templates
+            if (risk === 'CRITICAL') {
+                document.getElementById('msg-en').textContent = `CRITICAL FLASH ADVISORY: Imminent debris runoff breached safety thresholds in ${city}. Evacuation protocol is mandatory. Proceed immediately to designated forward SDRF base camp. Helpline: 1077.`;
+                document.getElementById('msg-hi').textContent = `अत्यंत गंभीर चेतावनी: ${city} घाटी में अचानक भारी सैलाब का खतरा है। सभी नागरिक तुरंत अपने घरों को छोड़ कर निकटतम SDRF राहत शिविर में पहुंचे। हेल्पलाइन: 1077।`;
+                document.getElementById('msg-gr').textContent = `सावधान रया: ${city} घाटी मा भारी जलजलो अर गदेरा उफणना खतरा च। अपणी जगह छोड़ीक तुरंत सुरक्षित SDRF शिविर मा जावा।`;
+                document.getElementById('msg-km').textContent = `सतर्क रया: ${city} क्षेत्र में भारी बरसात ले नदी नाला उफान में छू। सबे लोग सुरक्षित जगह में जा। हेल्पलाइन: 1077।`;
+            } else if (risk === 'HIGH' || risk === 'WARNING') {
+                document.getElementById('msg-en').textContent = `WEATHER WARNING: Heavy localized precipitation detected in ${city}. Avoid low-lying riverbeds and heed mountain traffic police regulations. Helpline: 1077.`;
+                document.getElementById('msg-hi').textContent = `चेतावनी: ${city} में तीव्र बारिश के कारण भूस्खलन की संभावना है। नदी तटों से दूर रहें और राज्य नियंत्रण कक्ष के निर्देशों का पालन करें।`;
+                document.getElementById('msg-gr').textContent = `चेतावनी: ${city} मा जोरदार बरखा ह्वैणी च। नदी-नालों का किनारा नि जावा अर सतर्क रया।`;
+                document.getElementById('msg-km').textContent = `चेतावनी: ${city} में तेज बारिश हुन लागी रयी। नदी का किनारा न जाया।`;
+            } else {
+                document.getElementById('msg-en').textContent = `SEOC ROUTINE BULLETIN: All hydrological basins across ${city} are operating within normal discharge parameters. Char Dham corridor routes are open.`;
+                document.getElementById('msg-hi').textContent = `सामान्य बुलेटिन: ${city} के सभी नदी बेसिन और मार्ग सुरक्षित सीमा में हैं। यात्रा मार्ग सुचारू रूप से संचालित हैं।`;
+                document.getElementById('msg-gr').textContent = `सामान्य जानकारी: ${city} मा सब कुछ ठीक-ठाक च। चार धाम यात्रा मार्ग सुचारू च।`;
+                document.getElementById('msg-km').textContent = `सामान्य जानकारी: ${city} में सब ठीक छू। क्वी डर की बात नी छू।`;
+            }
         }
 
         function speakText(elementId) {
