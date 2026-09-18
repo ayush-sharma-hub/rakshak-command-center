@@ -5,7 +5,7 @@ SQLite Database Schema, Initialization, and Connection Manager
 
 import sqlite3
 import os
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rakshak.db")
@@ -287,7 +287,6 @@ def _seed_initial_data(conn: sqlite3.Connection):
             ("Dehradun", 30.3165, 78.0322, 28.0, 8.0, 6.5, 62.0),
             ("Kedarnath", 30.7352, 79.0669, 11.2, 42.0, 18.5, 88.0),
         ]
-        from datetime import timedelta
         expires = (datetime.now(timezone.utc) + timedelta(hours=6)).isoformat()
         c.executemany("""
             INSERT INTO weather_cache (city_name, lat, lng, temperature, precipitation, wind_speed, humidity, raw_json, fetched_at, expires_at)

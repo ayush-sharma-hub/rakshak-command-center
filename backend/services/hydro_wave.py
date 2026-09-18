@@ -198,3 +198,4 @@ def calculate_wave_propagation(
         "total_population_at_risk": sum(r["population"] for r in results),
         "transects": results
     }
+

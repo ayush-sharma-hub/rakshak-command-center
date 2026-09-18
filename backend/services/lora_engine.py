@@ -175,3 +175,4 @@ def transmit_lora_packet(
         "packet_type": packet_type.upper(),
         "timestamp": now,
     }
+
