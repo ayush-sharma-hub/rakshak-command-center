@@ -227,6 +227,18 @@ def init_db():
         )
     """)
 
+    # ─── 12. WEB PUSH SUBSCRIPTIONS (BACKGROUND SMARTPHONE RADAR) ─────────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS push_subscriptions (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            endpoint TEXT UNIQUE NOT NULL,
+            p256dh TEXT,
+            auth TEXT,
+            device_info TEXT,
+            created_at TEXT NOT NULL
+        )
+    """)
+
     conn.commit()
     _seed_initial_data(conn)
     conn.close()

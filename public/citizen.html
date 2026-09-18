@@ -384,14 +384,16 @@
             }
         }
 
+        const EMERGENCY_SOS_VIBRATION = [300, 100, 300, 100, 300, 300, 700, 150, 700, 150, 700, 300, 300, 100, 300, 100, 300];
+
         function triggerNativeAlert(title, body) {
-            // Haptic Phone Vibration (Vibrates mobile devices)
+            // Distinct Morse SOS Distress Vibration (Cannot be confused with casual messages)
             if ("vibrate" in navigator) {
-                navigator.vibrate([400, 150, 400, 150, 800]);
+                navigator.vibrate(EMERGENCY_SOS_VIBRATION);
             }
-            // Tactical Siren
+            // Tactical Emergency Siren
             if (typeof RakshakAudio !== 'undefined') {
-                RakshakAudio.playAlert();
+                try { RakshakAudio.initCtx(); RakshakAudio.playAlert(); } catch(e){}
             }
             // Native OS Notification
             if ("Notification" in window && Notification.permission === 'granted') {
@@ -400,7 +402,7 @@
                         body: body,
                         icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
                         badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                        vibrate: [400, 150, 400, 150, 800],
+                        vibrate: EMERGENCY_SOS_VIBRATION,
                         requireInteraction: true
                     });
                 } catch (e) {

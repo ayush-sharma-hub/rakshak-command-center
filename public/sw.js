@@ -46,10 +46,12 @@ self.addEventListener('fetch', (event) => {
 });
 
 // Real-time Push Notification handler for mobile background wake-up
+const EMERGENCY_SOS_VIBRATION = [300, 100, 300, 100, 300, 300, 700, 150, 700, 150, 700, 300, 300, 100, 300, 100, 300];
+
 self.addEventListener('push', (event) => {
   let data = {
-    title: '⚠️ SEOC UTTARAKHAND FLOOD WARNING',
-    body: 'Urgent Evacuation Alert: High runoff velocity detected. Move to higher ground immediately.',
+    title: '🚨 SEOC UTTARAKHAND FLOOD WARNING',
+    body: 'Urgent Evacuation Alert: Runoff velocity breached danger threshold. Move to high ground immediately!',
     url: '/map.html'
   };
   if (event.data) {
@@ -64,9 +66,15 @@ self.addEventListener('push', (event) => {
     body: data.body,
     icon: 'https://cdn-icons-png.flaticon.com/512/9440/9440539.png',
     badge: 'https://cdn-icons-png.flaticon.com/512/9440/9440539.png',
-    vibrate: [500, 150, 500, 150, 800],
+    vibrate: EMERGENCY_SOS_VIBRATION,
     data: { url: data.url || '/map.html' },
-    requireInteraction: true
+    requireInteraction: true,
+    tag: 'seoc-critical-alert',
+    renotify: true,
+    actions: [
+      { action: 'shelter', title: '🗺️ Safe Shelter Map' },
+      { action: 'helpline', title: '📞 Call 1070 Line' }
+    ]
   };
 
   event.waitUntil(self.registration.showNotification(data.title, options));

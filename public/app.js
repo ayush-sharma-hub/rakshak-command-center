@@ -129,6 +129,8 @@ window.syncNavAuth = syncNavAuth;
 // =========================================================================
 let lastKnownAlertTime = localStorage.getItem('rakshak_last_alert_time') || new Date(Date.now() - 120000).toISOString();
 
+const EMERGENCY_SOS_VIBRATION = [300, 100, 300, 100, 300, 300, 700, 150, 700, 150, 700, 300, 300, 100, 300, 100, 300];
+
 async function requestCitizenNotificationPermission() {
     if (!("Notification" in window)) {
         alert("Web Notifications are not supported by this browser.");
@@ -138,19 +140,37 @@ async function requestCitizenNotificationPermission() {
         const perm = await Notification.requestPermission();
         if (perm === 'granted') {
             localStorage.setItem('rakshak_notifications_enabled', 'true');
-            if (navigator.vibrate) navigator.vibrate([250, 100, 250]);
+            if (navigator.vibrate) navigator.vibrate([300, 100, 300, 100, 300]);
             if (window.RakshakAudio) {
                 try { RakshakAudio.initCtx(); RakshakAudio.playConfirm(); } catch(e){}
             }
 
             try {
                 new Notification("✅ SEOC Uttarakhand Alert Radar Armed", {
-                    body: "Your device is now permanently linked to receive instant flash flood & cloudburst alerts!",
-                    icon: "https://img.icons8.com/color/96/shield.png",
-                    badge: "https://img.icons8.com/color/96/shield.png",
-                    vibrate: [250, 100, 250]
+                    body: "Your phone is now permanently linked to receive instant flash flood & cloudburst alerts!",
+                    icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                    badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                    vibrate: [300, 100, 300, 100, 300]
                 });
             } catch(e) {}
+
+            // Auto-register Service Worker Push for background wake-up
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.ready.then(async (reg) => {
+                    try {
+                        const sub = await reg.pushManager.getSubscription();
+                        const endpoint = sub ? sub.endpoint : ('device-sim-' + Date.now() + '-' + Math.random().toString(36).substring(2, 7));
+                        fetch('/api/alerts/subscribe-push', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                endpoint: endpoint,
+                                device_info: navigator.userAgent
+                            })
+                        }).catch(() => {});
+                    } catch (err) {}
+                }).catch(() => {});
+            }
 
             updateNotificationStatusUI();
             startAlertPolling();
@@ -195,7 +215,7 @@ let alertPollTimer = null;
 function startAlertPolling() {
     if (alertPollTimer) return;
     checkNewAlerts();
-    alertPollTimer = setInterval(checkNewAlerts, 4000);
+    alertPollTimer = setInterval(checkNewAlerts, 3500);
 }
 
 async function checkNewAlerts() {
@@ -207,8 +227,8 @@ async function checkNewAlerts() {
         if (alerts && alerts.length > 0) {
             alerts.forEach(al => {
                 triggerPhonePushAlert({
-                    title: `⚠️ SEOC EMERGENCY ALERT [${al.priority || 'CRITICAL'}]`,
-                    body: `${al.msg || 'Flash flood warning issued'} — Zone: ${al.zone || 'Catchment Basin'}`,
+                    title: `🚨 SEOC DISASTER ALERT [${al.priority || 'CRITICAL'}]`,
+                    body: `${al.msg || 'Flash flood warning issued'} — Zone: ${al.zone || 'Catchment Basin'}. Evacuate to higher elevation!`,
                     url: '/map.html',
                     tag: 'alert-' + al.id
                 });
@@ -222,21 +242,25 @@ async function checkNewAlerts() {
 }
 
 function triggerPhonePushAlert(opts) {
+    // 1. High-Urgency Morse Code SOS Vibration: 3 Short, 3 Long, 3 Short
     if ("vibrate" in navigator) {
-        navigator.vibrate([500, 150, 500, 150, 800]);
+        navigator.vibrate(EMERGENCY_SOS_VIBRATION);
     }
+    // 2. High-Decibel Tactical Emergency Siren
     if (window.RakshakAudio) {
-        try { RakshakAudio.playAlert(); } catch(e){}
+        try { RakshakAudio.initCtx(); RakshakAudio.playAlert(); } catch(e){}
     }
+    // 3. Pinned, High-Priority System Notification (Does not disappear automatically)
     if ("Notification" in window && Notification.permission === 'granted') {
         try {
-            const notif = new Notification(opts.title || "⚠️ RAKSHAK EMERGENCY WARNING", {
-                body: opts.body || "Urgent evacuation notice. Move to higher ground immediately.",
+            const notif = new Notification(opts.title || "🚨 RAKSHAK EMERGENCY WARNING", {
+                body: opts.body || "Urgent flash flood advisory! Move to designated high ground immediately.",
                 icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
                 badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
-                vibrate: [500, 150, 500, 150, 800],
-                requireInteraction: true,
-                tag: opts.tag || ('rakshak-' + Date.now())
+                vibrate: EMERGENCY_SOS_VIBRATION,
+                requireInteraction: true, // Pinned to lockscreen until user taps/swipes
+                silent: false,
+                tag: opts.tag || ('rakshak-disaster-' + Date.now())
             });
             notif.onclick = function() {
                 window.focus();
@@ -249,6 +273,7 @@ function triggerPhonePushAlert(opts) {
     }
 }
 window.triggerPhonePushAlert = triggerPhonePushAlert;
+
 
 // 1. TACTICAL WEB AUDIO ENGINE (Zero external dependencies)
 

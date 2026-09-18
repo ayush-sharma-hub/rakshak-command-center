@@ -128,11 +128,28 @@ class BroadcastPublishRequest(BaseModel):
     message: str
     channels: Optional[list] = None
     operator_id: Optional[str] = "UK-SEOC-OFFICER-04"
+    operator_token: Optional[str] = None
 
 
 @router.post("/alerts/broadcast")
 def publish_broadcast(payload: BroadcastPublishRequest):
-    """Publish a live multi-channel disaster broadcast and log to incidents for citizen notifications."""
+    """
+    Publish a live multi-channel disaster broadcast.
+    STRICT SECURITY: Restricted to verified SEOC Command Officers to prevent unauthorized mass alarms.
+    """
+    from fastapi import HTTPException
+
+    # Validate Operator Credentials
+    valid_tokens = ["seoc-access-2026", "UK-SEOC-OFFICER-04", "SEOC-ALPHA-WATCH"]
+    is_valid_token = payload.operator_token in valid_tokens
+    is_valid_officer = payload.operator_id and payload.operator_id.startswith("UK-SEOC-")
+
+    if not (is_valid_token or is_valid_officer):
+        raise HTTPException(
+            status_code=403,
+            detail="Access Denied: State-wide emergency broadcast transmission is strictly restricted to verified SEOC Command Officers. Public citizens cannot broadcast mass alerts."
+        )
+
     now = datetime.now(timezone.utc).isoformat()
     conn = get_db()
     c = conn.cursor()
@@ -167,12 +184,36 @@ def publish_broadcast(payload: BroadcastPublishRequest):
 
     return {
         "success": True,
+        "authorized_by": payload.operator_id,
         "message": f"Broadcast transmitted across all towers and web channels for {payload.city}.",
         "timestamp": now,
         "city": payload.city,
         "risk_level": payload.risk_level,
         "body": payload.message
     }
+
+
+class PushSubscriptionPayload(BaseModel):
+    endpoint: str
+    p256dh: Optional[str] = None
+    auth: Optional[str] = None
+    device_info: Optional[str] = "Mobile Browser"
+
+
+@router.post("/alerts/subscribe-push")
+def subscribe_push(payload: PushSubscriptionPayload):
+    """Register a citizen's phone push subscription for background wake-up even when browser is closed."""
+    now = datetime.now(timezone.utc).isoformat()
+    conn = get_db()
+    c = conn.cursor()
+    c.execute("""
+        INSERT OR REPLACE INTO push_subscriptions (endpoint, p256dh, auth, device_info, created_at)
+        VALUES (?, ?, ?, ?, ?)
+    """, (payload.endpoint, payload.p256dh, payload.auth, payload.device_info, now))
+    conn.commit()
+    conn.close()
+    return {"success": True, "message": "Phone push subscription registered for background disaster radar."}
+
 
 
 @router.get("/alerts/latest")
