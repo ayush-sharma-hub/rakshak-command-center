@@ -447,7 +447,6 @@ function renderMapMarkers() {
         circle.bindPopup(popupContent);
         pin.bindPopup(popupContent);
 
-        circle.on('click', () => selectCityByName(city.name));
         pin.on('click', () => selectCityByName(city.name));
 
         mapMarkers.push(circle);
@@ -499,9 +498,13 @@ function renderRescueUnits() {
     });
 }
 
+let activeSectorName = null;
+
 function selectCityByName(cityName) {
     const city = ukCities.find(c => c.name.toLowerCase() === cityName.toLowerCase());
     if (city) {
+        if (activeSectorName === city.name) return; // Prevent duplicate concurrent trigger
+        activeSectorName = city.name;
         RakshakAudio.playSonar();
         const input = document.getElementById('cityInput');
         if (input) input.value = city.name;
@@ -535,14 +538,26 @@ async function loadCityData(cityData) {
         renderDroneFeed(cityData);
     }
 
-    if (activeFluctuationTimer) clearInterval(activeFluctuationTimer);
+    if (activeFluctuationTimer) {
+        clearInterval(activeFluctuationTimer);
+        activeFluctuationTimer = null;
+    }
+
+    // Immediately display reliable cached sector baseline to prevent UI freeze/jump
+    const initialPayload = {
+        ...cityData,
+        currentTemp: 19.5,
+        tempTomorrow: 21.0,
+        precip: cityData.basePrecip
+    };
+    updateVisualMetrics(initialPayload);
 
     try {
         // 1. Check if Simulator is overriding this city
         const stateRes = await fetch('/api/state');
         const systemState = await stateRes.json();
 
-        if (systemState.simulatedCity === cityName) {
+        if (systemState.simulatedCity === cityName && systemState.telemetry) {
             addLog(`OVERRIDE DETECTED: Loading manual simulator injection for ${cityName}...`, "warn");
             const simulatedData = {
                 ...cityData,
@@ -556,62 +571,56 @@ async function loadCityData(cityData) {
             return;
         }
 
-        // 2. Check Local Cache
-        if (cityCache[cityName]) {
-            addLog(`Cache Hit: Loaded ${cityName} telemetry. Saved satellite uplink bandwidth.`, 'warn');
-            startFluctuationLoop(cityCache[cityName]);
+        // 2. Fetch live weather via backend cache to avoid client-side 429 & CORS
+        addLog(`Querying SEOC weather service for ${cityName}...`, 'api');
+        const weatherRes = await fetch(`/api/weather/${encodeURIComponent(cityName)}`);
+        if (weatherRes.ok) {
+            const wData = await weatherRes.json();
+            const payload = {
+                ...cityData,
+                currentTemp: wData.temperature ?? 19.0,
+                tempTomorrow: wData.temperature ? (wData.temperature + 1.5) : 21.0,
+                precip: (wData.precipitation !== undefined && wData.precipitation > 0) ? wData.precipitation : cityData.basePrecip
+            };
+            cityCache[cityName] = payload;
+            addLog(`Hydrological matrix computed for ${cityName}. Telemetry stable.`, 'sys');
+            startFluctuationLoop(payload);
             return;
         }
 
-        // 3. Live Satellite API Fetch
-        addLog(`Transmitting coordinates to IMD Doppler & Open-Meteo Satellite...`, 'api');
-        const tempEl = document.getElementById('val-temp');
-        if (tempEl) tempEl.innerHTML = '<span class="text-xs text-slate-400 animate-pulse">Syncing...</span>';
-
-        const apiUrl = `https://api.open-meteo.com/v1/forecast?latitude=${cityData.lat}&longitude=${cityData.lng}&current=temperature_2m,precipitation&daily=temperature_2m_max&timezone=auto`;
-        const response = await fetch(apiUrl);
-        const weatherData = await response.json();
-
-        addLog(`Telemetry packet decoded. Mandakini/Alaknanda basin flux calculated.`, 'api');
-
-        const liveTempTomorrow = (weatherData.daily && weatherData.daily.temperature_2m_max) ? weatherData.daily.temperature_2m_max[1] : 21.0;
-        const liveRadarPrecip = (weatherData.current && weatherData.current.precipitation) !== undefined ? weatherData.current.precipitation : 0;
-
-        const payload = {
-            ...cityData,
-            currentTemp: weatherData.current ? weatherData.current.temperature_2m : 19,
-            tempTomorrow: liveTempTomorrow,
-            precip: liveRadarPrecip > 0 ? liveRadarPrecip : cityData.basePrecip
-        };
-
-        cityCache[cityName] = payload;
-        addLog(`Evaluating SEOC Hydrological Risk Matrix...`, 'ai');
-        startFluctuationLoop(payload);
-
     } catch (err) {
-        addLog(`Remote telemetry link timeout. Using emergency mountain fallback model.`, 'crit');
-        const fallback = { ...cityData, currentTemp: 19, tempTomorrow: 21.5, precip: cityData.basePrecip };
-        cityCache[cityName] = fallback;
-        startFluctuationLoop(fallback);
+        console.warn('Telemetry fetch notice:', err);
     }
+
+    // Reliable mountain fallback model
+    cityCache[cityName] = initialPayload;
+    startFluctuationLoop(initialPayload);
 }
 
 // =========================================================================
 // 8. TELEMETRY FLUCTUATION & TACTICAL CALCULATION
 // =========================================================================
 function startFluctuationLoop(baseData) {
+    if (activeFluctuationTimer) {
+        clearInterval(activeFluctuationTimer);
+        activeFluctuationTimer = null;
+    }
+
     let working = JSON.parse(JSON.stringify(baseData));
     updateVisualMetrics(working);
 
+    // Subtle, realistic telemetry heartbeat (+-0.1°C temperature variation only)
+    // Precipitation & risk score remain rock-solid and stable
     activeFluctuationTimer = setInterval(() => {
-        const tempShift = (Math.random() - 0.5) * 0.3;
-        working.tempTomorrow = (parseFloat(baseData.tempTomorrow) + tempShift).toFixed(1);
-
-        const precipShift = (Math.random() - 0.5) * 1.5;
-        working.precip = Math.max(0, (parseFloat(baseData.precip) + precipShift)).toFixed(1);
-
+        if (activeSectorName && activeSectorName !== baseData.name) {
+            clearInterval(activeFluctuationTimer);
+            activeFluctuationTimer = null;
+            return;
+        }
+        const tempShift = (Math.random() - 0.5) * 0.2;
+        working.tempTomorrow = (parseFloat(baseData.tempTomorrow || 20) + tempShift).toFixed(1);
         updateVisualMetrics(working);
-    }, 2500);
+    }, 3000);
 }
 
 function updateVisualMetrics(data) {
@@ -623,21 +632,25 @@ function updateVisualMetrics(data) {
     const basinEl = document.getElementById('val-basin');
     const popEl = document.getElementById('val-pop');
 
-    if (tempEl) tempEl.textContent = `${data.tempTomorrow} °C`;
-    if (precipEl) precipEl.textContent = `${data.precip} mm/hr`;
-    if (soilEl) soilEl.textContent = data.soil;
+    if (tempEl) tempEl.textContent = `${data.tempTomorrow || 20} °C`;
+    if (precipEl) precipEl.textContent = `${data.precip || data.basePrecip || 10} mm/hr`;
+    if (soilEl) soilEl.textContent = data.soil || "Rocky";
     if (elevEl) elevEl.textContent = `${data.elevation}m`;
     if (slopeEl) slopeEl.textContent = `${data.slope}°`;
     if (basinEl) basinEl.textContent = data.riverBasin || "Alaknanda Basin";
     if (popEl && data.population) popEl.textContent = data.population.toLocaleString();
 
     // SEOC UNIFIED HYDROLOGICAL RISK MODEL
-    let baseRisk = (data.slope * 1.2) + (data.elevation / 110);
-    let weatherRisk = (data.precip * 1.4);
-    
-    if (data.soil && data.soil.includes('Wet')) weatherRisk += 15;
-    if (data.soil && data.soil.includes('Saturated')) weatherRisk += 25;
-    if (data.cloudburst) weatherRisk += 30;
+    const slopeFactor = (data.slope || 25) * 1.1;
+    const elevFactor = Math.min(30, (data.elevation || 1500) / 120);
+    let baseRisk = slopeFactor + elevFactor;
+
+    const precipVal = parseFloat(data.precip || data.basePrecip || 10);
+    let weatherRisk = Math.min(45, precipVal * 1.1);
+
+    if (data.soil && data.soil.includes('Wet')) weatherRisk += 8;
+    if (data.soil && data.soil.includes('Saturated')) weatherRisk += 14;
+    if (data.cloudburst) weatherRisk += 25;
 
     const totalScore = Math.min(100, Math.max(5, Math.round(baseRisk + weatherRisk)));
 
@@ -670,7 +683,6 @@ function updateVisualMetrics(data) {
         if (totalScore > 75) {
             banner.textContent = `CRITICAL ALERT: IMMEDIATE EVACUATION FOR ${data.name.toUpperCase()}`;
             banner.classList.add('bg-rose-950/80', 'border-rose-500', 'text-rose-300', 'animate-pulse');
-            RakshakAudio.playAlert();
         } else if (totalScore > 50) {
             banner.textContent = `WARNING: ELEVATED FLASH FLOOD HAZARD IN ${data.name.toUpperCase()}`;
             banner.classList.add('bg-amber-950/80', 'border-amber-500', 'text-amber-300');
