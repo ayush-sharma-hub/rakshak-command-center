@@ -85,6 +85,9 @@
             <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
                 <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
             </a>
+            <a href="lora.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-circle-nodes w-4 text-cyan-400"></i> LoRa Mesh Relay (SIH)
+            </a>
         </nav>
 
         <!-- WATCH OFFICER PROFILE -->
@@ -222,13 +225,16 @@
                 <div id="map" class="w-full h-full z-0"></div>
                 
                 <!-- TACTICAL MAP HUD OVERLAY -->
-                <div class="absolute top-4 left-4 z-[400] bg-slate-900/90 border border-slate-800 px-3.5 py-2 rounded-xl text-xs backdrop-blur-md shadow-2xl flex items-center gap-3 pointer-events-none">
+                <div class="absolute top-4 left-4 z-[400] bg-slate-900/90 border border-slate-800 px-3.5 py-2 rounded-xl text-xs backdrop-blur-md shadow-2xl flex items-center gap-3">
                     <div class="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px] font-bold">
                         <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span>
                         <span>GIS ACTIVE: UTTARAKHAND GRID</span>
                     </div>
                     <span class="text-slate-600">|</span>
-                    <span class="text-slate-400 font-mono text-[10px]">Scale: 1:250,000</span>
+                    <a href="lora.html" class="flex items-center gap-1.5 text-cyan-400 hover:text-cyan-300 font-mono text-[10px] font-bold transition">
+                        <i class="fa-solid fa-circle-nodes text-cyan-400"></i>
+                        <span>8 LORA MESH RELAYS (SIH #2619)</span>
+                    </a>
                 </div>
 
                 <!-- HAZARD CLASSIFICATION LEGEND -->

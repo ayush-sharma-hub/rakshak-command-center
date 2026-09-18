@@ -53,6 +53,9 @@
             <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
                 <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
             </a>
+            <a href="lora.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-circle-nodes w-4 text-cyan-400"></i> LoRa Mesh Relay (SIH)
+            </a>
         </nav>
 
         <div class="p-3.5 border-t border-slate-800 bg-slate-900/60 text-xs">
@@ -226,6 +229,75 @@
 
             </div>
 
+            <!-- DOWNSTREAM FLOOD WAVE PROPAGATION CARD (SIH PROBLEM #2619) -->
+            <div class="mt-8 bg-slate-900 border border-slate-800 rounded-2xl p-5 md:p-6 shadow-2xl">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4 mb-6">
+                    <div>
+                        <div class="flex items-center gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400">
+                                <i class="fa-solid fa-water"></i>
+                            </div>
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <h3 class="text-sm font-black text-white uppercase tracking-wider">Downstream Flood Wave Arrival & Evacuation Lead-Time</h3>
+                                    <span class="px-2 py-0.5 rounded text-[9px] font-extrabold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-mono">SIH #2619 ENGINE</span>
+                                </div>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Calculated via Manning's hydrodynamic open-channel velocity: <span class="font-mono text-cyan-400 text-[10px]">v = (1/n) · R^(2/3) · S^(1/2)</span></p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">River Corridor:</label>
+                        <select id="wave-corridor" onchange="loadWavePropagation()" class="bg-slate-950 border border-slate-700 text-cyan-300 rounded-lg px-3 py-1.5 text-xs font-semibold focus:outline-none focus:border-cyan-500">
+                            <option value="Mandakini">Mandakini (Chorabari ➡️ Kedarnath ➡️ Rudraprayag)</option>
+                            <option value="Alaknanda">Alaknanda (Satopanth ➡️ Joshimath ➡️ Srinagar)</option>
+                            <option value="Bhagirathi">Bhagirathi (Gaumukh ➡️ Uttarkashi ➡️ Tehri)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- HYDRO DYNAMICS TELEMETRY RIBBON -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Channel Roughness (n)</span>
+                        <span id="wave-roughness" class="text-sm font-black text-slate-300 font-mono">0.048 (Boulder Gorge)</span>
+                    </div>
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Peak Wave Velocity</span>
+                        <span id="wave-max-vel" class="text-sm font-black text-rose-400 font-mono">-- m/s</span>
+                    </div>
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Monitored Valley Reach</span>
+                        <span id="wave-reach" class="text-sm font-black text-cyan-400 font-mono">-- km</span>
+                    </div>
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <span class="text-[10px] uppercase font-bold text-slate-500 block mb-1">Downstream At-Risk</span>
+                        <span id="wave-pop" class="text-sm font-black text-amber-400 font-mono">-- citizens</span>
+                    </div>
+                </div>
+
+                <!-- TRANSECT COUNTDOWN TABLE -->
+                <div class="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950">
+                    <table class="w-full text-left text-xs">
+                        <thead class="bg-slate-900/90 text-[10px] uppercase font-bold text-slate-400 border-b border-slate-800">
+                            <tr>
+                                <th class="px-4 py-3">Valley Transect</th>
+                                <th class="px-3 py-3">Distance & Elev</th>
+                                <th class="px-3 py-3">Wave Arrival</th>
+                                <th class="px-3 py-3">Evacuation Lead Time</th>
+                                <th class="px-3 py-3">Surge Height</th>
+                                <th class="px-3 py-3">Infrastructure Risk</th>
+                                <th class="px-3 py-3 text-right">Inundation Risk</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wave-transects-body" class="divide-y divide-slate-800/60 font-mono">
+                            <tr><td colspan="7" class="px-4 py-6 text-center text-slate-500 font-sans">Computing hydrodynamic wave propagation vectors...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -240,7 +312,81 @@
                 select.appendChild(opt);
             });
             select.value = "Kedarnath";
+            loadWavePropagation();
         });
+
+        async function loadWavePropagation() {
+            const corridor = document.getElementById('wave-corridor')?.value || 'Mandakini';
+            const rainfall = parseFloat(document.getElementById('sim-rain')?.value) || 110;
+            const cloudburst = document.getElementById('sim-cloudburst')?.checked ?? true;
+
+            try {
+                const res = await fetch(`/api/wave-propagation?corridor=${encodeURIComponent(corridor)}&rainfall_mm=${rainfall}&cloudburst=${cloudburst}`);
+                const data = await res.json();
+
+                if (!data || !data.transects) return;
+
+                document.getElementById('wave-roughness').textContent = `${data.channel_roughness} (Boulder Bed)`;
+                document.getElementById('wave-max-vel').textContent = `${data.max_surge_velocity_mps} m/s (${Math.round(data.max_surge_velocity_mps * 3.6)} km/h)`;
+                document.getElementById('wave-reach').textContent = `${data.total_reach_km} km`;
+                document.getElementById('wave-pop').textContent = `${data.total_population_at_risk.toLocaleString()} citizens`;
+
+                const tbody = document.getElementById('wave-transects-body');
+                tbody.innerHTML = '';
+
+                data.transects.forEach(t => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-900/60 transition";
+
+                    let statusBadge = '';
+                    if (t.evacuation_status === 'ORIGIN_IMPACT' || t.evacuation_status === 'IMMINENT_CRITICAL') {
+                        statusBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-rose-500/20 text-rose-400 border border-rose-500/40">${t.evacuation_status}</span>`;
+                    } else if (t.evacuation_status === 'URGENT_EVACUATION') {
+                        statusBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40">${t.evacuation_status}</span>`;
+                    } else if (t.evacuation_status === 'CONTROLLED_EGRESS') {
+                        statusBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-yellow-500/20 text-yellow-300 border border-yellow-500/40">${t.evacuation_status}</span>`;
+                    } else {
+                        statusBadge = `<span class="px-2 py-0.5 rounded text-[9px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40">${t.evacuation_status}</span>`;
+                    }
+
+                    const arrivalText = t.wave_arrival_minutes === 0 
+                        ? '<span class="text-rose-400 font-bold">0 min (Origin)</span>' 
+                        : `<span class="text-amber-300 font-bold">+${t.wave_arrival_minutes} min</span>`;
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-3 font-sans">
+                            <div class="font-bold text-white text-xs">${t.settlement}</div>
+                            <div class="text-[10px] text-slate-400">Pop: ${t.population.toLocaleString()}</div>
+                        </td>
+                        <td class="px-3 py-3 text-slate-300 text-[11px]">
+                            <div>${t.distance_km} km</div>
+                            <div class="text-slate-500 text-[10px]">${t.elevation_m}m ASL</div>
+                        </td>
+                        <td class="px-3 py-3 text-xs">${arrivalText}</td>
+                        <td class="px-3 py-3">
+                            <div class="text-xs text-white font-bold">${t.evacuation_deadline}</div>
+                            <div class="mt-0.5">${statusBadge}</div>
+                        </td>
+                        <td class="px-3 py-3 text-xs text-rose-300">
+                            ${t.surge_height_m > 0 ? `▲ ${t.surge_height_m}m` : 'Origin'}
+                            <div class="text-[9px] text-slate-500">${t.surge_velocity_mps > 0 ? `${t.surge_velocity_mps} m/s` : '--'}</div>
+                        </td>
+                        <td class="px-3 py-3 text-[11px] font-sans text-slate-400">
+                            ${t.bridge_status}
+                        </td>
+                        <td class="px-3 py-3 text-right">
+                            <div class="text-xs font-bold ${t.inundation_prob_pct > 70 ? 'text-rose-400' : (t.inundation_prob_pct > 40 ? 'text-amber-400' : 'text-emerald-400')}">${t.inundation_prob_pct}%</div>
+                            <div class="w-16 h-1.5 bg-slate-800 rounded-full ml-auto mt-1 overflow-hidden">
+                                <div class="h-full ${t.inundation_prob_pct > 70 ? 'bg-rose-500' : (t.inundation_prob_pct > 40 ? 'bg-amber-500' : 'bg-emerald-500')}" style="width: ${t.inundation_prob_pct}%"></div>
+                            </div>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) {
+                console.error("Wave propagation fetch error:", err);
+            }
+        }
 
         function loadScenario(preset) {
             RakshakAudio.playConfirm();
@@ -335,6 +481,9 @@
                 }
 
                 addLog(`[SIM] ${cityName}: Risk ${level} (${score}/100) — Pop at risk: ${popAtRisk.toLocaleString()} — Lead time: ${leadTime} min`, 'warn');
+
+                // Update Downstream Wave Propagation simultaneously
+                loadWavePropagation();
             } catch (err) {
                 console.error('Simulation error:', err);
                 addLog('[SIM ERROR] Backend simulation failed. Check server connection.', 'crit');

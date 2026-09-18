@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SEOC Rakshak | LoRaWAN Tactical Mesh Network</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="/app.js" defer></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        @keyframes rfPing {
+            0% { transform: scale(0.8); opacity: 0.9; }
+            50% { transform: scale(1.6); opacity: 0.3; }
+            100% { transform: scale(2.2); opacity: 0; }
+        }
+        .rf-ping-ring {
+            animation: rfPing 2s cubic-bezier(0, 0.2, 0.8, 1) infinite;
+        }
+        .mesh-line {
+            stroke-dasharray: 6 4;
+            animation: dash 1.5s linear infinite;
+        }
+        @keyframes dash {
+            to { stroke-dashoffset: -20; }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
+
+    <!-- SIDE NAVIGATION -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+        <!-- BRANDING -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-600 to-indigo-600 flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(6,182,212,0.4)]">
+                    <i class="fa-solid fa-tower-cell text-lg"></i>
+                </div>
+                <div>
+                    <span class="font-black tracking-widest text-base text-white block leading-none">RAKSHAK</span>
+                    <span class="text-[9px] text-cyan-400 font-mono tracking-wider font-semibold">LORA MESH HUB</span>
+                </div>
+            </div>
+            <button class="audio-toggle-btn text-slate-400 hover:text-white transition p-1.5 bg-slate-800 rounded-lg border border-slate-700 text-xs" title="Toggle Tactical Audio">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
+        </div>
+
+        <!-- NAV LINKS -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-chart-line w-4 text-slate-400"></i> Command War Room
+            </a>
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-map-location-dot w-4 text-slate-400"></i> Tactical GIS Map
+            </a>
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-flask-vial w-4 text-slate-400"></i> Crisis Sandbox
+            </a>
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-route w-4 text-slate-400"></i> Evacuation Hub
+            </a>
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-tower-broadcast w-4 text-slate-400"></i> Broadcast Center
+            </a>
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
+            </a>
+            <a href="lora.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-cyan-600/20 text-cyan-300 border border-cyan-500/30 font-bold text-xs tracking-wide">
+                <i class="fa-solid fa-circle-nodes w-4 text-cyan-400"></i> LoRa Mesh Relay (SIH)
+            </a>
+        </nav>
+
+        <!-- OFFICER & PROTOCOL PROFILE -->
+        <div class="p-3.5 border-t border-slate-800 bg-slate-900/60">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-cyan-950 border border-cyan-500/40 flex items-center justify-center text-cyan-300 font-bold text-xs">
+                        RF
+                    </div>
+                    <div>
+                        <div class="font-bold text-white text-[11px] leading-tight">865–867 MHz Band</div>
+                        <div class="text-[9px] text-cyan-400 font-mono">India Free ISM Mesh</div>
+                    </div>
+                </div>
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            </div>
+            <div class="text-[10px] text-slate-500 flex justify-between font-mono pt-1 border-t border-slate-800">
+                <span>Relay Mode: P2P Hop</span>
+                <span class="text-emerald-400">8 Nodes Online</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+        
+        <!-- HEADER -->
+        <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
+            <div class="flex items-center gap-3">
+                <div id="global-status" class="text-cyan-400 font-bold text-xs flex items-center">
+                    <span class="w-2.5 h-2.5 rounded-full bg-cyan-500 animate-pulse mr-2 inline-block"></span> LORA MESH OPERATIONAL &bull; 0% CELLULAR OFFLINE FALLBACK READY
+                </div>
+            </div>
+            <div class="flex items-center gap-3">
+                <button onclick="openSosModal()" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] py-2 px-3.5 rounded-xl shadow-lg shadow-rose-600/30 transition flex items-center gap-2 tracking-wider">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                    <span>BROADCAST LORA SOS</span>
+                </button>
+                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
+                    00:00:00
+                </div>
+            </div>
+        </header>
+
+        <!-- DASHBOARD BODY -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 flex flex-col gap-6">
+
+            <!-- SIH 2619 HERO BANNER -->
+            <div class="bg-gradient-to-r from-cyan-950/50 via-slate-900 to-indigo-950/40 border border-cyan-500/30 p-5 rounded-2xl flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 shadow-[0_0_25px_rgba(6,182,212,0.15)]">
+                <div>
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="px-2.5 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 font-mono text-[10px] font-bold uppercase">
+                            SIH Problem #2619 Solution Module
+                        </span>
+                        <span class="text-xs text-slate-400 font-mono">Mandakini & Alaknanda Valley Gorges</span>
+                    </div>
+                    <h1 class="text-xl font-black text-white tracking-wide">
+                        Offline LoRa Mesh Relay & Resilient Mountain Comms
+                    </h1>
+                    <p class="text-xs text-slate-300 max-w-2xl mt-1 leading-relaxed">
+                        When catastrophic cloudbursts destroy cellular towers and fiber backhauls (as observed in Kedarnath 2013), Project Rakshak seamlessly switches to peer-to-peer 865 MHz LoRa mesh packet hopping. Ultrasonic river depth and distress beacons travel node-by-node down the gorge to the SEOC Command Post with zero internet dependency.
+                    </p>
+                </div>
+                <div class="flex items-center gap-3 shrink-0">
+                    <button onclick="simulateTelemetryBurst()" class="px-4 py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-cyan-600/30 flex items-center gap-2">
+                        <i class="fa-solid fa-wave-pulse"></i>
+                        <span>Transmit Sensor Telemetry Burst</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- MESH TOPOLOGY & TELEMETRY ROW -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                
+                <!-- VALLEY RELAY TOPOLOGY DIAGRAM -->
+                <div class="lg:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                    <div class="flex justify-between items-center mb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-network-wired text-cyan-400 text-sm"></i>
+                            <h2 class="text-xs font-bold uppercase tracking-widest text-slate-200">Mandakini Gorge LoRa Mesh Hop Architecture</h2>
+                        </div>
+                        <span class="text-[10px] bg-slate-950 border border-slate-700 px-2 py-0.5 rounded text-cyan-300 font-mono">
+                            Multi-Hop Store & Forward
+                        </span>
+                    </div>
+
+                    <!-- SVG TOPOLOGY DIAGRAM -->
+                    <div class="relative bg-slate-950 border border-slate-800 rounded-xl p-4 overflow-hidden h-[300px] flex items-center justify-center">
+                        <svg class="w-full h-full" viewBox="0 0 760 260" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <!-- Mountain Terrain Background Silhouette -->
+                            <path d="M 0 240 L 90 90 L 210 160 L 340 70 L 480 180 L 610 110 L 760 240 Z" fill="#030712" stroke="#1e293b" stroke-width="1.5"/>
+                            
+                            <!-- RF Links Between Nodes -->
+                            <line x1="80" y1="90" x2="180" y2="130" stroke="#06b6d4" stroke-width="2" class="mesh-line" />
+                            <line x1="180" y1="130" x2="290" y2="110" stroke="#06b6d4" stroke-width="2" class="mesh-line" />
+                            <line x1="290" y1="110" x2="400" y2="160" stroke="#06b6d4" stroke-width="2" class="mesh-line" />
+                            <line x1="400" y1="160" x2="520" y2="175" stroke="#10b981" stroke-width="2.5" class="mesh-line" />
+                            <line x1="520" y1="175" x2="630" y2="150" stroke="#06b6d4" stroke-width="2" class="mesh-line" />
+                            <line x1="630" y1="150" x2="720" y2="210" stroke="#6366f1" stroke-width="3" class="mesh-line" />
+
+                            <!-- Node 1: Kedarnath Ridge -->
+                            <g id="svg-node-1" class="cursor-pointer" onclick="selectNode('LORA-ND-01')">
+                                <circle cx="80" cy="90" r="14" fill="#083344" stroke="#06b6d4" stroke-width="2"/>
+                                <circle cx="80" cy="90" r="24" fill="none" stroke="#06b6d4" class="rf-ping-ring"/>
+                                <text x="80" y="70" text-anchor="middle" fill="#f8fafc" font-size="10" font-weight="bold">Kedarnath (3583m)</text>
+                                <text x="80" y="118" text-anchor="middle" fill="#06b6d4" font-size="9" font-family="monospace">Node-01 [SF9]</text>
+                            </g>
+
+                            <!-- Node 2: Lincheli -->
+                            <g id="svg-node-2" class="cursor-pointer" onclick="selectNode('LORA-ND-02')">
+                                <circle cx="180" cy="130" r="11" fill="#083344" stroke="#06b6d4" stroke-width="2"/>
+                                <text x="180" y="152" text-anchor="middle" fill="#f8fafc" font-size="9" font-weight="bold">Lincheli (3100m)</text>
+                            </g>
+
+                            <!-- Node 3: Rambara -->
+                            <g id="svg-node-3" class="cursor-pointer" onclick="selectNode('LORA-ND-03')">
+                                <circle cx="290" cy="110" r="11" fill="#083344" stroke="#f59e0b" stroke-width="2"/>
+                                <text x="290" y="94" text-anchor="middle" fill="#f8fafc" font-size="9" font-weight="bold">Rambara (2800m)</text>
+                            </g>
+
+                            <!-- Node 4: Gaurikund -->
+                            <g id="svg-node-4" class="cursor-pointer" onclick="selectNode('LORA-ND-04')">
+                                <circle cx="400" cy="160" r="11" fill="#083344" stroke="#06b6d4" stroke-width="2"/>
+                                <text x="400" y="182" text-anchor="middle" fill="#f8fafc" font-size="9" font-weight="bold">Gaurikund (1982m)</text>
+                            </g>
+
+                            <!-- Node 5: Sonprayag GATEWAY -->
+                            <g id="svg-node-5" class="cursor-pointer" onclick="selectNode('LORA-GW-05')">
+                                <rect x="506" y="161" width="28" height="28" rx="6" fill="#064e3b" stroke="#10b981" stroke-width="2.5"/>
+                                <circle cx="520" cy="175" r="28" fill="none" stroke="#10b981" class="rf-ping-ring"/>
+                                <text x="520" y="152" text-anchor="middle" fill="#34d399" font-size="10" font-weight="black">Sonprayag Gateway</text>
+                                <text x="520" y="204" text-anchor="middle" fill="#6ee7b7" font-size="8" font-family="monospace">Internet Bridge [SF7]</text>
+                            </g>
+
+                            <!-- Node 6: Guptkashi -->
+                            <g id="svg-node-6" class="cursor-pointer" onclick="selectNode('LORA-ND-06')">
+                                <circle cx="630" cy="150" r="11" fill="#083344" stroke="#06b6d4" stroke-width="2"/>
+                                <text x="630" y="136" text-anchor="middle" fill="#f8fafc" font-size="9" font-weight="bold">Guptkashi (1319m)</text>
+                            </g>
+
+                            <!-- Node 8: Rudraprayag CENTRAL SEOC GATEWAY -->
+                            <g id="svg-node-8" class="cursor-pointer" onclick="selectNode('LORA-GW-08')">
+                                <rect x="706" y="196" width="30" height="30" rx="8" fill="#1e1b4b" stroke="#6366f1" stroke-width="2.5"/>
+                                <circle cx="721" cy="211" r="30" fill="none" stroke="#6366f1" class="rf-ping-ring"/>
+                                <text x="721" y="188" text-anchor="middle" fill="#a5b4fc" font-size="10" font-weight="black">Rudraprayag SEOC</text>
+                                <text x="721" y="240" text-anchor="middle" fill="#818cf8" font-size="8" font-family="monospace">Master Command [895m]</text>
+                            </g>
+                        </svg>
+
+                        <!-- TRANSMISSION TOAST / OVERLAY -->
+                        <div id="hop-overlay" class="hidden absolute bottom-3 left-4 right-4 bg-slate-900/90 border border-cyan-500/50 p-2.5 rounded-xl backdrop-blur-md text-xs flex items-center justify-between font-mono">
+                            <span class="text-cyan-400 flex items-center gap-2">
+                                <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                                <span id="hop-text">Packet In-Flight...</span>
+                            </span>
+                            <span id="hop-latency" class="text-slate-400 text-[11px]">Transit: -- ms</span>
+                        </div>
+                    </div>
+
+                    <!-- RF LINK TELEMETRY BAR -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs font-mono">
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-500 block uppercase">RF Center Freq</span>
+                            <span class="text-cyan-400 font-bold text-sm">865.200 MHz</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-500 block uppercase">Avg Link RSSI</span>
+                            <span class="text-emerald-400 font-bold text-sm" id="avg-rssi">-86 dBm (Strong)</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-500 block uppercase">Spreading Factor</span>
+                            <span class="text-indigo-400 font-bold text-sm">Adaptive (SF7–SF10)</span>
+                        </div>
+                        <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
+                            <span class="text-[10px] text-slate-500 block uppercase">Mesh Gateway Status</span>
+                            <span class="text-emerald-400 font-bold text-sm flex items-center gap-1.5">
+                                <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span> 2 Gateways Uplinked
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SELECTED NODE METRICS & TRANSMITTER -->
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start border-b border-slate-800 pb-3 mb-4">
+                            <div>
+                                <span class="text-[10px] text-slate-500 uppercase font-mono font-bold block">Selected Transceiver</span>
+                                <h3 id="node-detail-name" class="text-base font-extrabold text-white">Kedarnath Ridge Optical Node</h3>
+                                <span id="node-detail-id" class="text-xs text-cyan-400 font-mono">LORA-ND-01 &bull; 3,583m</span>
+                            </div>
+                            <span id="node-detail-role" class="px-2 py-0.5 bg-cyan-500/20 text-cyan-300 border border-cyan-500/40 rounded text-[10px] font-bold">
+                                SENSOR_NODE
+                            </span>
+                        </div>
+
+                        <!-- NODE HARDWARE STATS -->
+                        <div class="space-y-3 text-xs mb-4">
+                            <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-slate-400">Battery Level:</span>
+                                <span id="node-batt" class="text-emerald-400 font-mono font-bold">94% (LiFePO4 Solar)</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-slate-400">Signal (RSSI / SNR):</span>
+                                <span id="node-rf" class="text-white font-mono font-bold">-89 dBm / +7.8 dB</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-slate-400">Downstream Mesh Target:</span>
+                                <span id="node-target" class="text-indigo-400 font-mono font-bold">Lincheli Forward (ND-02)</span>
+                            </div>
+                            <div class="flex justify-between items-center bg-slate-950 p-2.5 rounded-xl border border-slate-800">
+                                <span class="text-slate-400">Connected Sensors:</span>
+                                <span class="text-slate-200 font-bold">Ultrasonic River Depth, Soil Probe</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- TEST PACKET TRIGGER -->
+                    <div class="pt-3 border-t border-slate-800 flex flex-col gap-2">
+                        <button onclick="transmitCurrentNode('SENSOR_TELEMETRY')" class="w-full py-2.5 bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-tower-broadcast"></i>
+                            <span>Inject LoRa Hydrological Packet</span>
+                        </button>
+                        <button onclick="transmitCurrentNode('SOS_DISTRESS')" class="w-full py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-rose-600/30 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-satellite-dish"></i>
+                            <span>Simulate Offline Mesh SOS Beacon</span>
+                        </button>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- LIVE PACKET INSPECTOR TABLE -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/60">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-binary text-cyan-400 text-sm"></i>
+                        <h3 class="text-xs font-bold uppercase tracking-widest text-slate-200">
+                            Real-Time 865 MHz LoRa RF Packet Stream
+                        </h3>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded border border-slate-700 font-mono">
+                            <i class="fa-solid fa-rotate animate-spin mr-1"></i> Auto-Sniffing
+                        </span>
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs text-slate-300">
+                        <thead class="bg-slate-950/70 border-b border-slate-800 text-[10px] text-slate-400 uppercase font-mono tracking-wider">
+                            <tr>
+                                <th class="p-3">Packet Hash</th>
+                                <th class="p-3">Source Node</th>
+                                <th class="p-3">Destination</th>
+                                <th class="p-3">Hops</th>
+                                <th class="p-3">Type</th>
+                                <th class="p-3">Decoded Telemetry / Payload</th>
+                                <th class="p-3">RSSI / SNR</th>
+                                <th class="p-3 text-right">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="packets-tbody" class="divide-y divide-slate-800/60 font-mono text-[11px]">
+                            <tr>
+                                <td colspan="8" class="p-6 text-center text-slate-500">
+                                    <i class="fa-solid fa-rotate animate-spin mr-2"></i> Listening to 865 MHz India ISM band relay...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- OFFLINE SOS MODAL -->
+    <div id="sos-modal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-rose-500/50 rounded-2xl max-w-md w-full p-6 shadow-2xl shadow-rose-600/30">
+            <div class="flex justify-between items-center mb-4 border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2 text-rose-400 font-bold text-sm">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                    <span>EMERGENCY LORA OFFLINE DISTRESS</span>
+                </div>
+                <button onclick="closeSosModal()" class="text-slate-400 hover:text-white text-xs">&times;</button>
+            </div>
+            
+            <p class="text-xs text-slate-300 mb-4 leading-relaxed">
+                Cellular tower collapsed? Transmit an emergency GPS packet directly over the 865 MHz mountain LoRa mesh network. Neighboring relay stations will forward the packet down the gorge to SEOC Command.
+            </p>
+
+            <div class="space-y-3 text-xs mb-4">
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Originating LoRa Node:</label>
+                    <select id="modal-node" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white font-mono text-xs">
+                        <option value="LORA-ND-01">LORA-ND-01: Kedarnath Ridge (3,583m)</option>
+                        <option value="LORA-ND-02">LORA-ND-02: Lincheli Camp (3,100m)</option>
+                        <option value="LORA-ND-03">LORA-ND-03: Rambara Gorge (2,800m)</option>
+                        <option value="LORA-ND-04">LORA-ND-04: Gaurikund Chatti (1,982m)</option>
+                        <option value="LORA-ND-06">LORA-ND-06: Guptkashi Staging (1,319m)</option>
+                        <option value="LORA-ND-07">LORA-ND-07: Joshimath KM-48 (1,890m)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Caller Identity / Group:</label>
+                    <input type="text" id="modal-caller" value="Kedarnath Trek Group (8 Pilgrims)" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white text-xs font-medium">
+                </div>
+                <div>
+                    <label class="block text-slate-400 mb-1 font-semibold">Situation Report / Coordinates:</label>
+                    <textarea id="modal-details" rows="3" class="w-full bg-slate-950 border border-slate-700 rounded-xl p-2.5 text-white text-xs font-medium">Debris mudflow breached pedestrian trail at KM 4. 8 pilgrims stranded near rocky cave, drinking water exhausted.</textarea>
+                </div>
+            </div>
+
+            <button onclick="sendOfflineSosFromModal()" class="w-full py-3.5 bg-rose-600 hover:bg-rose-500 text-white font-black text-xs rounded-xl shadow-lg shadow-rose-600/40 tracking-wider uppercase transition flex items-center justify-center gap-2">
+                <i class="fa-solid fa-satellite-dish"></i>
+                <span>TRANSMIT OVER 865 MHz MESH NETWORK</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        let allNodes = [];
+        let selectedNodeId = "LORA-ND-01";
+
+        async function fetchNodes() {
+            try {
+                const res = await fetch('/api/lora/nodes');
+                if (res.ok) {
+                    const data = await res.json();
+                    allNodes = data.nodes || [];
+                    updateNodeDetail(selectedNodeId);
+                }
+            } catch (err) {
+                console.warn('LoRa node sync notice:', err);
+            }
+        }
+
+        async function fetchPackets() {
+            try {
+                const res = await fetch('/api/lora/packets?limit=20');
+                if (res.ok) {
+                    const data = await res.json();
+                    renderPacketsTable(data.packets || []);
+                }
+            } catch (err) {
+                console.warn('Packet stream sync notice:', err);
+            }
+        }
+
+        function renderPacketsTable(packets) {
+            const tbody = document.getElementById('packets-tbody');
+            if (!tbody) return;
+
+            if (packets.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-500">No packets received yet.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = packets.map(p => {
+                let typeBadge = 'bg-cyan-500/10 text-cyan-300 border-cyan-500/30';
+                if (p.packet_type === 'SOS_DISTRESS') typeBadge = 'bg-rose-500/20 text-rose-300 border-rose-500/50 font-bold animate-pulse';
+                if (p.packet_type === 'BEACON') typeBadge = 'bg-slate-800 text-slate-400 border-slate-700';
+
+                let payloadStr = typeof p.payload === 'object' ? JSON.stringify(p.payload) : p.payload_json;
+                let timeStr = p.created_at ? p.created_at.split('T')[1].slice(0, 8) : 'Just now';
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="p-3 text-cyan-400 font-bold">${p.packet_hash}</td>
+                        <td class="p-3 text-white font-bold">${p.source_node}</td>
+                        <td class="p-3 text-slate-400">${p.destination_node}</td>
+                        <td class="p-3"><span class="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 border border-slate-700 font-bold">${p.hop_count} hops</span></td>
+                        <td class="p-3"><span class="px-2 py-0.5 rounded border text-[10px] ${typeBadge}">${p.packet_type}</span></td>
+                        <td class="p-3 text-slate-300 max-w-xs truncate" title='${payloadStr}'>${payloadStr}</td>
+                        <td class="p-3 text-slate-400">${p.rssi_dbm} dBm &bull; ${p.snr_db} dB</td>
+                        <td class="p-3 text-right text-slate-500">${timeStr}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function selectNode(nodeId) {
+            selectedNodeId = nodeId;
+            RakshakAudio.playConfirm();
+            updateNodeDetail(nodeId);
+        }
+
+        function updateNodeDetail(nodeId) {
+            const node = allNodes.find(n => n.id === nodeId);
+            if (!node) return;
+
+            document.getElementById('node-detail-name').textContent = node.name;
+            document.getElementById('node-detail-id').textContent = `${node.id} &bull; ${node.elevation_m}m &bull; ${node.sector}`;
+            document.getElementById('node-detail-role').textContent = node.role;
+            document.getElementById('node-batt').textContent = `${node.battery_pct}% (LiFePO4 Solar)`;
+            document.getElementById('node-rf').textContent = `${node.rssi_dbm} dBm / +${node.snr_db} dB`;
+            document.getElementById('node-target').textContent = node.next_hop || "Central Gateway (Terminal)";
+        }
+
+        async function transmitCurrentNode(pktType) {
+            RakshakAudio.playSquelch();
+            showHopAnimation(selectedNodeId, pktType);
+
+            let payload = {};
+            if (pktType === 'SENSOR_TELEMETRY') {
+                payload = {
+                    water_depth_m: (Math.random() * 3 + 3.2).toFixed(2),
+                    soil_saturation_pct: Math.round(Math.random() * 20 + 75),
+                    river_velocity_mps: (Math.random() * 2 + 4.8).toFixed(1),
+                    sensor_type: "Ultrasonic River Gauge + TDR Soil Probe"
+                };
+            } else {
+                payload = {
+                    caller: "SDRF Forward Patrol 02",
+                    details: "Immediate debris runoff warning relayed via LoRa mesh (0% cell connectivity).",
+                    alert_level: "CRITICAL"
+                };
+            }
+
+            try {
+                const res = await fetch('/api/lora/transmit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_node: selectedNodeId,
+                        packet_type: pktType,
+                        payload: payload
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    RakshakAudio.playConfirm();
+                    fetchPackets();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function showHopAnimation(sourceId, pktType) {
+            const overlay = document.getElementById('hop-overlay');
+            const hopText = document.getElementById('hop-text');
+            const hopLatency = document.getElementById('hop-latency');
+
+            overlay.classList.remove('hidden');
+            hopText.textContent = `[865 MHz] Transmitting ${pktType} from ${sourceId}...`;
+            hopLatency.textContent = "Tracing Mesh Hops...";
+
+            setTimeout(() => {
+                hopText.textContent = `[HOP 1 ➔ HOP 2] Relaying via Lincheli & Rambara Gorge...`;
+            }, 600);
+
+            setTimeout(() => {
+                hopText.textContent = `[DELIVERED] Reached Sonprayag Gateway ➔ SEOC Database!`;
+                hopLatency.textContent = "Transit: 742 ms";
+                setTimeout(() => overlay.classList.add('hidden'), 2500);
+            }, 1400);
+        }
+
+        function openSosModal() {
+            RakshakAudio.playAlert();
+            document.getElementById('sos-modal').classList.remove('hidden');
+        }
+
+        function closeSosModal() {
+            document.getElementById('sos-modal').classList.add('hidden');
+        }
+
+        async function sendOfflineSosFromModal() {
+            const nodeId = document.getElementById('modal-node').value;
+            const caller = document.getElementById('modal-caller').value;
+            const details = document.getElementById('modal-details').value;
+
+            closeSosModal();
+            showHopAnimation(nodeId, 'SOS_DISTRESS');
+            RakshakAudio.playSiren(2);
+
+            try {
+                const res = await fetch('/api/lora/transmit', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        source_node: nodeId,
+                        packet_type: 'SOS_DISTRESS',
+                        payload: {
+                            caller: caller,
+                            details: details
+                        }
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    RakshakAudio.playConfirm();
+                    fetchPackets();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function simulateTelemetryBurst() {
+            selectNode("LORA-ND-01");
+            transmitCurrentNode("SENSOR_TELEMETRY");
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchNodes();
+            fetchPackets();
+            setInterval(fetchPackets, 4000);
+            setInterval(fetchNodes, 10000);
+        });
+    </script>
+</body>
+</html>

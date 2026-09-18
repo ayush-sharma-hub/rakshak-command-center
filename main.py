@@ -120,6 +120,7 @@ from backend.api.routes.simulate import router as sim_router
 from backend.api.routes.alerts import router as alerts_router
 from backend.api.routes.dispatch import router as dispatch_router
 from backend.api.routes.ws import router as ws_router
+from backend.api.routes.lora import router as lora_router
 
 app.include_router(state_router)
 app.include_router(sos_router)
@@ -127,6 +128,7 @@ app.include_router(sim_router)
 app.include_router(alerts_router)
 app.include_router(dispatch_router)
 app.include_router(ws_router)
+app.include_router(lora_router)
 
 # ─── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/api/health")

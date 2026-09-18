@@ -234,6 +234,8 @@ let activeFluctuationTimer = null;
 let leafletMap = null;
 let mapMarkers = [];
 let unitMarkers = [];
+let rescueUnitLayerGroup = typeof L !== 'undefined' ? L.layerGroup() : null;
+let loraLayerGroup = typeof L !== 'undefined' ? L.layerGroup() : null;
 let activeDroneAnim = null;
 
 // =========================================================================
@@ -373,16 +375,28 @@ function initTacticalMap() {
 
     darkLayer.addTo(leafletMap);
 
+    if (!rescueUnitLayerGroup && typeof L !== 'undefined') rescueUnitLayerGroup = L.layerGroup();
+    if (!loraLayerGroup && typeof L !== 'undefined') loraLayerGroup = L.layerGroup();
+
+    if (rescueUnitLayerGroup) rescueUnitLayerGroup.addTo(leafletMap);
+    if (loraLayerGroup) loraLayerGroup.addTo(leafletMap);
+
     // Tactical Layer Control
     const baseMaps = {
         "<span class='text-xs font-bold text-slate-800'>Tactical Dark</span>": darkLayer,
         "<span class='text-xs font-bold text-slate-800'>Satellite Ortho</span>": satelliteLayer,
         "<span class='text-xs font-bold text-slate-800'>Terrain Topo</span>": topoLayer
     };
-    L.control.layers(baseMaps, null, { position: 'bottomleft' }).addTo(leafletMap);
+
+    const overlayMaps = {
+        "<span class='text-xs font-bold text-cyan-800'><i class='fa-solid fa-circle-nodes text-cyan-600 mr-1'></i> LoRa Mesh Relays (SIH)</span>": loraLayerGroup,
+        "<span class='text-xs font-bold text-slate-800'><i class='fa-solid fa-truck-medical text-amber-600 mr-1'></i> Field Rescue Units</span>": rescueUnitLayerGroup
+    };
+    L.control.layers(baseMaps, overlayMaps, { position: 'bottomleft' }).addTo(leafletMap);
 
     renderMapMarkers();
     renderRescueUnits();
+    renderLoraNodes();
 }
 
 function renderMapMarkers() {
@@ -457,7 +471,7 @@ function renderMapMarkers() {
 // Live NDRF / SDRF / IAF Field Units on the Tactical Map
 function renderRescueUnits() {
     if (!leafletMap) return;
-    unitMarkers.forEach(m => leafletMap.removeLayer(m));
+    if (rescueUnitLayerGroup) rescueUnitLayerGroup.clearLayers();
     unitMarkers = [];
 
     const fieldUnitsOnMap = [
@@ -484,7 +498,8 @@ function renderRescueUnits() {
             iconAnchor: [14, 14]
         });
 
-        const m = L.marker([unit.lat, unit.lng], { icon: customUnitIcon }).addTo(leafletMap);
+        const targetLayer = rescueUnitLayerGroup || leafletMap;
+        const m = L.marker([unit.lat, unit.lng], { icon: customUnitIcon }).addTo(targetLayer);
         m.bindPopup(`
             <div style="color:#0f172a; font-family:sans-serif; min-width:180px;">
                 <div style="font-weight:bold; font-size:13px; color:#1e293b;">${unit.name}</div>
@@ -495,6 +510,83 @@ function renderRescueUnits() {
             </div>
         `);
         unitMarkers.push(m);
+    });
+}
+
+// Live LoRa Mesh Relay Nodes on Tactical Map (SIH #2619 Core)
+async function renderLoraNodes() {
+    if (!leafletMap) return;
+    if (loraLayerGroup) loraLayerGroup.clearLayers();
+
+    const fallbackNodes = [
+        { node_id: "LORA-ND-01", name: "Kedarnath Shrine Relay", lat: 30.7352, lng: 79.0669, role: "REPEATER", battery_pct: 94, elevation_m: 3583, frequency_mhz: 865.2, status: "ONLINE" },
+        { node_id: "LORA-ND-02", name: "Lincheli Ridge Repeater", lat: 30.7120, lng: 79.0550, role: "REPEATER", battery_pct: 88, elevation_m: 3100, frequency_mhz: 865.2, status: "ONLINE" },
+        { node_id: "LORA-ND-03", name: "Rambara Gorge Hop", lat: 30.6975, lng: 79.0435, role: "REPEATER", battery_pct: 76, elevation_m: 2800, frequency_mhz: 865.2, status: "ONLINE" },
+        { node_id: "LORA-ND-04", name: "Gaurikund Highway Relay", lat: 30.6558, lng: 79.0289, role: "REPEATER", battery_pct: 98, elevation_m: 1982, frequency_mhz: 865.2, status: "ONLINE" },
+        { node_id: "LORA-ND-05", name: "Sonprayag Gateway Base", lat: 30.6375, lng: 78.9950, role: "GATEWAY", battery_pct: 100, elevation_m: 1829, frequency_mhz: 865.5, status: "ONLINE" },
+        { node_id: "LORA-ND-06", name: "Guptkashi Sector Relay", lat: 30.5230, lng: 79.0833, role: "ROUTER", battery_pct: 91, elevation_m: 1319, frequency_mhz: 865.2, status: "ONLINE" },
+        { node_id: "LORA-ND-07", name: "Joshimath Dhauliganga Relay", lat: 30.5506, lng: 79.5660, role: "ROUTER", battery_pct: 82, elevation_m: 1890, frequency_mhz: 866.1, status: "ONLINE" },
+        { node_id: "LORA-ND-08", name: "Rudraprayag SEOC Hub", lat: 30.2844, lng: 78.9811, role: "GATEWAY", battery_pct: 100, elevation_m: 895, frequency_mhz: 866.5, status: "ONLINE" }
+    ];
+
+    let nodes = fallbackNodes;
+    try {
+        const res = await fetch('/api/lora/nodes');
+        if (res.ok) {
+            const data = await res.json();
+            if (data && data.nodes && data.nodes.length > 0) {
+                nodes = data.nodes;
+            }
+        }
+    } catch (e) {
+        console.warn("LoRa nodes fetch fallback:", e);
+    }
+
+    const targetLayer = loraLayerGroup || leafletMap;
+
+    nodes.forEach(node => {
+        const isGateway = node.role === 'GATEWAY';
+        const loraIcon = L.divIcon({
+            className: 'custom-lora-node-pin',
+            html: `
+                <div style="background:${isGateway ? '#164e63' : '#083344'}; border:2px solid #22d3ee; width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 0 14px rgba(34,211,238,0.85); cursor:pointer;">
+                    <i class="fa-solid ${isGateway ? 'fa-tower-broadcast' : 'fa-circle-nodes'}" style="color:#22d3ee; font-size:11px;"></i>
+                </div>
+            `,
+            iconSize: [26, 26],
+            iconAnchor: [13, 13]
+        });
+
+        const coverage = L.circle([node.lat, node.lng], {
+            color: '#06b6d4',
+            fillColor: '#0891b2',
+            fillOpacity: 0.08,
+            radius: isGateway ? 12000 : 7000,
+            weight: 1.5,
+            dashArray: '4, 4'
+        }).addTo(targetLayer);
+
+        const marker = L.marker([node.lat, node.lng], { icon: loraIcon }).addTo(targetLayer);
+
+        const popup = `
+            <div style="color:#0f172a; font-family:'Inter',sans-serif; min-width:220px; padding:3px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                    <span style="font-weight:900; font-size:13px; color:#0891b2;">${node.node_id}</span>
+                    <span style="background:#ecfeff; color:#0e7490; font-size:9px; font-weight:800; padding:2px 6px; border-radius:4px; border:1px solid #06b6d4;">${node.role}</span>
+                </div>
+                <div style="font-weight:700; font-size:12px; color:#1e293b; margin-bottom:6px;">${node.name}</div>
+                <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px; font-size:11px; margin-bottom:8px; line-height:1.5;">
+                    <div>RF Band: <b>${node.frequency_mhz} MHz (ISM)</b></div>
+                    <div>Elevation: <b>${node.elevation_m}m ASL</b></div>
+                    <div>Battery: <b>${node.battery_pct}%</b> | Status: <b style="color:#10b981;">${node.status}</b></div>
+                </div>
+                <a href="lora.html" style="display:block; text-align:center; background:#0891b2; color:white; padding:6px; border-radius:6px; font-size:11px; font-weight:bold; text-decoration:none;">
+                    Open LoRa Mesh Console &rarr;
+                </a>
+            </div>
+        `;
+        coverage.bindPopup(popup);
+        marker.bindPopup(popup);
     });
 }
 

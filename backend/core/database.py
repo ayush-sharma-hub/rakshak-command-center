@@ -169,6 +169,46 @@ def init_db():
         )
     """)
 
+    # ─── 9. LORA MESH RELAY NODES (865-867 MHz INDIA ISM BAND) ────────────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS lora_nodes (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            sector TEXT NOT NULL,
+            role TEXT NOT NULL,
+            lat REAL NOT NULL,
+            lng REAL NOT NULL,
+            elevation_m REAL NOT NULL,
+            frequency_mhz REAL DEFAULT 865.2,
+            spreading_factor INTEGER DEFAULT 7,
+            tx_power_dbm INTEGER DEFAULT 14,
+            rssi_dbm INTEGER DEFAULT -88,
+            snr_db REAL DEFAULT 7.5,
+            battery_pct INTEGER DEFAULT 95,
+            status TEXT DEFAULT 'ACTIVE',
+            uplink_type TEXT DEFAULT 'RF_MESH',
+            last_seen TEXT NOT NULL
+        )
+    """)
+
+    # ─── 10. LORA PACKET INSPECTOR STREAM ─────────────────────────────────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS lora_packets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            packet_hash TEXT UNIQUE NOT NULL,
+            source_node TEXT NOT NULL,
+            destination_node TEXT DEFAULT 'LORA-GW-05',
+            hop_count INTEGER DEFAULT 1,
+            max_hops INTEGER DEFAULT 5,
+            packet_type TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            raw_hex TEXT NOT NULL,
+            rssi_dbm INTEGER DEFAULT -92,
+            snr_db REAL DEFAULT 6.8,
+            created_at TEXT NOT NULL
+        )
+    """)
+
     conn.commit()
     _seed_initial_data(conn)
     conn.close()
@@ -254,6 +294,40 @@ def _seed_initial_data(conn: sqlite3.Connection):
             VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?, ?)
         """, [(w[0], w[1], w[2], w[3], w[4], w[5], w[6], now, expires) for w in weather_seeds])
         print("[DB] Seeded baseline weather cache.")
+
+    # Seed Himalayan LoRa Mesh Nodes (Mandakini & Alaknanda Gorges)
+    c.execute("SELECT COUNT(*) FROM lora_nodes")
+    if c.fetchone()[0] == 0:
+        nodes = [
+            ("LORA-ND-01", "Kedarnath Ridge Optical Node", "Kedarnath Upper", "SENSOR_NODE", 30.7352, 79.0669, 3583, 865.2, 9, 14, -89, 7.8, 94, "ACTIVE", "RF_MESH"),
+            ("LORA-ND-02", "Lincheli Forward Repeater", "Lincheli Gorge", "REPEATER", 30.6720, 79.0480, 3100, 865.4, 8, 14, -84, 8.2, 91, "ACTIVE", "RF_MESH"),
+            ("LORA-ND-03", "Rambara Surge Bridge Relay", "Rambara Corridor", "REPEATER", 30.6975, 79.0435, 2800, 865.2, 10, 14, -104, 5.4, 82, "RELAYING", "RF_MESH"),
+            ("LORA-ND-04", "Gaurikund Chatti Gate Node", "Gaurikund Axis", "SENSOR_NODE", 30.6558, 79.0289, 1982, 865.6, 7, 14, -82, 9.1, 88, "ACTIVE", "RF_MESH"),
+            ("LORA-GW-05", "Sonprayag Valley Master Gateway", "Sonprayag Base", "GATEWAY", 30.6375, 78.9950, 1829, 865.0, 7, 20, -74, 11.2, 100, "ACTIVE", "FIBER_GATEWAY"),
+            ("LORA-ND-06", "Guptkashi Ridge Transceiver", "Guptkashi Sector", "REPEATER", 30.5230, 79.0833, 1319, 866.0, 8, 14, -87, 8.0, 86, "ACTIVE", "RF_MESH"),
+            ("LORA-ND-07", "Joshimath Dhauliganga Watch", "Joshimath KM-48", "SENSOR_NODE", 30.5506, 79.5660, 1890, 865.8, 9, 14, -93, 6.9, 93, "ACTIVE", "RF_MESH"),
+            ("LORA-GW-08", "Rudraprayag SEOC Central Bridge", "Rudraprayag Sangam", "GATEWAY", 30.2844, 78.9811, 895, 865.0, 7, 20, -71, 12.0, 100, "ACTIVE", "SATELLITE_IP"),
+        ]
+        c.executemany("""
+            INSERT INTO lora_nodes (id, name, sector, role, lat, lng, elevation_m, frequency_mhz, spreading_factor, tx_power_dbm, rssi_dbm, snr_db, battery_pct, status, uplink_type, last_seen)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, [(n[0], n[1], n[2], n[3], n[4], n[5], n[6], n[7], n[8], n[9], n[10], n[11], n[12], n[13], n[14], now) for n in nodes])
+        print("[DB] Seeded 8 Himalayan LoRa mesh nodes.")
+
+    # Seed sample decoded LoRa RF packets
+    c.execute("SELECT COUNT(*) FROM lora_packets")
+    if c.fetchone()[0] == 0:
+        packets = [
+            ("PKT-9A4F12", "LORA-ND-01", "LORA-GW-05", 3, 5, "SENSOR_TELEMETRY", '{"water_level_m": 4.12, "soil_moisture_pct": 82, "rainfall_rate_mmhr": 48.5, "temp_c": 9.4}', "4C4F5241019A4F1204125200300940", -94, 6.5),
+            ("PKT-8B2E09", "LORA-ND-03", "LORA-GW-05", 2, 5, "SENSOR_TELEMETRY", '{"water_level_m": 6.85, "river_velocity_mps": 5.4, "warning_level": true}', "4C4F5241038B2E090685054001", -102, 5.1),
+            ("PKT-7C1D88", "LORA-ND-04", "LORA-GW-05", 1, 5, "BEACON", '{"mesh_neighbors": ["LORA-ND-03", "LORA-GW-05"], "battery_v": 3.95}', "4C4F5241047C1D88020305", -82, 9.4),
+            ("PKT-5D9E44", "LORA-ND-01", "LORA-GW-05", 4, 5, "SOS_DISTRESS", '{"caller": "Gaurikund Pilgrim Group", "lat": 30.6558, "lng": 79.0289, "details": "Mudslide blocked trail near bridge. 6 sheltered in tea shack."}', "4C4F5241534F53010461", -91, 7.2),
+        ]
+        c.executemany("""
+            INSERT INTO lora_packets (packet_hash, source_node, destination_node, hop_count, max_hops, packet_type, payload_json, raw_hex, rssi_dbm, snr_db, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, [(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], now) for p in packets])
+        print("[DB] Seeded initial LoRa RF packet stream.")
 
     conn.commit()
 
