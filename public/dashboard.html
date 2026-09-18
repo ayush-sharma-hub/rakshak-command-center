@@ -287,5 +287,96 @@
         </main>
     </div>
 
+<!-- ═══ LIVE WEBSOCKET ENGINE ═══ -->
+<script>
+(function initLiveWS() {
+    const WS_URL = `ws://${location.host}/ws/live`;
+    let ws, reconnectTimer;
+
+    // ── Status dot in the header (create if not present)
+    const statusDot = document.querySelector('.ws-status-dot') || (() => {
+        const d = document.createElement('span');
+        d.className = 'ws-status-dot';
+        d.style.cssText = 'width:8px;height:8px;border-radius:50%;display:inline-block;background:#ef4444;margin-left:6px;box-shadow:0 0 6px #ef4444;transition:background 0.3s';
+        const header = document.querySelector('header') || document.body;
+        header.prepend(d);
+        return d;
+    })();
+
+    function connect() {
+        ws = new WebSocket(WS_URL);
+
+        ws.onopen = () => {
+            statusDot.style.background = '#22c55e';
+            statusDot.style.boxShadow = '0 0 8px #22c55e';
+            statusDot.title = 'Live stream connected';
+            console.log('[WS] Connected to Rakshak live stream');
+        };
+
+        ws.onmessage = (evt) => {
+            try {
+                const data = JSON.parse(evt.data);
+                if (data.type === 'live_state' || data.type === 'initial_state') {
+                    updateRiverBasins(data.river_basins || []);
+                    updateSOSBadge(data.pending_sos ?? data.active_sos?.filter(s => s.status === 'PENDING').length ?? 0);
+                }
+            } catch (e) { /* ignore */ }
+        };
+
+        ws.onclose = () => {
+            statusDot.style.background = '#f59e0b';
+            statusDot.style.boxShadow = '0 0 6px #f59e0b';
+            statusDot.title = 'Reconnecting...';
+            reconnectTimer = setTimeout(connect, 5000);
+        };
+
+        ws.onerror = () => ws.close();
+    }
+
+    function updateRiverBasins(basins) {
+        basins.forEach(b => {
+            // Find gauge bar by river name fragment
+            const key = (b.river || '').split(' ')[0].toLowerCase();
+            document.querySelectorAll('[data-river]').forEach(el => {
+                if (el.dataset.river.toLowerCase().includes(key)) {
+                    // Update level text
+                    const lvlEl = el.querySelector('.gauge-level');
+                    if (lvlEl) lvlEl.textContent = parseFloat(b.current_level).toFixed(1) + 'm';
+                    // Update status colour
+                    const statusEl = el.querySelector('.gauge-status');
+                    if (statusEl) {
+                        statusEl.textContent = b.status;
+                        statusEl.className = 'gauge-status text-xs font-bold ' +
+                            ({ DANGER:'text-red-400', WARNING:'text-yellow-400',
+                               NOMINAL:'text-cyan-400', SAFE:'text-green-400' }[b.status] || 'text-slate-400');
+                    }
+                    // Update trend
+                    const trendEl = el.querySelector('.gauge-trend');
+                    if (trendEl) trendEl.textContent = b.trend || '';
+                }
+            });
+
+            // Also update any progress-bar style gauge
+            const bar = document.querySelector(`[data-river-bar="${key}"]`);
+            if (bar) {
+                const pct = Math.min(100, (b.current_level / (b.danger_level || b.current_level * 1.05)) * 100);
+                bar.style.width = pct + '%';
+            }
+        });
+    }
+
+    function updateSOSBadge(count) {
+        document.querySelectorAll('[data-sos-count]').forEach(el => {
+            el.textContent = count;
+            el.style.background = count > 0 ? '#ef4444' : '#22c55e';
+        });
+    }
+
+    // Ping every 25s to keep alive
+    setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 25000);
+
+    connect();
+})();
+</script>
 </body>
 </html>

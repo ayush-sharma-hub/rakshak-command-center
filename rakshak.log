@@ -6,3 +6,8 @@
 2026-09-19 02:40:59,151 [rakshak.main] INFO — [OK] Background sensor loop started.
 2026-09-19 02:40:59,151 [rakshak.main] INFO — [..] Pre-warming weather cache for priority cities...
 2026-09-19 02:40:59,175 [rakshak.background] INFO — [Background] Sensor simulation loop started.
+2026-09-19 02:41:02,206 [rakshak.main] INFO — [OK] Weather cache warmed for 4 cities.
+2026-09-19 02:41:02,206 [rakshak.main] WARNING — [WARN] GEMINI_API_KEY not set — AI features using fallback templates.
+2026-09-19 02:41:02,206 [rakshak.main] INFO — ============================================================
+2026-09-19 02:41:02,206 [rakshak.main] INFO —   RAKSHAK BACKEND ONLINE — http://localhost:3000
+2026-09-19 02:41:02,206 [rakshak.main] INFO — ============================================================
