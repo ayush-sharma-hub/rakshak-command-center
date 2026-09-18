@@ -354,16 +354,42 @@
             window.speechSynthesis.speak(utter);
         }
 
-        function pushAlertToTowers() {
+        async function pushAlertToTowers() {
             RakshakAudio.playAlert();
             const btn = document.getElementById('push-btn');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse mr-1.5"></i> Transmitted to Cell Towers & Loudspeakers!';
+            btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse mr-1.5"></i> Transmitting to Cell Towers & Smartphones...';
             btn.className = 'px-4 py-2 bg-indigo-700 text-white font-bold rounded-xl text-xs transition';
+
+            const city = latestCity || "Kedarnath Mandakini Basin";
+            const risk = latestRisk || "CRITICAL";
+            const msg = document.getElementById('msg-en').textContent || `CRITICAL EVACUATION WARNING for ${city}!`;
+
+            try {
+                const rawAuth = localStorage.getItem('rakshak_auth');
+                const opId = rawAuth ? (JSON.parse(rawAuth).operatorId || 'UK-SEOC-OFFICER-04') : 'UK-SEOC-OFFICER-04';
+
+                const res = await fetch('/api/alerts/broadcast', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        city: city,
+                        risk_level: risk,
+                        message: msg,
+                        channels: ["Cell SMS", "Temple PA", "AIR FM", "Web Push Notification"],
+                        operator_id: opId
+                    })
+                });
+                const data = await res.json();
+                fetchLiveAlerts();
+            } catch(e) {
+                console.warn('Broadcast transmission error:', e);
+            }
+
             setTimeout(() => {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-check-double mr-1.5"></i> Broadcast Logged';
-            }, 3000);
+                btn.innerHTML = '<i class="fa-solid fa-check-double mr-1.5"></i> Transmitted & Logged';
+            }, 2500);
         }
     </script>
 </body>

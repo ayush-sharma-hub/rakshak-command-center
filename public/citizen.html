@@ -202,6 +202,26 @@
 
     </main>
 
+    <!-- BOTTOM FLOATING ACTION DOCK -->
+    <nav class="fixed bottom-0 left-0 right-0 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-4 py-2 z-40 flex items-center justify-around text-center">
+        <a href="citizen.html" class="flex flex-col items-center text-rose-400 text-[10px] font-bold">
+            <i class="fa-solid fa-mobile-screen-button text-base mb-0.5"></i>
+            <span>Citizen SOS</span>
+        </a>
+        <a href="map.html" class="flex flex-col items-center text-slate-400 hover:text-indigo-400 text-[10px] font-bold transition">
+            <i class="fa-solid fa-map-location-dot text-base mb-0.5"></i>
+            <span>Tactical Map</span>
+        </a>
+        <button onclick="testPhoneNotification()" class="flex flex-col items-center text-slate-400 hover:text-emerald-400 text-[10px] font-bold transition">
+            <i class="fa-solid fa-bell text-base mb-0.5"></i>
+            <span>Test Phone Alert</span>
+        </button>
+        <a href="index.html" class="flex flex-col items-center text-slate-400 hover:text-white text-[10px] font-bold transition">
+            <i class="fa-solid fa-lock text-base mb-0.5"></i>
+            <span>SEOC Officer</span>
+        </a>
+    </nav>
+
     <!-- SOS TRANSMIT MODAL -->
     <div id="sos-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
         <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col gap-3">
@@ -358,7 +378,9 @@
             const perm = await Notification.requestPermission();
             checkNotificationStatus();
             if (perm === 'granted') {
-                triggerNativeAlert("🔔 Rakshak Emergency Alerts Active", "Your phone is now armed to receive instant disaster warnings & vibration even when locked!");
+                localStorage.setItem('rakshak_notifications_enabled', 'true');
+                if (typeof startAlertPolling === 'function') startAlertPolling();
+                triggerNativeAlert("🔔 Rakshak Emergency Alerts Active", "Your phone is now permanently armed to receive instant disaster warnings & vibration even when locked!");
             }
         }
 
@@ -587,3 +609,4 @@
     </script>
 </body>
 </html>
+

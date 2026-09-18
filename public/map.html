@@ -119,15 +119,28 @@
         
         <!-- TOPBAR -->
         <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
-            <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> SEOC NOMINAL &bull; GIS RADAR ACTIVE
-            </div>
             <div class="flex items-center gap-3">
-                <button onclick="sendSOS()" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] py-2 px-3.5 rounded-xl shadow-lg shadow-rose-600/30 transition flex items-center gap-2 tracking-wider">
-                    <i class="fa-solid fa-satellite-dish animate-pulse"></i>
-                    <span>BROADCAST SOS</span>
+                <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> PUBLIC TACTICAL GIS &bull; 115 SECTORS MONITORED
+                </div>
+                <span class="hidden md:inline-flex items-center gap-1.5 text-[10px] font-mono text-slate-400 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+                    <i class="fa-solid fa-earth-asia text-indigo-400"></i> Open Public Access
+                </span>
+            </div>
+            <div class="flex items-center gap-2.5">
+                <!-- 1-TAP NOTIFICATION BUTTON -->
+                <button onclick="requestCitizenNotificationPermission()" class="citizen-notif-status text-xs font-bold px-3 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-amber-500/20 border-amber-500/30 text-amber-300 hover:brightness-110">
+                    <i class="fa-solid fa-bell-slash text-amber-400 mr-1"></i>
+                    <span>Enable Phone Alerts</span>
                 </button>
-                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
+
+                <!-- CITIZEN SOS COMPANION LINK -->
+                <a href="citizen.html" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] py-1.5 px-3 rounded-xl shadow-lg shadow-rose-600/30 transition flex items-center gap-1.5 tracking-wider">
+                    <i class="fa-solid fa-mobile-screen-button"></i>
+                    <span>CITIZEN SOS</span>
+                </a>
+
+                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden lg:block">
                     00:00:00
                 </div>
             </div>

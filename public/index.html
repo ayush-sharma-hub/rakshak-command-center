@@ -51,80 +51,185 @@
         </div>
     </header>
 
-    <!-- MAIN LOGIN CARD -->
-    <main class="flex-1 flex items-center justify-center p-4 relative z-10">
-        <div class="w-full max-w-lg bg-slate-900/95 border border-slate-800 p-8 sm:p-10 rounded-3xl shadow-[0_20px_50px_rgba(0,0,0,0.8)] backdrop-blur-xl relative">
-            
-            <!-- Security watermark badge -->
-            <div class="absolute top-4 right-4 text-[10px] font-mono font-bold bg-slate-800/80 border border-slate-700 px-2.5 py-1 rounded text-emerald-400 flex items-center gap-1.5">
-                <i class="fa-solid fa-fingerprint"></i> SECURE LEVEL 4
-            </div>
-
-            <div class="text-center mb-8">
-                <div class="w-20 h-20 rounded-2xl bg-gradient-to-tr from-indigo-900/60 to-slate-800 border border-indigo-500/30 flex items-center justify-center mx-auto mb-4 text-indigo-400 text-3xl shadow-[0_0_30px_rgba(99,102,241,0.25)] relative group">
+    <!-- MAIN CONTAINER -->
+    <main class="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10 max-w-6xl mx-auto w-full">
+        
+        <!-- SECURITY / LOGOUT ALERT BANNER (If Redirected) -->
+        <div id="auth-alert-banner" class="w-full hidden mb-6 bg-amber-950/80 border border-amber-500/50 rounded-2xl p-4 text-amber-200 flex items-center justify-between shadow-2xl backdrop-blur-md">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg shrink-0">
                     <i class="fa-solid fa-shield-halved"></i>
-                    <div class="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-600 border-2 border-slate-900 flex items-center justify-center text-[10px] text-white">
-                        <i class="fa-solid fa-satellite"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-black uppercase tracking-wider text-amber-300" id="auth-alert-title">SEOC Officer Authentication Required</div>
+                    <div class="text-xs text-amber-200/80" id="auth-alert-desc">Command War Room, Evacuation Hub, Broadcast Center, Simulator, and LoRa Mesh Console are restricted to authorized disaster management personnel. Please log in below, or browse public emergency portals freely.</div>
+                </div>
+            </div>
+            <button onclick="document.getElementById('auth-alert-banner').classList.add('hidden')" class="text-amber-400 hover:text-white p-2">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center gap-2 bg-indigo-950/60 border border-indigo-500/30 px-3 py-1 rounded-full text-indigo-300 text-xs font-mono mb-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span>SIH-2619 &bull; HIMALAYAN FLASH FLOOD DECISION SUPPORT</span>
+            </div>
+            <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">PROJECT RAKSHAK</h1>
+            <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl mx-auto">
+                Uttarakhand State Emergency Operations Centre (SEOC) & Community Mutual Aid Network
+            </p>
+        </div>
+
+        <!-- DUAL GATEWAY GRID: CITIZEN SAFETY (PUBLIC) VS SEOC COMMAND (ADMIN) -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start">
+            
+            <!-- LEFT / TOP: PUBLIC CITIZEN & PILGRIM PORTAL (NO LOGIN REQUIRED) -->
+            <div class="lg:col-span-6 bg-slate-900/90 border border-emerald-500/30 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
+                <div class="absolute -top-12 -right-12 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider">
+                            <i class="fa-solid fa-unlock-keyhole"></i> 100% Free Public Access (No Login)
+                        </div>
+                        <span class="text-[10px] font-mono text-slate-400">For Citizens & Pilgrims</span>
+                    </div>
+
+                    <h2 class="text-xl font-black text-white mb-2 flex items-center gap-2">
+                        <span>Citizen & Pilgrim Safety Hub</span>
+                    </h2>
+                    <p class="text-xs text-slate-300 leading-relaxed mb-6">
+                        Access live Uttarakhand river flood risk maps, safe evacuation shelters, 1-tap SOS distress beacons, and community mutual aid without needing any account or login.
+                    </p>
+
+                    <!-- PUBLIC ACTION CARDS -->
+                    <div class="space-y-3.5 mb-6">
+                        <!-- Card 1: Tactical GIS Map -->
+                        <a href="map.html" class="block p-4 rounded-2xl bg-slate-950/70 border border-slate-800 hover:border-emerald-500/60 transition group hover:bg-slate-950">
+                            <div class="flex items-start gap-3.5">
+                                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center text-base shrink-0 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-map-location-dot"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-white group-hover:text-emerald-300 transition">Tactical GIS & Flood Hazard Map</span>
+                                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">115 SECTORS</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">Explore live river danger gauges, Char Dham choke points, and forward SDRF safe shelters.</p>
+                                </div>
+                                <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-white transition text-xs mt-3"></i>
+                            </div>
+                        </a>
+
+                        <!-- Card 2: Citizen Mobile SOS Companion -->
+                        <a href="citizen.html" class="block p-4 rounded-2xl bg-slate-950/70 border border-slate-800 hover:border-rose-500/60 transition group hover:bg-slate-950">
+                            <div class="flex items-start gap-3.5">
+                                <div class="w-10 h-10 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-base shrink-0 group-hover:scale-110 transition">
+                                    <i class="fa-solid fa-mobile-screen-button"></i>
+                                </div>
+                                <div class="flex-1">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-white group-hover:text-rose-300 transition">Citizen Mobile Companion & SOS Hub</span>
+                                        <span class="text-[9px] font-mono text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">COMMUNITY RADAR</span>
+                                    </div>
+                                    <p class="text-[11px] text-slate-400 mt-0.5">1-tap emergency distress beacon, nearby volunteers ("Citizens helping citizens"), and state hotlines.</p>
+                                </div>
+                                <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-white transition text-xs mt-3"></i>
+                            </div>
+                        </a>
                     </div>
                 </div>
-                <div class="text-[11px] font-extrabold uppercase tracking-widest text-indigo-400 mb-1">State Emergency Operations Centre</div>
-                <h1 class="text-2xl sm:text-3xl font-black tracking-tight text-white">PROJECT RAKSHAK</h1>
-                <p class="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                    Himalayan Flash Flood & Multi-Hazard Disaster Decision Support System
-                </p>
+
+                <!-- 1-TAP PHONE NOTIFICATIONS ENROLLMENT -->
+                <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-950/50 -mx-6 -mb-6 p-5 rounded-b-3xl">
+                    <div>
+                        <div class="text-[11px] font-bold text-white flex items-center gap-1.5">
+                            <i class="fa-solid fa-satellite-dish text-cyan-400"></i> Instant Phone Alerts
+                        </div>
+                        <div class="text-[10px] text-slate-400">Allow once to receive urgent flood sirens on your phone.</div>
+                    </div>
+                    <button onclick="requestCitizenNotificationPermission()" class="citizen-notif-status px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:brightness-110 shrink-0">
+                        <i class="fa-solid fa-bell-slash text-amber-400 mr-1"></i>
+                        <span>Enable Phone Flood Alerts</span>
+                    </button>
+                </div>
             </div>
 
-            <form onsubmit="handleLogin(event)" class="space-y-4">
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex justify-between">
-                        <span>Incident Commander / Operator ID</span>
-                        <span class="text-emerald-400 font-mono text-[10px]">Verified Credentials</span>
-                    </label>
-                    <div class="relative">
-                        <i class="fa-solid fa-id-card absolute left-3.5 top-3.5 text-indigo-400 text-sm"></i>
-                        <input type="text" id="op-id" value="UK-SEOC-OFFICER-04" 
-                               class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+            <!-- RIGHT / BOTTOM: SEOC OFFICER LOGIN (COMMAND OPERATIONS) -->
+            <div class="lg:col-span-6 bg-slate-900/95 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative">
+                
+                <!-- Security watermark badge -->
+                <div class="flex items-center justify-between mb-4">
+                    <div class="text-[10px] font-mono font-bold bg-slate-800/80 border border-slate-700 px-2.5 py-1 rounded text-indigo-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-lock"></i> COMMAND ACCESS ONLY
                     </div>
+                    <span class="text-[10px] font-mono text-emerald-400">SEOC Dehradun HQ</span>
                 </div>
 
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Duty Shift & Protocol</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-clock absolute left-3.5 top-3.5 text-indigo-400 text-sm"></i>
-                        <select id="duty-shift" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-indigo-500 transition appearance-none">
-                            <option value="alpha">Crisis Watch Alpha (High Monsoon / Cloudburst Alert)</option>
-                            <option value="bravo">Char Dham Pilgrimage Axis Surveillance</option>
-                            <option value="routine">Routine Regional Sensor Telemetry Review</option>
-                        </select>
-                        <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
-                    </div>
+                <div class="mb-5">
+                    <h2 class="text-xl font-black text-white flex items-center gap-2">
+                        <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+                        <span>Incident Commander Login</span>
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-1">
+                        Authorizes access to Command War Room, Evacuation Hub, Broadcast Center, Simulator, and LoRa Mesh Console.
+                    </p>
                 </div>
 
-                <div>
-                    <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Passcode / Cryptographic Token</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-key absolute left-3.5 top-3.5 text-indigo-400 text-sm"></i>
-                        <input type="password" value="seoc-access-2026" 
-                               class="w-full bg-slate-950 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+                <form onsubmit="handleLogin(event)" class="space-y-3.5">
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex justify-between">
+                            <span>Incident Commander / Operator ID</span>
+                            <span class="text-emerald-400 font-mono text-[10px]">Verified Credentials</span>
+                        </label>
+                        <div class="relative">
+                            <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
+                            <input type="text" id="op-id" value="UK-SEOC-OFFICER-04" 
+                                   class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+                        </div>
                     </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Duty Shift & Protocol</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-clock absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
+                            <select id="duty-shift" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-indigo-500 transition appearance-none">
+                                <option value="alpha">Crisis Watch Alpha (High Monsoon / Cloudburst Alert)</option>
+                                <option value="bravo">Char Dham Pilgrimage Axis Surveillance</option>
+                                <option value="routine">Routine Regional Sensor Telemetry Review</option>
+                            </select>
+                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Passcode / Cryptographic Token</label>
+                        <div class="relative">
+                            <i class="fa-solid fa-key absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
+                            <input type="password" id="passcode" value="seoc-access-2026" 
+                                   class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+                        </div>
+                    </div>
+
+                    <!-- BIOMETRIC TOUCH BUTTON -->
+                    <button type="submit" id="auth-btn" 
+                            class="w-full mt-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
+                        <i class="fa-solid fa-fingerprint text-base"></i>
+                        <span id="auth-text">Authorize & Enter Command Center</span>
+                        <i class="fa-solid fa-arrow-right text-xs"></i>
+                    </button>
+                </form>
+
+                <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
+                    <span class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-tower-cell text-emerald-400"></i>
+                        <span>INSAT-3DR & LoRa Mesh Relay</span>
+                    </span>
+                    <span class="font-mono">SEOC v3.2</span>
                 </div>
-
-                <!-- BIOMETRIC TOUCH BUTTON -->
-                <button type="submit" id="auth-btn" 
-                        class="w-full mt-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3.5 px-6 rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
-                    <i class="fa-solid fa-fingerprint text-base"></i>
-                    <span id="auth-text">Authorize & Enter Command Center</span>
-                    <i class="fa-solid fa-arrow-right text-xs"></i>
-                </button>
-            </form>
-
-            <div class="mt-6 pt-5 border-t border-slate-800/80 flex flex-col sm:flex-row items-center justify-between text-[11px] text-slate-400 gap-2">
-                <span class="flex items-center gap-1.5">
-                    <i class="fa-solid fa-satellite-dish text-emerald-400"></i>
-                    <span>INSAT-3DR Telemetry Linked</span>
-                </span>
-                <span class="font-mono text-slate-500">SEOC Ver 3.2.0 (Relay)</span>
             </div>
+
         </div>
     </main>
 
@@ -142,25 +247,67 @@
     </footer>
 
     <script>
+        // Check URL parameters for redirect alerts
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const banner = document.getElementById('auth-alert-banner');
+            const title = document.getElementById('auth-alert-title');
+            const desc = document.getElementById('auth-alert-desc');
+
+            if (params.get('auth_required') === 'true') {
+                const target = params.get('target') || 'Command Center';
+                title.textContent = `SEOC Officer Authentication Required for ${target}`;
+                desc.textContent = `The requested module (${target}) is restricted to authorized disaster management officers. Please authenticate below, or browse public emergency maps without login.`;
+                banner.classList.remove('hidden');
+                if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
+                    try { RakshakAudio.playAlert(); } catch(e){}
+                }
+            } else if (params.get('logged_out') === 'true') {
+                title.textContent = `SEOC Watch Officer Duty Concluded`;
+                desc.textContent = `You have successfully ended your command watch shift and logged off.`;
+                banner.className = "w-full mb-6 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl p-4 text-emerald-200 flex items-center justify-between shadow-2xl backdrop-blur-md";
+                banner.classList.remove('hidden');
+            }
+        });
+
         function handleLogin(e) {
             e.preventDefault();
             const btn = document.getElementById('auth-btn');
             const text = document.getElementById('auth-text');
+            const opId = document.getElementById('op-id').value.trim() || 'UK-SEOC-OFFICER-04';
+            const shift = document.getElementById('duty-shift').value;
             
-            RakshakAudio.initCtx();
-            RakshakAudio.playSquelch();
+            if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
+                RakshakAudio.initCtx();
+                RakshakAudio.playSquelch();
+            }
 
             btn.disabled = true;
             btn.classList.add('animate-pulse', 'bg-indigo-700');
             text.textContent = "VALIDATING BIOMETRIC SECURITY CLEARANCE...";
 
+            // Persist valid SEOC Officer session
+            localStorage.setItem('rakshak_auth', JSON.stringify({
+                role: 'ADMIN',
+                operatorId: opId,
+                dutyShift: shift,
+                loginTime: new Date().toISOString()
+            }));
+
             setTimeout(() => {
-                RakshakAudio.playConfirm();
+                if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
+                    RakshakAudio.playConfirm();
+                }
                 text.textContent = "CLEARANCE GRANTED. INITIALIZING SEOC WAR ROOM...";
+                
+                const params = new URLSearchParams(window.location.search);
+                const target = params.get('target');
+                const dest = (target && target.endsWith('.html')) ? target : 'dashboard.html';
+
                 setTimeout(() => {
-                    window.location.href = 'dashboard.html';
+                    window.location.href = dest;
                 }, 600);
-            }, 900);
+            }, 800);
         }
     </script>
 </body>

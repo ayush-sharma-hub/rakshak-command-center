@@ -122,3 +122,74 @@ def trigger_phone_test(city: Optional[str] = "Kedarnath Mandakini Basin"):
     }
 
 
+class BroadcastPublishRequest(BaseModel):
+    city: str
+    risk_level: Optional[str] = "CRITICAL"
+    message: str
+    channels: Optional[list] = None
+    operator_id: Optional[str] = "UK-SEOC-OFFICER-04"
+
+
+@router.post("/alerts/broadcast")
+def publish_broadcast(payload: BroadcastPublishRequest):
+    """Publish a live multi-channel disaster broadcast and log to incidents for citizen notifications."""
+    now = datetime.now(timezone.utc).isoformat()
+    conn = get_db()
+    c = conn.cursor()
+
+    # Log into incidents so it appears in /api/state and triggers live client push alerts
+    c.execute("""
+        INSERT INTO incidents (type, msg, zone, priority, risk_score, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        f"BROADCAST_{payload.risk_level.upper()}",
+        payload.message,
+        payload.city,
+        payload.risk_level.upper(),
+        95 if payload.risk_level.upper() == "CRITICAL" else 75,
+        now
+    ))
+
+    import json
+    c.execute("""
+        INSERT INTO broadcasts (target_city, risk_level, msg_english, channels, operator_id, created_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (
+        payload.city,
+        payload.risk_level.upper(),
+        payload.message,
+        json.dumps(payload.channels or ["Cell SMS", "Temple PA", "AIR FM", "Web Push"]),
+        payload.operator_id,
+        now
+    ))
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": f"Broadcast transmitted across all towers and web channels for {payload.city}.",
+        "timestamp": now,
+        "city": payload.city,
+        "risk_level": payload.risk_level,
+        "body": payload.message
+    }
+
+
+@router.get("/alerts/latest")
+def get_latest_alerts(since: Optional[str] = None):
+    """Lightweight polling endpoint for smartphone client notifications."""
+    conn = get_db()
+    if since:
+        rows = conn.execute(
+            "SELECT * FROM incidents WHERE created_at > ? ORDER BY created_at DESC LIMIT 10",
+            (since,)
+        ).fetchall()
+    else:
+        rows = conn.execute(
+            "SELECT * FROM incidents ORDER BY created_at DESC LIMIT 5"
+        ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+

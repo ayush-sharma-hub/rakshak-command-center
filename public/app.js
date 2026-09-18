@@ -3,7 +3,255 @@
 // MASTER CLIENT ENGINE & TACTICAL DISPATCH PROTOCOL v3.0
 // =========================================================================
 
+// =========================================================================
+// 0. ROLE-BASED ACCESS CONTROL (RBAC) & COMMAND GATEWAY
+// =========================================================================
+const ADMIN_PROTECTED_PAGES = [
+    'dashboard.html',
+    'simulator.html',
+    'evacuation.html',
+    'alerts.html',
+    'assistant.html',
+    'lora.html'
+];
+
+function checkPageAuth() {
+    const path = window.location.pathname.toLowerCase();
+    const currentPage = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+    const isAdminPage = ADMIN_PROTECTED_PAGES.some(p => currentPage === p || path.endsWith('/' + p));
+
+    if (isAdminPage) {
+        const rawAuth = localStorage.getItem('rakshak_auth');
+        let isAuthenticated = false;
+        if (rawAuth) {
+            try {
+                const parsed = JSON.parse(rawAuth);
+                if (parsed && (parsed.role === 'ADMIN' || parsed.role === 'OFFICER')) {
+                    isAuthenticated = true;
+                }
+            } catch (e) {
+                localStorage.removeItem('rakshak_auth');
+            }
+        }
+
+        if (!isAuthenticated) {
+            console.warn('[SEOC Security Guard] Unauthorized access blocked to:', currentPage);
+            window.location.replace(`index.html?auth_required=true&target=${encodeURIComponent(currentPage)}`);
+            return false;
+        }
+    }
+    return true;
+}
+
+// Synchronous execution immediately upon script loading
+checkPageAuth();
+
+function rakshakLogout() {
+    localStorage.removeItem('rakshak_auth');
+    if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
+        try { RakshakAudio.playSquelch(); } catch(e){}
+    }
+    window.location.href = 'index.html?logged_out=true';
+}
+window.rakshakLogout = rakshakLogout;
+
+function syncNavAuth() {
+    const rawAuth = localStorage.getItem('rakshak_auth');
+    let auth = null;
+    if (rawAuth) {
+        try { auth = JSON.parse(rawAuth); } catch(e) {}
+    }
+
+    const path = window.location.pathname.toLowerCase();
+    const currentPage = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
+
+    // Hook up all logout buttons
+    document.querySelectorAll('a[title="Logoff Duty"], button[title="Logoff Duty"], .rakshak-logout-btn').forEach(btn => {
+        btn.removeAttribute('href');
+        btn.style.cursor = 'pointer';
+        btn.onclick = (e) => {
+            e.preventDefault();
+            rakshakLogout();
+        };
+    });
+
+    // If on public map and not authenticated as officer
+    if (currentPage === 'map.html' && !auth) {
+        const adminHrefs = ['dashboard.html', 'simulator.html', 'evacuation.html', 'alerts.html', 'assistant.html', 'lora.html'];
+        document.querySelectorAll('nav a').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && adminHrefs.includes(href)) {
+                if (!link.querySelector('.lock-indicator')) {
+                    link.innerHTML += ' <span class="lock-indicator ml-auto text-[10px] text-amber-400 font-mono"><i class="fa-solid fa-lock"></i></span>';
+                }
+                link.classList.add('opacity-75');
+            }
+        });
+
+        // Update profile widget in sidebar to show Public Mode
+        const profileContainer = document.querySelector('aside .p-3\\.5.border-t');
+        if (profileContainer) {
+            profileContainer.innerHTML = `
+                <div class="flex items-center justify-between text-xs mb-1.5">
+                    <div class="flex items-center gap-2">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-950 border border-emerald-500/40 flex items-center justify-center text-emerald-300 font-bold text-xs">
+                            PUB
+                        </div>
+                        <div>
+                            <div class="font-bold text-white text-[11px] leading-tight">Public Citizen Access</div>
+                            <div class="text-[9px] text-emerald-400 font-mono">No Login Required</div>
+                        </div>
+                    </div>
+                    <a href="index.html" class="p-1.5 text-indigo-400 hover:text-white transition flex items-center gap-1 text-[10px] font-bold" title="SEOC Officer Login">
+                        <i class="fa-solid fa-right-to-bracket"></i> Login
+                    </a>
+                </div>
+                <div class="text-[10px] text-slate-500 flex justify-between font-mono pt-1 border-t border-slate-800">
+                    <span>Tactical GIS: Active</span>
+                    <span class="text-emerald-400">115 Sectors</span>
+                </div>
+            `;
+        }
+    } else if (auth) {
+        // Officer is authenticated
+        const op = auth.operatorId || 'UK-SEOC-OFFICER-04';
+        const profileName = document.querySelector('aside .p-3\\.5.border-t .font-bold.text-white');
+        const profileRole = document.querySelector('aside .p-3\\.5.border-t .text-\\[9px\\]');
+        if (profileName) profileName.textContent = op;
+        if (profileRole) profileRole.textContent = "Authorized Officer";
+    }
+}
+window.syncNavAuth = syncNavAuth;
+
+
+// =========================================================================
+// 0.1 PERSISTENT CITIZEN NOTIFICATIONS ENGINE ("EK BAR PERMISSION -> HAR BAAR ALERT")
+// =========================================================================
+let lastKnownAlertTime = localStorage.getItem('rakshak_last_alert_time') || new Date(Date.now() - 120000).toISOString();
+
+async function requestCitizenNotificationPermission() {
+    if (!("Notification" in window)) {
+        alert("Web Notifications are not supported by this browser.");
+        return false;
+    }
+    try {
+        const perm = await Notification.requestPermission();
+        if (perm === 'granted') {
+            localStorage.setItem('rakshak_notifications_enabled', 'true');
+            if (navigator.vibrate) navigator.vibrate([250, 100, 250]);
+            if (window.RakshakAudio) {
+                try { RakshakAudio.initCtx(); RakshakAudio.playConfirm(); } catch(e){}
+            }
+
+            try {
+                new Notification("✅ SEOC Uttarakhand Alert Radar Armed", {
+                    body: "Your device is now permanently linked to receive instant flash flood & cloudburst alerts!",
+                    icon: "https://img.icons8.com/color/96/shield.png",
+                    badge: "https://img.icons8.com/color/96/shield.png",
+                    vibrate: [250, 100, 250]
+                });
+            } catch(e) {}
+
+            updateNotificationStatusUI();
+            startAlertPolling();
+            return true;
+        } else {
+            localStorage.removeItem('rakshak_notifications_enabled');
+            updateNotificationStatusUI();
+            return false;
+        }
+    } catch (e) {
+        console.warn("Notification request error:", e);
+        return false;
+    }
+}
+window.requestCitizenNotificationPermission = requestCitizenNotificationPermission;
+
+function isCitizenNotificationEnabled() {
+    return ("Notification" in window) && 
+           Notification.permission === 'granted' && 
+           localStorage.getItem('rakshak_notifications_enabled') === 'true';
+}
+window.isCitizenNotificationEnabled = isCitizenNotificationEnabled;
+
+function updateNotificationStatusUI() {
+    const isEnabled = isCitizenNotificationEnabled();
+    const badges = document.querySelectorAll('.citizen-notif-status');
+    badges.forEach(b => {
+        if (isEnabled) {
+            b.innerHTML = '<i class="fa-solid fa-bell text-emerald-400 mr-1.5"></i> <span class="text-emerald-400 font-bold">Alerts Active (Phone Armed)</span>';
+            b.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-300');
+            b.classList.add('bg-emerald-500/20', 'border-emerald-500/30', 'text-emerald-300');
+        } else {
+            b.innerHTML = '<i class="fa-solid fa-bell-slash text-amber-400 mr-1.5"></i> <span class="text-amber-400 font-bold">Enable Phone Flood Alerts</span>';
+            b.classList.remove('bg-emerald-500/20', 'border-emerald-500/30', 'text-emerald-300');
+            b.classList.add('bg-amber-500/20', 'border-amber-500/30', 'text-amber-300');
+        }
+    });
+}
+window.updateNotificationStatusUI = updateNotificationStatusUI;
+
+let alertPollTimer = null;
+function startAlertPolling() {
+    if (alertPollTimer) return;
+    checkNewAlerts();
+    alertPollTimer = setInterval(checkNewAlerts, 4000);
+}
+
+async function checkNewAlerts() {
+    if (!isCitizenNotificationEnabled()) return;
+    try {
+        const res = await fetch(`/api/alerts/latest?since=${encodeURIComponent(lastKnownAlertTime)}`);
+        if (!res.ok) return;
+        const alerts = await res.json();
+        if (alerts && alerts.length > 0) {
+            alerts.forEach(al => {
+                triggerPhonePushAlert({
+                    title: `⚠️ SEOC EMERGENCY ALERT [${al.priority || 'CRITICAL'}]`,
+                    body: `${al.msg || 'Flash flood warning issued'} — Zone: ${al.zone || 'Catchment Basin'}`,
+                    url: '/map.html',
+                    tag: 'alert-' + al.id
+                });
+                if (al.created_at && al.created_at > lastKnownAlertTime) {
+                    lastKnownAlertTime = al.created_at;
+                    localStorage.setItem('rakshak_last_alert_time', lastKnownAlertTime);
+                }
+            });
+        }
+    } catch(e) {}
+}
+
+function triggerPhonePushAlert(opts) {
+    if ("vibrate" in navigator) {
+        navigator.vibrate([500, 150, 500, 150, 800]);
+    }
+    if (window.RakshakAudio) {
+        try { RakshakAudio.playAlert(); } catch(e){}
+    }
+    if ("Notification" in window && Notification.permission === 'granted') {
+        try {
+            const notif = new Notification(opts.title || "⚠️ RAKSHAK EMERGENCY WARNING", {
+                body: opts.body || "Urgent evacuation notice. Move to higher ground immediately.",
+                icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                vibrate: [500, 150, 500, 150, 800],
+                requireInteraction: true,
+                tag: opts.tag || ('rakshak-' + Date.now())
+            });
+            notif.onclick = function() {
+                window.focus();
+                if (opts.url) window.location.href = opts.url;
+                notif.close();
+            };
+        } catch(e) {
+            console.warn("Desktop notification display error:", e);
+        }
+    }
+}
+window.triggerPhonePushAlert = triggerPhonePushAlert;
+
 // 1. TACTICAL WEB AUDIO ENGINE (Zero external dependencies)
+
 class TacticalAudioEngine {
     constructor() {
         this.ctx = null;
@@ -455,6 +703,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // 7. Global State Sync
     syncBackendStatus();
     setInterval(syncBackendStatus, 3000);
+
+    // 8. Persistent Citizen Notifications (Ek bar permission -> permanent background radar)
+    if (("Notification" in window) && (Notification.permission === 'granted' || localStorage.getItem('rakshak_notifications_enabled') === 'true')) {
+        localStorage.setItem('rakshak_notifications_enabled', 'true');
+        startAlertPolling();
+    }
+    updateNotificationStatusUI();
+
+    // 9. Sync Navigation & Auth State across headers/sidebars
+    syncNavAuth();
 });
 
 // =========================================================================
