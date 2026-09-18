@@ -3,79 +3,283 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rakshak | Scenario Simulator</title>
+    <title>SEOC Rakshak | Crisis Sandbox Simulator</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="/app.js" defer></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
     
     <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 p-3 gap-2">
-        <div class="p-3 mb-4 flex items-center gap-3 border-b border-slate-800">
-            <i class="fa-solid fa-shield-halved text-indigo-500 text-2xl"></i>
-            <span class="font-bold text-lg tracking-widest">RAKSHAK</span>
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+        <!-- BRANDING -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+                <div>
+                    <span class="font-black tracking-widest text-base text-white block leading-none">RAKSHAK</span>
+                    <span class="text-[9px] text-indigo-400 font-mono tracking-wider font-semibold">UK-SEOC COMMAND</span>
+                </div>
+            </div>
+            <button class="audio-toggle-btn text-slate-400 hover:text-white transition p-1.5 bg-slate-800 rounded-lg border border-slate-700 text-xs" title="Toggle Tactical Audio">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
         </div>
-        <a href="dashboard.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a>
-        <a href="map.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-map-location-dot w-6"></i> Tactical Map</a>
-        <a href="simulator.html" class="p-3 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-xl font-bold text-sm"><i class="fa-solid fa-flask-vial w-6"></i> Simulator</a>
-        <a href="evacuation.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-route w-6"></i> Evacuation Hub</a>
-        <a href="alerts.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-tower-broadcast w-6"></i> Alert Center</a>
+
+        <!-- NAV LINKS -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-chart-line w-4 text-slate-400"></i> Command War Room
+            </a>
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-map-location-dot w-4 text-slate-400"></i> Tactical GIS Map
+            </a>
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold text-xs tracking-wide">
+                <i class="fa-solid fa-flask-vial w-4 text-indigo-400"></i> Crisis Sandbox
+            </a>
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-route w-4 text-slate-400"></i> Evacuation Hub
+            </a>
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-tower-broadcast w-4 text-slate-400"></i> Broadcast Center
+            </a>
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
+            </a>
+        </nav>
+
+        <div class="p-3.5 border-t border-slate-800 bg-slate-900/60 text-xs">
+            <div class="text-[11px] font-bold text-white mb-0.5">Sandboxed Injection Mode</div>
+            <div class="text-[10px] text-slate-400">Syncs state across all live dispatch consoles.</div>
+        </div>
     </aside>
 
-    <div class="flex-1 overflow-y-auto p-6 md:p-8">
-        <h1 class="text-2xl font-bold mb-6 text-white"><i class="fa-solid fa-sliders text-indigo-400 mr-2"></i> Disaster Sandbox Injection</h1>
+    <!-- CONTENT WRAPPER -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
         
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Target City</label>
-                <select id="sim-region" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 mb-6"></select>
+        <!-- TOPBAR -->
+        <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
+            <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> SEOC CRISIS MODELING READY
+            </div>
+            <div class="flex items-center gap-3">
+                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
+                    00:00:00
+                </div>
+            </div>
+        </header>
 
-                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Rainfall Intensity (<span id="sim-rain-val" class="text-cyan-400">12</span> mm/hr)</label>
-                <input type="range" id="sim-rain" min="0" max="200" value="12" class="w-full accent-indigo-500 mb-6" oninput="document.getElementById('sim-rain-val').textContent = this.value">
+        <!-- MAIN SIMULATOR VIEWPORT -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
+            
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-800 pb-4">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-white flex items-center gap-2.5">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i> Tactical Disaster Scenario Injection
+                    </h1>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Simulate cloudbursts, glacial lake breaches, and saturated landslide cascades to test statewide emergency logistics.
+                    </p>
+                </div>
+                <span class="text-[10px] font-mono text-indigo-300 bg-indigo-500/10 border border-indigo-500/30 px-3 py-1.5 rounded-xl self-start sm:self-auto">
+                    CENTRAL DISPATCH SYNC ACTIVE
+                </span>
+            </div>
 
-                <label class="block text-xs font-bold text-slate-400 mb-2 uppercase">Soil Saturation</label>
-                <select id="sim-soil" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 mb-6">
-                    <option value="Normal">Normal (High Drainage)</option>
-                    <option value="Wet">Wet (Reduced Absorption)</option>
-                    <option value="Saturated">Saturated (Zero Absorption)</option>
-                </select>
+            <!-- PRESET CRISIS SCENARIOS -->
+            <div class="bg-slate-900 border border-slate-800 p-4 md:p-5 rounded-2xl shadow-lg">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
+                    <i class="fa-solid fa-bookmark text-amber-400"></i> Real-World Historical Benchmark Scenarios
+                </h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5">
+                    <button onclick="loadScenario('kedarnath')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/40 rounded-xl text-left transition flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-rose-400">2013 Kedarnath Surge</div>
+                            <div class="text-[10px] text-slate-400 mt-1">110 mm/hr cloudburst, saturated moraine debris.</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-500 mt-2 block uppercase">Apply Preset &rarr;</span>
+                    </button>
 
-                <div class="flex items-center justify-between p-3 bg-slate-950 border border-slate-800 rounded-xl mb-6">
+                    <button onclick="loadScenario('chamoli')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-amber-500/40 rounded-xl text-left transition flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-amber-400">2021 Chamoli GLOF</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Rishi Ganga glacial outburst & bridge breach.</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-500 mt-2 block uppercase">Apply Preset &rarr;</span>
+                    </button>
+
+                    <button onclick="loadScenario('joshimath')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 rounded-xl text-left transition flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-indigo-400">Joshimath Subsidence</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Ground fissures, aquifer breach, 44° slope.</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-500 mt-2 block uppercase">Apply Preset &rarr;</span>
+                    </button>
+
+                    <button onclick="loadScenario('pithoragarh')" class="p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-cyan-500/40 rounded-xl text-left transition flex flex-col justify-between">
+                        <div>
+                            <div class="text-xs font-bold text-cyan-400">Pithoragarh Border Flash</div>
+                            <div class="text-[10px] text-slate-400 mt-1">Dharchula Kali river surge, 38° debris slope.</div>
+                        </div>
+                        <span class="text-[9px] font-bold text-slate-500 mt-2 block uppercase">Apply Preset &rarr;</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SIMULATOR CONTROLS & RESULT -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
+                <!-- CONTROLS FORM -->
+                <div class="bg-slate-900 p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl space-y-4">
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 border-b border-slate-800 pb-2">
+                        Tactical Parameters Injection
+                    </h3>
+                    
                     <div>
-                        <div class="text-sm font-bold">Cloudburst Anomaly</div>
-                        <div class="text-xs text-slate-400">Triggers extreme flash surge</div>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase">Target Himalayan Sector</label>
+                        <select id="sim-region" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500"></select>
                     </div>
-                    <input type="checkbox" id="sim-cloudburst" class="w-5 h-5 accent-indigo-600 rounded">
+
+                    <div>
+                        <div class="flex justify-between items-center mb-1.5">
+                            <label class="text-[11px] font-bold text-slate-400 uppercase">Precipitation Intensity</label>
+                            <span class="text-xs font-mono font-bold text-cyan-400 bg-cyan-500/10 px-2 py-0.5 rounded border border-cyan-500/20">
+                                <span id="sim-rain-val">45</span> mm/hr
+                            </span>
+                        </div>
+                        <input type="range" id="sim-rain" min="0" max="200" value="45" class="w-full accent-indigo-500 h-2 bg-slate-950 rounded-lg cursor-pointer" 
+                               oninput="document.getElementById('sim-rain-val').textContent = this.value">
+                    </div>
+
+                    <div>
+                        <label class="block text-[11px] font-bold text-slate-400 mb-1.5 uppercase">Soil Moisture / Geomorphic State</label>
+                        <select id="sim-soil" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-3 text-xs focus:outline-none focus:border-indigo-500">
+                            <option value="Normal">Normal (High Drainage Capacity)</option>
+                            <option value="Wet">Wet (Reduced Mountain Absorption)</option>
+                            <option value="Saturated" selected>Saturated (Zero Absorption - Maximum Runoff)</option>
+                        </select>
+                    </div>
+
+                    <div class="flex items-center justify-between p-3.5 bg-slate-950 border border-slate-800 rounded-xl">
+                        <div>
+                            <div class="text-xs font-bold text-white">Atmospheric Cloudburst Anomaly</div>
+                            <div class="text-[10px] text-slate-400">Adds sudden flash surge vector (+30 pts)</div>
+                        </div>
+                        <input type="checkbox" id="sim-cloudburst" class="w-5 h-5 accent-indigo-600 rounded cursor-pointer" checked>
+                    </div>
+
+                    <button onclick="executeSimulation()" class="w-full bg-gradient-to-r from-indigo-600 to-indigo-500 hover:from-indigo-500 hover:to-indigo-600 text-white font-black py-4 rounded-xl transition shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2 text-xs tracking-wider uppercase">
+                        <i class="fa-solid fa-bolt"></i>
+                        <span>Transmit Scenario to Central Network</span>
+                    </button>
                 </div>
 
-                <button onclick="executeSimulation()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl transition shadow-lg shadow-indigo-500/30">
-                    <i class="fa-solid fa-play mr-2"></i> OVERRIDE SYSTEM STATE
-                </button>
+                <!-- LIVE RESULT MATRIX -->
+                <div class="bg-slate-900 p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-400">SEOC Projected Impact</span>
+                            <span id="sim-badge" class="px-3 py-1 rounded-full font-bold text-[10px] bg-slate-800 text-slate-400 border border-slate-700">AWAITING INJECTION</span>
+                        </div>
+
+                        <div class="text-center py-4">
+                            <div class="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Composite Hazard Score</div>
+                            <div id="sim-score" class="text-6xl md:text-7xl font-black text-white">--</div>
+                        </div>
+
+                        <!-- PROJECTED IMPACT METRICS -->
+                        <div class="grid grid-cols-2 gap-3 mt-4">
+                            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Runoff Velocity</span>
+                                <span id="sim-velocity" class="text-base font-black text-rose-400">-- km/h</span>
+                            </div>
+                            <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+                                <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Golden Hour Lead Time</span>
+                                <span id="sim-leadtime" class="text-base font-black text-amber-400">-- mins</span>
+                            </div>
+                        </div>
+
+                        <div id="sim-exp" class="mt-4 text-xs text-slate-300 bg-slate-950 p-3.5 rounded-xl border border-slate-800 leading-relaxed">
+                            Select a sector and adjust parameters or choose a historical benchmark to simulate ripple effects across the state.
+                        </div>
+                    </div>
+
+                    <div class="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
+                        <a href="evacuation.html" class="text-xs font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-route"></i>
+                            <span>View Triggered Evacuation Hub</span>
+                            <i class="fa-solid fa-arrow-right text-[10px]"></i>
+                        </a>
+                        <a href="alerts.html" class="text-xs font-bold text-indigo-400 hover:text-indigo-300 flex items-center gap-1.5 transition">
+                            <i class="fa-solid fa-tower-broadcast"></i>
+                            <span>Broadcast Siren Alert</span>
+                        </a>
+                    </div>
+                </div>
+
             </div>
 
-            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 flex flex-col justify-center items-center text-center">
-                <div class="text-slate-400 text-sm font-bold uppercase tracking-widest mb-4">Live Sandbox Result</div>
-                <div id="sim-score" class="text-7xl font-black text-white">--</div>
-                <div id="sim-badge" class="mt-4 px-6 py-2 rounded-full font-bold text-sm bg-slate-800 text-slate-400 border border-slate-700">AWAITING PAYLOAD</div>
-                <p id="sim-exp" class="mt-6 text-sm text-slate-400 bg-slate-950 p-4 rounded-xl border border-slate-800 w-full">Select a city and adjust parameters to simulate disaster metrics across the network.</p>
-                <a href="evacuation.html" class="mt-6 text-indigo-400 text-sm hover:text-indigo-300 font-bold">View Evacuation Hub ➔</a>
-            </div>
-        </div>
+        </main>
     </div>
 
-    <script src="/app.js"></script>
     <script>
         document.addEventListener("DOMContentLoaded", () => {
             const select = document.getElementById('sim-region');
             const sorted = [...ukCities].sort((a,b) => a.name.localeCompare(b.name));
             sorted.forEach(c => {
                 let opt = document.createElement('option');
-                opt.value = c.name; opt.textContent = `${c.name} (Base Elev: ${c.elevation}m, Slope: ${c.slope}°)`;
+                opt.value = c.name;
+                opt.textContent = `${c.name} (${c.elevation}m Elev, ${c.slope}° Slope, ${c.riverBasin})`;
                 select.appendChild(opt);
             });
+            select.value = "Kedarnath";
         });
 
+        function loadScenario(preset) {
+            RakshakAudio.playConfirm();
+            const reg = document.getElementById('sim-region');
+            const rain = document.getElementById('sim-rain');
+            const rainVal = document.getElementById('sim-rain-val');
+            const soil = document.getElementById('sim-soil');
+            const cb = document.getElementById('sim-cloudburst');
+
+            if (preset === 'kedarnath') {
+                reg.value = "Kedarnath";
+                rain.value = 110;
+                rainVal.textContent = 110;
+                soil.value = "Saturated";
+                cb.checked = true;
+            } else if (preset === 'chamoli') {
+                reg.value = "Joshimath";
+                rain.value = 65;
+                rainVal.textContent = 65;
+                soil.value = "Saturated";
+                cb.checked = true;
+            } else if (preset === 'joshimath') {
+                reg.value = "Joshimath";
+                rain.value = 35;
+                rainVal.textContent = 35;
+                soil.value = "Wet";
+                cb.checked = false;
+            } else if (preset === 'pithoragarh') {
+                reg.value = "Dharchula";
+                rain.value = 85;
+                rainVal.textContent = 85;
+                soil.value = "Saturated";
+                cb.checked = true;
+            }
+            executeSimulation();
+        }
+
         async function executeSimulation() {
+            RakshakAudio.playSquelch();
             const cityName = document.getElementById('sim-region').value;
             const cityData = ukCities.find(c => c.name === cityName);
             
@@ -84,7 +288,7 @@
                 rainfall: document.getElementById('sim-rain').value,
                 slope: cityData.slope,
                 elevation: cityData.elevation,
-                population: 15000, // Base proxy pop
+                population: cityData.population || 15000,
                 soil: document.getElementById('sim-soil').value,
                 cloudburst: document.getElementById('sim-cloudburst').checked
             };
@@ -96,16 +300,30 @@
             });
             const data = await res.json();
 
-            if(data.success) {
-                document.getElementById('sim-score').textContent = data.state.risk.score;
+            if (data.success) {
+                const score = data.state.risk.score;
+                document.getElementById('sim-score').textContent = score;
                 document.getElementById('sim-exp').textContent = data.state.risk.explanation;
                 
+                // Calculated realistic physics metrics
+                const velocity = Math.round((cityData.slope * 0.9) + (payload.rainfall * 0.3));
+                const leadtime = Math.max(15, Math.round(90 - (velocity * 0.8)));
+                document.getElementById('sim-velocity').textContent = `${velocity} km/h`;
+                document.getElementById('sim-leadtime').textContent = `${leadtime} mins`;
+
                 const b = document.getElementById('sim-badge');
                 b.textContent = data.state.risk.level;
-                b.className = "mt-4 px-6 py-2 rounded-full font-bold text-sm border ";
-                if(data.state.risk.level === 'CRITICAL') b.classList.add("bg-red-500/20", "text-red-400", "border-red-500/30", "animate-pulse");
-                else if(data.state.risk.level === 'WARNING') b.classList.add("bg-orange-500/20", "text-orange-400", "border-orange-500/30");
-                else b.classList.add("bg-yellow-500/20", "text-yellow-400", "border-yellow-500/30");
+                b.className = "px-3 py-1 rounded-full font-bold text-[10px] border ";
+                
+                if (data.state.risk.level === 'CRITICAL') {
+                    b.classList.add("bg-rose-500/20", "text-rose-400", "border-rose-500/40", "animate-pulse");
+                    RakshakAudio.playAlert();
+                } else if (data.state.risk.level === 'WARNING') {
+                    b.classList.add("bg-amber-500/20", "text-amber-400", "border-amber-500/40");
+                } else {
+                    b.classList.add("bg-emerald-500/20", "text-emerald-400", "border-emerald-500/40");
+                    RakshakAudio.playConfirm();
+                }
             }
         }
     </script>

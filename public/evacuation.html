@@ -3,176 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rakshak | Evacuation Hub</title>
+    <title>SEOC Rakshak | Evacuation Hub & Dispatch</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="/app.js" defer></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
     
     <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 p-3 gap-2">
-        <div class="p-3 mb-4 flex items-center gap-3 border-b border-slate-800">
-            <i class="fa-solid fa-shield-halved text-indigo-500 text-2xl"></i>
-            <span class="font-bold text-lg tracking-widest">RAKSHAK</span>
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+        <!-- BRANDING -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+                <div>
+                    <span class="font-black tracking-widest text-base text-white block leading-none">RAKSHAK</span>
+                    <span class="text-[9px] text-indigo-400 font-mono tracking-wider font-semibold">UK-SEOC COMMAND</span>
+                </div>
+            </div>
+            <button class="audio-toggle-btn text-slate-400 hover:text-white transition p-1.5 bg-slate-800 rounded-lg border border-slate-700 text-xs" title="Toggle Tactical Audio">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
         </div>
-        <a href="dashboard.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a>
-        <a href="map.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-map-location-dot w-6"></i> Tactical Map</a>
-        <a href="simulator.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-flask-vial w-6"></i> Simulator</a>
-        <a href="evacuation.html" class="p-3 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-xl font-bold text-sm"><i class="fa-solid fa-route w-6"></i> Evacuation Hub</a>
-        <a href="alerts.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-tower-broadcast w-6"></i> Alert Center</a>
+
+        <!-- NAV LINKS -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-chart-line w-4 text-slate-400"></i> Command War Room
+            </a>
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-map-location-dot w-4 text-slate-400"></i> Tactical GIS Map
+            </a>
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-flask-vial w-4 text-slate-400"></i> Crisis Sandbox
+            </a>
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold text-xs tracking-wide">
+                <i class="fa-solid fa-route w-4 text-indigo-400"></i> Evacuation Hub
+            </a>
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-tower-broadcast w-4 text-slate-400"></i> Broadcast Center
+            </a>
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
+            </a>
+        </nav>
+
+        <div class="p-3.5 border-t border-slate-800 bg-slate-900/60 text-xs">
+            <div class="text-[11px] font-bold text-white mb-0.5">SDRF Logistics Fleet</div>
+            <div class="text-[10px] text-emerald-400">28 Base Camps Active</div>
+        </div>
     </aside>
 
-    <div class="flex-1 flex flex-col h-full overflow-hidden">
-        <!-- GLOBAL STATUS HEADER (For clock & SOS) -->
-        <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex justify-between items-center shrink-0">
-            <div id="global-status" class="text-emerald-400 font-bold text-sm flex items-center">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> LOGISTICS SYSTEM ONLINE
+    <!-- CONTENT WRAPPER -->
+    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+        
+        <!-- TOPBAR -->
+        <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
+            <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> LOGISTICS & CORRIDOR COMMAND ONLINE
             </div>
-            <div class="flex items-center gap-4">
-                <div id="clock" class="font-mono text-sm text-slate-400 hidden sm:block">00:00:00</div>
+            <div class="flex items-center gap-3">
+                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
+                    00:00:00
+                </div>
             </div>
         </header>
 
-        <!-- MAIN CONTENT -->
-        <main class="flex-1 overflow-y-auto p-6 md:p-8">
-            <h1 class="text-2xl font-bold mb-6 text-white flex items-center gap-3">
-                <i class="fa-solid fa-person-walking-arrow-right text-indigo-400"></i> Active Evacuation Logistics
-            </h1>
+        <!-- MAIN VIEWPORT -->
+        <main class="flex-1 overflow-y-auto p-4 md:p-6 space-y-6 max-w-6xl mx-auto w-full">
             
-            <!-- STATE 1: NO EVACUATION -->
-            <div id="no-evac-state" class="bg-slate-900 p-12 rounded-2xl border border-slate-800 text-center transition-all">
-                <i class="fa-solid fa-shield-check text-6xl text-emerald-500 mb-4 opacity-80"></i>
-                <h2 class="text-2xl font-bold text-white">No Critical Evacuations Active</h2>
-                <p class="text-slate-400 mt-2 max-w-md mx-auto">All monitored regions are operating within safe parameters. Trigger a critical event in the Simulator to engage automated logistics.</p>
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-800 pb-4">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-white flex items-center gap-2.5">
+                        <i class="fa-solid fa-person-walking-arrow-right text-indigo-400"></i> Statewide Evacuation & Ground Logistics
+                    </h1>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Manage civilian evacuation convoys, emergency shelter capacities, and forward NDRF/SDRF rescue corridors.
+                    </p>
+                </div>
+                <div class="flex gap-2">
+                    <a href="simulator.html" class="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-xl text-xs font-bold transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-sliders text-indigo-400"></i>
+                        <span>Trigger Simulation</span>
+                    </a>
+                </div>
             </div>
 
-            <!-- STATE 2: ACTIVE EVACUATION (Hidden by default) -->
-            <div id="active-evac-state" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6 transition-all fade-in">
+            <!-- STATE 1: SAFE / STANDBY STATE -->
+            <div id="no-evac-state" class="bg-slate-900 p-8 sm:p-12 rounded-2xl border border-slate-800 text-center transition-all shadow-xl">
+                <div class="w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto mb-4 text-emerald-400 text-3xl">
+                    <i class="fa-solid fa-shield-check"></i>
+                </div>
+                <h2 class="text-xl font-bold text-white">All Monitored Valley Corridors Operational</h2>
+                <p class="text-xs text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">
+                    No critical flash-evacuation threshold breached in the last telemetry cycle. All 28 SDRF shelter camps across the Char Dham axis remain on ready reserve.
+                </p>
+                <div class="mt-6 flex justify-center gap-3">
+                    <a href="simulator.html" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>Simulate Valley Cloudburst (Kedarnath)</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- STATE 2: ACTIVE EVACUATION LOGISTICS (Shown when risk > 75) -->
+            <div id="active-evac-state" class="hidden grid grid-cols-1 lg:grid-cols-2 gap-6 transition-all">
                 
-                <!-- TARGET CARD -->
-                <div class="bg-slate-900 p-6 rounded-2xl border border-red-500/40 shadow-[0_0_30px_rgba(239,68,68,0.15)] flex flex-col">
-                    <div class="flex justify-between items-start mb-6 border-b border-slate-800 pb-4">
-                        <div>
-                            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Target Sector</span>
-                            <h2 id="evac-city-name" class="text-4xl font-black text-white mt-1">--</h2>
+                <!-- SECTOR THREAT & CORRIDOR CARD -->
+                <div class="bg-slate-900 p-5 md:p-6 rounded-2xl border border-rose-500/40 shadow-[0_0_30px_rgba(244,63,94,0.15)] flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-start mb-4 border-b border-slate-800 pb-3">
+                            <div>
+                                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Priority Evacuation Sector</span>
+                                <h2 id="evac-city-name" class="text-3xl font-black text-white mt-0.5">--</h2>
+                            </div>
+                            <span id="evac-badge" class="bg-rose-500/20 border border-rose-500/50 text-rose-400 px-3.5 py-1 text-[11px] font-black rounded-full animate-pulse">
+                                CRITICAL BREACH
+                            </span>
                         </div>
-                        <span id="evac-badge" class="bg-red-500/20 border border-red-500/50 text-red-400 px-4 py-1.5 text-xs font-bold rounded-full animate-pulse">CRITICAL</span>
+
+                        <!-- POP & TERRAIN SUMMARY -->
+                        <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 mb-4 space-y-2.5 text-xs">
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Estimated Civilians at Risk:</span>
+                                <span id="evac-pop" class="text-white font-mono font-bold text-sm">-- Civilians</span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Primary Escape Route:</span>
+                                <span class="text-amber-400 font-bold bg-amber-500/10 px-2 py-0.5 rounded border border-amber-500/20">
+                                    NH-07 Corridor &bull; Bypass Valley
+                                </span>
+                            </div>
+                            <div class="flex justify-between items-center">
+                                <span class="text-slate-400">Runoff Bottleneck Status:</span>
+                                <span class="text-rose-400 font-bold bg-rose-500/10 px-2 py-0.5 rounded border border-rose-500/20">
+                                    HIGH ROCKFALL PROBABILITY
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- SHELTER ASSIGNMENT & LOGISTICS CAPACITY -->
+                        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                            <i class="fa-solid fa-campground text-indigo-400"></i> Designated Forward Relief Camp
+                        </h3>
+                        <div class="bg-indigo-950/20 border border-indigo-500/30 p-4 rounded-xl mb-4">
+                            <div class="flex items-center gap-3 mb-2.5">
+                                <div class="w-8 h-8 rounded-lg bg-indigo-600/30 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+                                    <i class="fa-solid fa-house-medical"></i>
+                                </div>
+                                <span id="evac-shelter-name" class="font-bold text-white text-sm">--</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 text-xs text-slate-300 bg-slate-900/60 p-3 rounded-lg border border-slate-800/60">
+                                <div>Bed Capacity: <b class="text-white">1,200 / 1,500</b></div>
+                                <div>Est. Transit Distance: <b class="text-cyan-400">2.4 km</b></div>
+                                <div>Medical Team: <b class="text-emerald-400">8 Doctors Ready</b></div>
+                                <div>Ration Supply: <b class="text-white">5 Days Stored</b></div>
+                            </div>
+                        </div>
+
+                        <!-- EVACUATION TRANSPORT CONVOY -->
+                        <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800 mb-4 text-xs">
+                            <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1.5">Mobilized Convoys</span>
+                            <div class="flex flex-wrap gap-2">
+                                <span class="px-2.5 py-1 bg-slate-900 rounded-lg text-slate-300 font-mono text-[11px] border border-slate-800">
+                                    <i class="fa-solid fa-bus text-indigo-400 mr-1"></i> 14 GMVN Buses
+                                </span>
+                                <span class="px-2.5 py-1 bg-slate-900 rounded-lg text-slate-300 font-mono text-[11px] border border-slate-800">
+                                    <i class="fa-solid fa-truck text-emerald-400 mr-1"></i> 8 4x4 Gypsies
+                                </span>
+                                <span class="px-2.5 py-1 bg-slate-900 rounded-lg text-slate-300 font-mono text-[11px] border border-slate-800">
+                                    <i class="fa-solid fa-helicopter text-cyan-400 mr-1"></i> 2 IAF Airlifts
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    <div class="bg-slate-950 p-5 rounded-xl border border-slate-800 mb-6 space-y-3">
-                        <div class="flex justify-between items-center"><span class="text-slate-400 text-sm">Estimated Pop at Risk:</span> <span id="evac-pop" class="text-white font-bold text-lg">--</span></div>
-                        <div class="flex justify-between items-center"><span class="text-slate-400 text-sm">Evac Type:</span> <span class="text-orange-400 font-bold bg-orange-500/10 px-2 py-0.5 rounded">Immediate Terrain Evacuation</span></div>
-                        <div class="flex justify-between items-center"><span class="text-slate-400 text-sm">Primary Route Status:</span> <span class="text-red-400 font-bold bg-red-500/10 px-2 py-0.5 rounded">HIGH DEBRIS PROBABILITY</span></div>
-                    </div>
-
-                    <h3 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">AI Shelter Assignment</h3>
-                    <div class="bg-indigo-900/20 border border-indigo-500/30 p-5 rounded-xl mb-6">
-                        <div class="flex items-center gap-3 mb-3">
-                            <i class="fa-solid fa-house-medical text-indigo-400 text-2xl"></i>
-                            <span id="evac-shelter-name" class="font-bold text-white text-xl">--</span>
-                        </div>
-                        <div class="grid grid-cols-2 gap-4 text-sm text-slate-300 bg-slate-900/50 p-3 rounded-lg border border-slate-800/50">
-                            <div>Capacity: <b class="text-white text-base">1200 / 1500</b></div>
-                            <div>Distance: <b class="text-cyan-400 text-base">2.4 km</b></div>
-                        </div>
-                    </div>
-
-                    <button onclick="runDispatch()" id="dispatch-btn" class="w-full mt-auto bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(239,68,68,0.4)] tracking-wide">
-                        <i class="fa-solid fa-siren-on mr-2"></i> INITIALIZE DISPATCH PROTOCOL
+                    <button onclick="runDispatch()" id="dispatch-btn" 
+                            class="w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-500 text-white font-black py-4 rounded-xl transition shadow-[0_0_25px_rgba(244,63,94,0.4)] tracking-wider uppercase text-xs flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-siren-on"></i>
+                        <span>EXECUTE FOUR-STAGE DISPATCH MANDATE</span>
                     </button>
                 </div>
 
-                <!-- SEQUENCE CARD -->
-                <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800">
-                    <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest mb-6 border-b border-slate-800 pb-3">Automated Dispatch Sequence</h3>
-                    <div class="space-y-6" id="seq-steps">
-                        <div class="flex items-center gap-4 text-slate-600 transition-all duration-300" id="seq-1">
-                            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 border-current"><i class="fa-solid fa-check opacity-0" id="ic-1"></i></div>
-                            <div class="text-sm">Broadcast Siren & Emergency SMS Alert to all cellular devices in sector.</div>
+                <!-- FOUR-STAGE TACTICAL DISPATCH PROTOCOL -->
+                <div class="bg-slate-900 p-5 md:p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col justify-between">
+                    <div>
+                        <div class="flex justify-between items-center border-b border-slate-800 pb-3 mb-4">
+                            <h3 class="text-xs font-bold text-slate-300 uppercase tracking-widest flex items-center gap-2">
+                                <i class="fa-solid fa-list-check text-indigo-400"></i> Standard Operating Procedure (SOP) Sequence
+                            </h3>
+                            <span class="text-[10px] font-mono text-slate-500">NDMA / SDMA GUIDELINE</span>
                         </div>
-                        <div class="flex items-center gap-4 text-slate-600 transition-all duration-300" id="seq-2">
-                            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 border-current"><i class="fa-solid fa-check opacity-0" id="ic-2"></i></div>
-                            <div class="text-sm">Reserve capacity limits at designated SDRF Base camps.</div>
+
+                        <div class="space-y-4" id="seq-steps">
+                            <div class="flex items-start gap-3.5 text-slate-600 transition-all duration-300 p-3 rounded-xl border border-transparent" id="seq-1">
+                                <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 border-current font-bold text-xs mt-0.5">
+                                    <span id="num-1">1</span>
+                                    <i class="fa-solid fa-check hidden" id="ic-1"></i>
+                                </div>
+                                <div class="text-xs">
+                                    <div class="font-bold text-slate-300 mb-0.5">Mass Cell Siren & Distress Broadcast</div>
+                                    <div class="text-slate-400">Transmit immediate geo-fenced CAP sirens and vernacular SMS alerts to all active mobile SIMs in the valley.</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3.5 text-slate-600 transition-all duration-300 p-3 rounded-xl border border-transparent" id="seq-2">
+                                <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 border-current font-bold text-xs mt-0.5">
+                                    <span id="num-2">2</span>
+                                    <i class="fa-solid fa-check hidden" id="ic-2"></i>
+                                </div>
+                                <div class="text-xs">
+                                    <div class="font-bold text-slate-300 mb-0.5">Reserve Base Shelter Capacity & Medical Surge</div>
+                                    <div class="text-slate-400">Lock beds at forward SDRF relief barracks, activate 8 emergency doctors, and prepare trauma triage kits.</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3.5 text-slate-600 transition-all duration-300 p-3 rounded-xl border border-transparent" id="seq-3">
+                                <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 border-current font-bold text-xs mt-0.5">
+                                    <span id="num-3">3</span>
+                                    <i class="fa-solid fa-check hidden" id="ic-3"></i>
+                                </div>
+                                <div class="text-xs">
+                                    <div class="font-bold text-slate-300 mb-0.5">Deploy NDRF 8th Bn & BRO Task Force Shivalik</div>
+                                    <div class="text-slate-400">Mobilize forward rescue teams with heavy road-clearing dozers to secure bridge bottlenecks and pedestrian suspension bridges.</div>
+                                </div>
+                            </div>
+
+                            <div class="flex items-start gap-3.5 text-slate-600 transition-all duration-300 p-3 rounded-xl border border-transparent" id="seq-4">
+                                <div class="w-7 h-7 rounded-full border-2 flex items-center justify-center shrink-0 border-current font-bold text-xs mt-0.5">
+                                    <span id="num-4">4</span>
+                                    <i class="fa-solid fa-check hidden" id="ic-4"></i>
+                                </div>
+                                <div class="text-xs">
+                                    <div class="font-bold text-slate-300 mb-0.5">Establish Safe Corridor & Launch Drone Recon</div>
+                                    <div class="text-slate-400">Deploy thermal UAV recon over river gorge and enforce single-lane escorted civilian evacuation convoys.</div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-4 text-slate-600 transition-all duration-300" id="seq-3">
-                            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 border-current"><i class="fa-solid fa-check opacity-0" id="ic-3"></i></div>
-                            <div class="text-sm">Deploy NDRF Forward Team to designated bottleneck zones.</div>
+                    </div>
+
+                    <div id="dispatch-report" class="hidden mt-4 p-3.5 bg-emerald-950/30 border border-emerald-500/40 rounded-xl text-xs text-emerald-300">
+                        <div class="font-bold flex items-center gap-2 mb-1">
+                            <i class="fa-solid fa-circle-check"></i> OFFICIAL SEOC DISPATCH ORDER AUTHORIZED
                         </div>
-                        <div class="flex items-center gap-4 text-slate-600 transition-all duration-300" id="seq-4">
-                            <div class="w-8 h-8 rounded-full border-2 flex items-center justify-center shrink-0 border-current"><i class="fa-solid fa-check opacity-0" id="ic-4"></i></div>
-                            <div class="text-sm">Establish Safe Travel Corridor and launch drone surveillance.</div>
+                        <div class="text-[11px] text-slate-300">
+                            Relayed to District Magistrate, NDRF Gauchar Base, and SDRF Command via INSAT-3DR Satcom.
                         </div>
                     </div>
                 </div>
 
             </div>
+
         </main>
     </div>
 
-    <!-- Include core app JS for global clock and status -->
-    <script src="/app.js"></script>
-    
-    <<script>
-        let isDispatching = false; 
+    <script>
+        let isDispatching = false;
 
-        // Function to continuously poll the server for state
         async function fetchLiveEvacState() {
-            if (isDispatching) return; 
+            if (isDispatching) return;
 
             try {
-                // ADDED CACHE-BUSTING: Browser ab purana data load nahi karega
                 const timestamp = new Date().getTime();
-                const res = await fetch(`/api/state?t=${timestamp}`, {
-                    cache: 'no-store', // Force browser to fetch live data
-                    headers: {
-                        'Cache-Control': 'no-cache',
-                        'Pragma': 'no-cache'
-                    }
-                });
-                
+                const res = await fetch(`/api/state?t=${timestamp}`, { cache: 'no-store' });
                 const data = await res.json();
-                
-                console.log("Live Risk Level:", data.risk.level, "City:", data.simulatedCity); // Debugging
 
-                // Ensure data exists and is strictly CRITICAL
                 if (data.simulatedCity && data.risk.score > 75) {
                     document.getElementById('no-evac-state').classList.add('hidden');
                     document.getElementById('active-evac-state').classList.remove('hidden');
-                    
+
                     document.getElementById('evac-city-name').textContent = data.simulatedCity;
-                    document.getElementById('evac-pop').textContent = `${data.risk.popAtRisk} Civilians`;
-                    document.getElementById('evac-shelter-name').textContent = `State SDRF Base - ${data.simulatedCity} Sector`;
+                    document.getElementById('evac-pop').textContent = `${(data.risk.popAtRisk || 6500).toLocaleString()} Civilians`;
+                    document.getElementById('evac-shelter-name').textContent = `State SDRF Base - ${data.simulatedCity} Sector Camp`;
                 } else {
                     document.getElementById('no-evac-state').classList.remove('hidden');
                     document.getElementById('active-evac-state').classList.add('hidden');
                     resetDispatchUI();
                 }
-            } catch(e) {
-                console.log("Waiting for backend sync...");
-            }
+            } catch(e) {}
         }
 
-        // Poll every 2 seconds
-        setInterval(fetchLiveEvacState, 2000);
+        setInterval(fetchLiveEvacState, 2500);
         document.addEventListener('DOMContentLoaded', fetchLiveEvacState);
 
-        // Sequence Animation
         function runDispatch() {
             isDispatching = true;
+            RakshakAudio.playAlert();
             const btn = document.getElementById('dispatch-btn');
-            btn.disabled = true; 
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin mr-2"></i> TRANSMITTING...';
-            
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse mr-2"></i> TRANSMITTING FOUR-STAGE PROTOCOL...';
+
             [1, 2, 3, 4].forEach(i => {
                 setTimeout(() => {
-                    document.getElementById('seq-'+i).classList.replace('text-slate-600', 'text-emerald-400');
-                    document.getElementById('seq-'+i).classList.add('font-bold');
-                    document.getElementById('ic-'+i).classList.replace('opacity-0', 'opacity-100');
+                    RakshakAudio.playConfirm();
+                    const el = document.getElementById('seq-' + i);
+                    el.classList.remove('text-slate-600');
+                    el.classList.add('text-emerald-400', 'bg-slate-950', 'border-emerald-500/30');
                     
-                    if(i === 4) {
-                        btn.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> DISPATCH COMPLETED';
-                        btn.classList.replace('bg-red-600', 'bg-emerald-600');
-                        btn.classList.remove('hover:bg-red-500');
+                    document.getElementById('num-' + i).classList.add('hidden');
+                    document.getElementById('ic-' + i).classList.remove('hidden');
+
+                    if (i === 4) {
+                        RakshakAudio.playSiren(3);
+                        btn.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> PROTOCOL FULLY DEPLOYED & SIGNED';
+                        btn.className = 'w-full bg-emerald-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-emerald-600/30 tracking-wide text-xs';
+                        document.getElementById('dispatch-report').classList.remove('hidden');
                     }
                 }, i * 900);
             });
@@ -181,14 +323,21 @@
         function resetDispatchUI() {
             isDispatching = false;
             const btn = document.getElementById('dispatch-btn');
-            btn.disabled = false;
-            btn.innerHTML = '<i class="fa-solid fa-siren-on mr-2"></i> INITIALIZE DISPATCH PROTOCOL';
-            btn.className = 'w-full mt-auto bg-red-600 hover:bg-red-500 text-white font-bold py-4 rounded-xl transition shadow-[0_0_20px_rgba(239,68,68,0.4)] tracking-wide';
-            
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-siren-on mr-2"></i> EXECUTE FOUR-STAGE DISPATCH MANDATE';
+                btn.className = 'w-full bg-gradient-to-r from-rose-600 to-rose-500 hover:from-rose-500 hover:to-rose-500 text-white font-black py-4 rounded-xl transition shadow-[0_0_25px_rgba(244,63,94,0.4)] tracking-wider uppercase text-xs flex items-center justify-center gap-2';
+            }
             [1, 2, 3, 4].forEach(i => {
-                document.getElementById('seq-'+i).className = 'flex items-center gap-4 text-slate-600 transition-all duration-300';
-                document.getElementById('ic-'+i).className = 'fa-solid fa-check opacity-0';
+                const el = document.getElementById('seq-' + i);
+                if (el) {
+                    el.className = 'flex items-start gap-3.5 text-slate-600 transition-all duration-300 p-3 rounded-xl border border-transparent';
+                    document.getElementById('num-' + i).classList.remove('hidden');
+                    document.getElementById('ic-' + i).classList.add('hidden');
+                }
             });
+            const rep = document.getElementById('dispatch-report');
+            if (rep) rep.classList.add('hidden');
         }
     </script>
 </body>

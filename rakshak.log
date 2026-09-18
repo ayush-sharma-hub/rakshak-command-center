@@ -1,0 +1,8 @@
+2026-09-19 02:40:59,078 [rakshak.main] INFO — [OK] Frontend served from: C:\Users\rikwa\rakshak-new\public
+2026-09-19 02:40:59,138 [rakshak.main] INFO — ============================================================
+2026-09-19 02:40:59,138 [rakshak.main] INFO —   RAKSHAK SEOC — Initializing Backend Systems
+2026-09-19 02:40:59,138 [rakshak.main] INFO — ============================================================
+2026-09-19 02:40:59,150 [rakshak.main] INFO — [OK] SQLite database initialized.
+2026-09-19 02:40:59,151 [rakshak.main] INFO — [OK] Background sensor loop started.
+2026-09-19 02:40:59,151 [rakshak.main] INFO — [..] Pre-warming weather cache for priority cities...
+2026-09-19 02:40:59,175 [rakshak.background] INFO — [Background] Sensor simulation loop started.

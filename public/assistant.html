@@ -3,148 +3,318 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rakshak | Voice AI Assistant</title>
+    <title>SEOC Rakshak | Tactical VHF Radio & Comms</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="/app.js" defer></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
     
     <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
-        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+        <!-- BRANDING -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">
-                    <i class="fa-solid fa-shield-halved"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
                 </div>
-                <span class="font-black tracking-widest text-lg text-white">RAKSHAK</span>
+                <div>
+                    <span class="font-black tracking-widest text-base text-white block leading-none">RAKSHAK</span>
+                    <span class="text-[9px] text-indigo-400 font-mono tracking-wider font-semibold">UK-SEOC COMMAND</span>
+                </div>
             </div>
-            <span class="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-indigo-400 font-mono">v2.4</span>
+            <button class="audio-toggle-btn text-slate-400 hover:text-white transition p-1.5 bg-slate-800 rounded-lg border border-slate-700 text-xs" title="Toggle Tactical Audio">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 p-3 flex flex-col gap-1.5 overflow-y-auto">
-            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-chart-pie w-4"></i> Dashboard
+        <!-- NAV LINKS -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-chart-line w-4 text-slate-400"></i> Command War Room
             </a>
-            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-map-location-dot w-4"></i> Tactical Map
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-map-location-dot w-4 text-slate-400"></i> Tactical GIS Map
             </a>
-            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-flask-vial w-4"></i> Sandbox Simulator
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-flask-vial w-4 text-slate-400"></i> Crisis Sandbox
             </a>
-            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-route w-4"></i> Evacuation Hub
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-route w-4 text-slate-400"></i> Evacuation Hub
             </a>
-            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-tower-broadcast w-4"></i> Alert Center
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-tower-broadcast w-4 text-slate-400"></i> Broadcast Center
             </a>
-            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-semibold text-sm">
-                <i class="fa-solid fa-microphone-lines w-4"></i> Voice AI Assistant
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold text-xs tracking-wide">
+                <i class="fa-solid fa-microphone-lines w-4 text-indigo-400"></i> Radio & Voice Comms
             </a>
         </nav>
 
-        <div class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <div>
-                <div class="font-bold text-slate-200">UK Command</div>
-                <div class="text-[10px] text-emerald-400">Relay Active</div>
-            </div>
-            <a href="index.html" class="p-2 hover:text-rose-400 transition"><i class="fa-solid fa-power-off"></i></a>
+        <div class="p-3.5 border-t border-slate-800 bg-slate-900/60 text-xs">
+            <div class="text-[11px] font-bold text-white mb-0.5">VHF Radio Relay</div>
+            <div class="text-[10px] text-emerald-400 font-mono">Channel 01: 156.800 MHz</div>
         </div>
     </aside>
 
-    <!-- CONTENT -->
+    <!-- CONTENT WRAPPER -->
     <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
-        <header class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 flex items-center justify-between shrink-0">
-            <div id="global-status" class="text-emerald-400 font-bold text-sm flex items-center">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> VOICE ENGINE READY
+        
+        <!-- TOPBAR -->
+        <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
+            <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> SEOC RADIO INTERCOM LINKED &bull; FREQ 156.800 MHz
             </div>
-            <div id="clock" class="font-mono text-sm text-slate-400 hidden sm:block">00:00:00</div>
+            <div class="flex items-center gap-3">
+                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
+                    00:00:00
+                </div>
+            </div>
         </header>
 
-        <main class="flex-1 p-6 md:p-8 overflow-y-auto space-y-4 max-w-4xl mx-auto w-full flex flex-col">
-            <div>
-                <h1 class="text-2xl font-bold text-white flex items-center gap-3">
-                    <i class="fa-solid fa-robot text-indigo-400"></i> Rakshak Voice Operator
-                </h1>
-                <p class="text-sm text-slate-400 mt-1">Speak or type queries such as "What is the status?", "Check Kedarnath", or "Send SOS".</p>
+        <!-- MAIN VIEWPORT -->
+        <main class="flex-1 p-4 md:p-6 overflow-y-auto space-y-4 max-w-5xl mx-auto w-full flex flex-col">
+            
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-2 border-b border-slate-800 pb-3">
+                <div>
+                    <h1 class="text-xl md:text-2xl font-black text-white flex items-center gap-2.5">
+                        <i class="fa-solid fa-walkie-talkie text-indigo-400"></i> Tactical VHF/HF Field Radio Intercom
+                    </h1>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Transmit voice dispatches, query sector telemetry, and monitor on-ground responder comms.
+                    </p>
+                </div>
+                <!-- FREQUENCY SELECTOR -->
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="text-slate-400 font-mono text-[10px] uppercase font-bold">VHF Band:</span>
+                    <select id="radio-channel" class="bg-slate-900 border border-slate-700 text-white rounded-xl px-3 py-1.5 text-xs font-mono focus:outline-none focus:border-indigo-500">
+                        <option value="ch1">CH-01: SEOC Dehradun HQ (156.800 MHz)</option>
+                        <option value="ch2">CH-02: NDRF 8th Bn Tactical (164.225 MHz)</option>
+                        <option value="ch3">CH-03: SDRF Mountain Rescue (142.150 MHz)</option>
+                        <option value="ch4">CH-04: IAF Air Medevac (121.500 MHz)</option>
+                    </select>
+                </div>
             </div>
 
-            <!-- CHAT TERMINAL -->
-            <div class="flex-1 min-h-[350px] bg-slate-900 border border-slate-800 rounded-2xl p-5 flex flex-col overflow-hidden">
+            <!-- AUDIO WAVEFORM VISUALIZER CANVAS -->
+            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg">
+                <div class="w-full sm:w-2/3">
+                    <div class="flex justify-between text-[10px] font-mono text-slate-400 mb-1">
+                        <span class="text-emerald-400 font-bold flex items-center gap-1.5">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> RF AUDIO SPECTRUM ANALYZER
+                        </span>
+                        <span>SQUELCH: OPTIMAL &bull; SNR: 32 dB</span>
+                    </div>
+                    <canvas id="waveformCanvas" width="550" height="60" class="w-full h-14 bg-black rounded-xl border border-slate-800"></canvas>
+                </div>
+                <div class="flex flex-wrap sm:flex-col gap-2 w-full sm:w-1/3 text-xs">
+                    <button onclick="quickQuery('Kedarnath ka haal batao')" class="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-300 text-left truncate transition">
+                        <i class="fa-solid fa-microphone text-indigo-400 mr-1.5"></i> "Kedarnath ka status?"
+                    </button>
+                    <button onclick="quickQuery('Mandakini river level report')" class="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-300 text-left truncate transition">
+                        <i class="fa-solid fa-water text-cyan-400 mr-1.5"></i> "River basin check"
+                    </button>
+                    <button onclick="quickQuery('NDRF force deployment summary')" class="px-3 py-1.5 bg-slate-950 hover:bg-slate-800 border border-slate-800 rounded-lg text-slate-300 text-left truncate transition">
+                        <i class="fa-solid fa-person-military-pointing text-amber-400 mr-1.5"></i> "Field force positions"
+                    </button>
+                </div>
+            </div>
+
+            <!-- CHAT / DISPATCH LOG TERMINAL -->
+            <div class="flex-1 min-h-[380px] bg-slate-900 border border-slate-800 rounded-2xl p-4 md:p-5 flex flex-col overflow-hidden shadow-xl">
+                
+                <div class="flex justify-between items-center text-xs pb-3 border-b border-slate-800 mb-3">
+                    <span class="font-bold text-slate-300 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-tower-cell text-indigo-400"></i> Tactical Radio Transmission Stream
+                    </span>
+                    <span class="text-[10px] font-mono text-slate-500">ENCRYPTED AES-256</span>
+                </div>
+
                 <div id="chat-stream" class="flex-1 overflow-y-auto space-y-3 pr-2">
-                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl max-w-md text-xs text-slate-300">
-                        Hello Operator. I am Rakshak AI. You can issue voice commands using the microphone or type status queries below.
+                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl max-w-lg text-xs text-slate-300 leading-relaxed shadow-inner">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-emerald-400 font-mono text-[10px]">[SEOC-DISPATCH-DESK]</span>
+                            <span class="text-[10px] text-slate-500 font-mono">RELAY LINK ACTIVE</span>
+                        </div>
+                        Station UK-SEOC online. Speak or transmit tactical queries in Hindi or English (e.g. <i>"Kedarnath ka status check karo"</i>, <i>"River levels report"</i>, <i>"Emergency alert"</i>).
                     </div>
                 </div>
 
-                <div class="pt-4 border-t border-slate-800 flex gap-2">
-                    <button onclick="toggleVoice()" id="mic-btn" class="w-12 h-12 bg-slate-800 hover:bg-slate-700 text-white rounded-xl flex items-center justify-center transition border border-slate-700 shrink-0">
+                <!-- TRANSMISSION INPUT BAR -->
+                <div class="pt-3 border-t border-slate-800 flex items-center gap-2">
+                    <button onclick="toggleVoice()" id="mic-btn" 
+                            class="w-12 h-12 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl flex items-center justify-center transition border border-slate-700 shrink-0 text-base"
+                            title="Push To Talk (Voice Recognition)">
                         <i class="fa-solid fa-microphone"></i>
                     </button>
-                    <input type="text" id="chat-input" placeholder="Type command (e.g. status, kedarnath, sos)..."
-                           class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 text-xs text-white focus:outline-none focus:border-indigo-500"
+                    
+                    <input type="text" id="chat-input" 
+                           placeholder="Type command or query (e.g. Kedarnath status, River levels, Force update)..."
+                           class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-xs text-white focus:outline-none focus:border-indigo-500 transition"
                            onkeydown="if(event.key==='Enter') sendChat()">
-                    <button onclick="sendChat()" class="px-5 bg-indigo-600 hover:bg-indigo-500 font-bold text-xs rounded-xl text-white transition">
-                        TRANSMIT
+                    
+                    <button onclick="sendChat()" 
+                            class="px-5 py-3 bg-indigo-600 hover:bg-indigo-500 font-bold text-xs rounded-xl text-white transition flex items-center gap-2 shrink-0 shadow-lg shadow-indigo-600/30">
+                        <span>TRANSMIT</span>
+                        <i class="fa-solid fa-paper-plane text-[10px]"></i>
                     </button>
                 </div>
             </div>
+
         </main>
     </div>
 
     <script>
-        function sendChat(forcedText = null) {
+        // WAVEFORM CANVAS ANIMATION
+        const canvas = document.getElementById('waveformCanvas');
+        const ctx = canvas ? canvas.getContext('2d') : null;
+        let isSpeakingOrListening = false;
+        let waveFrame = 0;
+
+        function drawWaveform() {
+            if (!ctx) return;
+            waveFrame++;
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.fillStyle = '#050b14';
+            ctx.fillRect(0, 0, w, h);
+
+            // Center line
+            ctx.strokeStyle = '#1e293b';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(0, h / 2);
+            ctx.lineTo(w, h / 2);
+            ctx.stroke();
+
+            // Waveform path
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = isSpeakingOrListening ? '#10b981' : '#6366f1';
+            ctx.beginPath();
+
+            const slices = 60;
+            const sliceW = w / slices;
+
+            for (let i = 0; i <= slices; i++) {
+                const x = i * sliceW;
+                let amp = isSpeakingOrListening ? 18 : 3;
+                const freq = isSpeakingOrListening ? 0.2 : 0.08;
+                const y = (h / 2) + Math.sin((i + waveFrame) * freq) * Math.cos(i * 0.1) * amp;
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            }
+            ctx.stroke();
+
+            requestAnimationFrame(drawWaveform);
+        }
+        drawWaveform();
+
+        function quickQuery(text) {
+            document.getElementById('chat-input').value = text;
+            sendChat();
+        }
+
+        async function sendChat(forcedText = null) {
             const input = document.getElementById('chat-input');
             const text = forcedText || input.value.trim();
             if (!text) return;
 
+            RakshakAudio.playSquelch();
+            isSpeakingOrListening = true;
+
             const stream = document.getElementById('chat-stream');
+            const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+
             stream.innerHTML += `
-                <div class="bg-indigo-600 text-white p-3 rounded-2xl max-w-md ml-auto text-xs font-medium">
+                <div class="bg-indigo-600 text-white p-3 rounded-2xl max-w-md ml-auto text-xs font-medium shadow-md">
+                    <div class="flex justify-between text-[10px] text-indigo-200 font-mono mb-1">
+                        <span>[DUTY-OFFICER-04]</span>
+                        <span>${time}</span>
+                    </div>
                     ${text}
-                </div>`;
+                </div>
+            `;
             input.value = '';
+            stream.scrollTop = stream.scrollHeight;
 
             setTimeout(async () => {
-                let reply = "Monitoring telemetry streams. Please specify a sector name or query.";
+                let reply = "Transmission received by SEOC Control. Telemetry stream is nominal. Specify a sector name or hazard query.";
                 const lower = text.toLowerCase();
 
-                if (lower.includes('status') || lower.includes('risk')) {
+                if (lower.includes('kedarnath') || lower.includes('kedar')) {
+                    reply = "SEOC SITREP: Kedarnath corridor telemetry active. Elevation: 3583m, slope: 48°. Glacial moraine saturation elevated with rainfall at 42mm/hr. SDRF Lincheli forward team on patrol. Avoid riverbed crossings.";
+                } else if (lower.includes('joshimath')) {
+                    reply = "SEOC SITREP: Joshimath sector subsidence monitoring online. BRO Task Force Shivalik has cleared road boulders at KM 48. Soil moisture categorized as Wet.";
+                } else if (lower.includes('river') || lower.includes('basin') || lower.includes('mandakini') || lower.includes('alaknanda') || lower.includes('tehri')) {
+                    reply = "HYDRO REPORT: Mandakini at Rudraprayag is +0.4m/hr below danger mark. Alaknanda at Joshimath is nominal. Tehri Dam reservoir holding steady at 818.5m (Safe limit: 830m).";
+                } else if (lower.includes('ndrf') || lower.includes('force') || lower.includes('sdrf') || lower.includes('army')) {
+                    reply = "FORCE STATUS: NDRF 8th Bn stationed at Gauchar Base with 4 river inflatables. SDRF High Altitude unit patrol active at Guptkashi. IAF Chetak on standby at Sahastradhara Helipad.";
+                } else if (lower.includes('sos') || lower.includes('emergency')) {
+                    reply = "EMERGENCY BROADCAST TRIGGERED: High-priority GPS distress fix relayed to Central Command and forward response battalions.";
+                    sendSOS();
+                } else if (lower.includes('status') || lower.includes('risk') || lower.includes('overall')) {
                     try {
                         const res = await fetch('/api/state');
                         const s = await res.json();
-                        reply = `Current overall system status is ${s.risk.level} with risk index ${s.risk.score}/100. ${s.risk.explanation}`;
+                        reply = `SEOC MASTER STATUS: Current state alert level is ${s.risk.level} with composite hazard index ${s.risk.score}/100. ${s.risk.explanation}`;
                     } catch (e) {
-                        reply = "Central telemetry online. No critical state alerts active.";
+                        reply = "SEOC state link nominal. Satellite telemetry active across 25 hill sectors.";
                     }
-                } else if (lower.includes('sos') || lower.includes('emergency')) {
-                    reply = "Triggering emergency GPS beacon now...";
-                    sendSOS();
-                } else if (lower.includes('kedarnath') || lower.includes('joshimath')) {
-                    reply = `Sector telemetry flagged for elevated monitoring. Geotechnical sensors active along that corridor.`;
                 }
 
+                RakshakAudio.playConfirm();
                 stream.innerHTML += `
-                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl max-w-md text-xs text-slate-300">
+                    <div class="bg-slate-950 border border-slate-800 p-3.5 rounded-2xl max-w-lg text-xs text-slate-300 leading-relaxed shadow-inner">
+                        <div class="flex items-center gap-2 mb-1">
+                            <span class="font-bold text-cyan-400 font-mono text-[10px]">[SEOC-RELAY-01]</span>
+                            <span class="text-[10px] text-slate-500 font-mono">${time}</span>
+                        </div>
                         ${reply}
-                    </div>`;
+                    </div>
+                `;
                 stream.scrollTop = stream.scrollHeight;
+
+                // Voice Readback
+                if (window.speechSynthesis) {
+                    const utter = new SpeechSynthesisUtterance(reply);
+                    utter.rate = 1.0;
+                    utter.onend = () => { isSpeakingOrListening = false; };
+                    window.speechSynthesis.speak(utter);
+                } else {
+                    setTimeout(() => { isSpeakingOrListening = false; }, 2000);
+                }
             }, 600);
         }
 
         function toggleVoice() {
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (!SpeechRec) {
-                alert('Web Speech API is not supported on this browser.');
+                alert('Web Speech Recognition API is not supported on this browser.');
                 return;
             }
 
+            RakshakAudio.playSquelch();
             const rec = new SpeechRec();
+            rec.lang = 'hi-IN'; // Supports Hindi & Hinglish/English
             const btn = document.getElementById('mic-btn');
-            btn.classList.add('bg-rose-600', 'animate-pulse');
+            btn.classList.add('bg-rose-600', 'text-white', 'animate-pulse');
+            isSpeakingOrListening = true;
 
-            rec.onresult = (e) => sendChat(e.results[0][0].transcript);
-            rec.onend = () => btn.classList.remove('bg-rose-600', 'animate-pulse');
+            rec.onresult = (e) => {
+                const transcript = e.results[0][0].transcript;
+                sendChat(transcript);
+            };
+
+            rec.onend = () => {
+                btn.classList.remove('bg-rose-600', 'text-white', 'animate-pulse');
+                isSpeakingOrListening = false;
+            };
+
             rec.start();
         }
     </script>

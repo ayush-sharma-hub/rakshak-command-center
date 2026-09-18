@@ -3,91 +3,219 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rakshak | Incident Communications</title>
+    <title>SEOC Rakshak | Incident Communications & Broadcast</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="/app.js" defer></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
     
     <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 p-3 gap-2">
-        <div class="p-3 mb-4 flex items-center gap-3 border-b border-slate-800">
-            <i class="fa-solid fa-shield-halved text-indigo-500 text-2xl"></i>
-            <span class="font-bold text-lg tracking-widest">RAKSHAK</span>
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+        <!-- BRANDING -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
+                </div>
+                <div>
+                    <span class="font-black tracking-widest text-base text-white block leading-none">RAKSHAK</span>
+                    <span class="text-[9px] text-indigo-400 font-mono tracking-wider font-semibold">UK-SEOC COMMAND</span>
+                </div>
+            </div>
+            <button class="audio-toggle-btn text-slate-400 hover:text-white transition p-1.5 bg-slate-800 rounded-lg border border-slate-700 text-xs" title="Toggle Tactical Audio">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
         </div>
-        <a href="dashboard.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-chart-pie w-6"></i> Dashboard</a>
-        <a href="map.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-map-location-dot w-6"></i> Tactical Map</a>
-        <a href="simulator.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-flask-vial w-6"></i> Simulator</a>
-        <a href="evacuation.html" class="p-3 text-slate-400 hover:bg-slate-800 rounded-xl transition text-sm"><i class="fa-solid fa-route w-6"></i> Evacuation Hub</a>
-        <a href="alerts.html" class="p-3 bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 rounded-xl font-bold text-sm"><i class="fa-solid fa-tower-broadcast w-6"></i> Alert Center</a>
+
+        <!-- NAV LINKS -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-chart-line w-4 text-slate-400"></i> Command War Room
+            </a>
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-map-location-dot w-4 text-slate-400"></i> Tactical GIS Map
+            </a>
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-flask-vial w-4 text-slate-400"></i> Crisis Sandbox
+            </a>
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-route w-4 text-slate-400"></i> Evacuation Hub
+            </a>
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold text-xs tracking-wide">
+                <i class="fa-solid fa-tower-broadcast w-4 text-indigo-400"></i> Broadcast Center
+            </a>
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
+            </a>
+        </nav>
+
+        <div class="p-3.5 border-t border-slate-800 bg-slate-900/60 text-xs">
+            <div class="text-[11px] font-bold text-white mb-0.5">CAP Emergency Gateway</div>
+            <div class="text-[10px] text-emerald-400">Cell Broadcast Online</div>
+        </div>
     </aside>
 
-    <!-- CONTENT -->
+    <!-- CONTENT WRAPPER -->
     <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
-        <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex items-center justify-between shrink-0">
-            <div class="text-emerald-400 font-bold text-sm flex items-center">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block animate-pulse"></span> BROADCAST NETWORK ONLINE
+        
+        <!-- TOPBAR -->
+        <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
+            <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> EMERGENCY BROADCAST RELAY ACTIVE
             </div>
-            <div id="clock" class="font-mono text-sm text-slate-400 hidden sm:block">00:00:00</div>
+            <div class="flex items-center gap-3">
+                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
+                    00:00:00
+                </div>
+            </div>
         </header>
 
-        <main class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6 max-w-5xl mx-auto w-full">
-            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 border-b border-slate-800 pb-4">
+        <!-- MAIN VIEWPORT -->
+        <main class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6 max-w-5xl mx-auto w-full">
+            
+            <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-3 border-b border-slate-800 pb-4">
                 <div>
-                    <h1 class="text-2xl font-bold text-white flex items-center gap-3">
-                        <i class="fa-solid fa-tower-broadcast text-indigo-400"></i> Incident Communication Center
+                    <h1 class="text-xl md:text-2xl font-black text-white flex items-center gap-2.5">
+                        <i class="fa-solid fa-tower-broadcast text-indigo-400"></i> Civil Defense Emergency Broadcast Hub
                     </h1>
-                    <p class="text-sm text-slate-400 mt-1">Live automated system alerts and AI-synthesized public broadcasts.</p>
+                    <p class="text-xs text-slate-400 mt-0.5">
+                        Synthesize and transmit Common Alerting Protocol (CAP) civil alerts across cellular towers, temple public address systems, and FM radio.
+                    </p>
                 </div>
-                <button onclick="synthesizeAlert()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-3 px-5 rounded-xl shadow-[0_0_15px_rgba(79,70,229,0.4)] transition flex items-center gap-2">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> Synthesize Emergency Broadcast
-                </button>
+                <div class="flex gap-2">
+                    <button onclick="RakshakAudio.playSiren(4)" class="bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold py-2.5 px-3.5 rounded-xl shadow-lg shadow-rose-600/30 transition flex items-center gap-2">
+                        <i class="fa-solid fa-volume-high animate-pulse"></i>
+                        <span>Test Siren Pulse</span>
+                    </button>
+                    <button onclick="synthesizeAlert()" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/30 transition flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn"></i>
+                        <span>Generate Multilingual Blast</span>
+                    </button>
+                </div>
             </div>
 
-            <!-- AI SYNTHESIZED BROADCAST BOX -->
-            <div id="ai-broadcast" class="hidden bg-slate-900 border border-indigo-500/50 p-6 rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.15)] fade-in">
-                <div class="flex justify-between items-center text-xs mb-4 pb-2 border-b border-slate-800">
-                    <span class="font-bold text-indigo-400 uppercase tracking-widest"><i class="fa-solid fa-robot mr-2"></i> Multilingual AI Synthesis Active</span>
-                    <span class="text-slate-500 bg-slate-950 px-3 py-1 rounded">Target: <span id="ai-target-city" class="text-white font-bold">--</span></span>
+            <!-- BROADCAST CHANNELS SELECTOR -->
+            <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl shadow-lg">
+                <span class="text-xs font-bold uppercase tracking-wider text-slate-300 block mb-3">Active Civil Defense Transmission Channels</span>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-xs">
+                    <label class="flex items-center gap-2.5 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
+                        <input type="checkbox" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        <div>
+                            <div class="font-bold text-white text-[11px]">Cell Towers (SMS)</div>
+                            <div class="text-[9px] text-emerald-400">CAP Geofence Active</div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
+                        <input type="checkbox" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        <div>
+                            <div class="font-bold text-white text-[11px]">Char Dham PA Network</div>
+                            <div class="text-[9px] text-emerald-400">42 Temple Loudspeakers</div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
+                        <input type="checkbox" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        <div>
+                            <div class="font-bold text-white text-[11px]">All India Radio (AIR)</div>
+                            <div class="text-[9px] text-cyan-400">FM Dehradun 100.5 MHz</div>
+                        </div>
+                    </label>
+
+                    <label class="flex items-center gap-2.5 p-3 bg-slate-950 border border-slate-800 rounded-xl cursor-pointer hover:border-slate-700 transition">
+                        <input type="checkbox" checked class="w-4 h-4 accent-indigo-600 rounded">
+                        <div>
+                            <div class="font-bold text-white text-[11px]">Police Wireless VHF</div>
+                            <div class="text-[9px] text-indigo-400">Frequency Channel 08</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- SYNTHESIZED MULTILINGUAL BROADCAST -->
+            <div id="ai-broadcast" class="hidden bg-slate-900 border border-indigo-500/50 p-5 rounded-2xl shadow-[0_0_20px_rgba(79,70,229,0.15)]">
+                <div class="flex justify-between items-center text-xs mb-3 pb-2 border-b border-slate-800">
+                    <span class="font-bold text-indigo-400 uppercase tracking-widest flex items-center gap-2">
+                        <i class="fa-solid fa-language"></i> Vernacular Broadcast Package
+                    </span>
+                    <span class="text-slate-400 bg-slate-950 px-2.5 py-1 rounded text-[11px]">
+                        Target Sector: <b id="ai-target-city" class="text-white">--</b>
+                    </span>
                 </div>
                 
-                <div class="space-y-4 text-sm leading-relaxed" id="ai-messages">
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-                        <b class="text-indigo-400">ENGLISH:</b> <span id="msg-en" class="text-slate-200"></span>
+                <div class="space-y-3 text-xs leading-relaxed" id="ai-messages">
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <div class="flex justify-between text-[10px] font-bold text-indigo-400 mb-1">
+                            <span>ENGLISH (ALL INDIA RELAY)</span>
+                            <button onclick="speakText('msg-en')" class="hover:text-white text-slate-400"><i class="fa-solid fa-volume-high"></i> Listen</button>
+                        </div>
+                        <span id="msg-en" class="text-slate-200"></span>
                     </div>
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-                        <b class="text-orange-400">HINDI:</b> <span id="msg-hi" class="text-slate-200 font-medium"></span>
+
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <div class="flex justify-between text-[10px] font-bold text-amber-400 mb-1">
+                            <span>HINDI (राज्य आपातकालीन संदेश)</span>
+                            <button onclick="speakText('msg-hi')" class="hover:text-white text-slate-400"><i class="fa-solid fa-volume-high"></i> Listen</button>
+                        </div>
+                        <span id="msg-hi" class="text-slate-200 font-medium"></span>
                     </div>
-                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800/80">
-                        <b class="text-emerald-400">GARHWALI:</b> <span id="msg-gr" class="text-slate-200 font-medium"></span>
+
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <div class="flex justify-between text-[10px] font-bold text-emerald-400 mb-1">
+                            <span>GARHWALI (स्थानीय पहाड़ी चेतावनी)</span>
+                            <button onclick="speakText('msg-gr')" class="hover:text-white text-slate-400"><i class="fa-solid fa-volume-high"></i> Listen</button>
+                        </div>
+                        <span id="msg-gr" class="text-slate-200 font-medium"></span>
                     </div>
+
+                    <div class="bg-slate-950 p-3.5 rounded-xl border border-slate-800/80">
+                        <div class="flex justify-between text-[10px] font-bold text-cyan-400 mb-1">
+                            <span>KUMAONI (कुमाऊँनी सीमांत चेतावनी)</span>
+                            <button onclick="speakText('msg-km')" class="hover:text-white text-slate-400"><i class="fa-solid fa-volume-high"></i> Listen</button>
+                        </div>
+                        <span id="msg-km" class="text-slate-200 font-medium"></span>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-800 flex justify-between items-center">
+                    <span class="text-[10px] text-emerald-400 font-mono"><i class="fa-solid fa-satellite"></i> Ready for cellular push</span>
+                    <button onclick="pushAlertToTowers()" id="push-btn" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-xl text-xs transition shadow-lg">
+                        <i class="fa-solid fa-paper-plane mr-1.5"></i> Transmit to Mobile Towers
+                    </button>
                 </div>
             </div>
 
-            <!-- LIVE ALERT LOG CONTAINER -->
+            <!-- LIVE INCIDENT LOG CONTAINER -->
             <div class="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-lg">
-                <div class="p-5 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
-                    <span class="text-sm font-bold uppercase tracking-widest text-slate-400">Live Incident Feed</span>
-                    <span class="text-xs bg-slate-800 text-slate-300 px-3 py-1 rounded border border-slate-700"><i class="fa-solid fa-rotate animate-spin mr-1"></i> Auto-Sync</span>
+                <div class="p-4 border-b border-slate-800 flex justify-between items-center bg-slate-900/50">
+                    <span class="text-xs font-bold uppercase tracking-widest text-slate-300 flex items-center gap-2">
+                        <i class="fa-solid fa-clock-rotate-left text-indigo-400"></i> Active SEOC Incident Bulletin Log
+                    </span>
+                    <span class="text-[10px] bg-slate-800 text-slate-300 px-2.5 py-1 rounded border border-slate-700 font-mono">
+                        <i class="fa-solid fa-rotate animate-spin mr-1"></i> Auto-Sync
+                    </span>
                 </div>
                 
-                <div class="p-5 flex flex-col gap-4" id="alert-feed">
-                    <!-- Alerts will be injected here automatically by JS -->
-                    <div class="text-center py-8 text-slate-500">
-                        <i class="fa-solid fa-check-circle text-4xl mb-3 text-emerald-500/50"></i>
-                        <p>No critical system alerts found.</p>
+                <div class="p-4 flex flex-col gap-3" id="alert-feed">
+                    <div class="text-center py-8 text-slate-500 text-xs">
+                        <i class="fa-solid fa-rotate animate-spin mr-2"></i> Fetching live incident logs...
                     </div>
                 </div>
             </div>
+
         </main>
     </div>
 
-    <script src="/app.js"></script>
     <script>
         let latestCity = "All Regions";
         let latestRisk = "SAFE";
 
-        // LIVE POLLING: Fetch Alerts from backend every 2 seconds
         async function fetchLiveAlerts() {
             try {
                 const timestamp = new Date().getTime();
@@ -99,84 +227,102 @@
 
                 const feed = document.getElementById('alert-feed');
                 
-                // If there are alerts, render them
                 if (data.alerts && data.alerts.length > 0) {
-                    feed.innerHTML = ''; // Clear empty state
+                    feed.innerHTML = '';
                     
                     data.alerts.forEach(alert => {
-                        // Check if it's an SOS or CRITICAL alert to set colors
                         let colorBorder = 'border-amber-500/30';
                         let colorBg = 'bg-amber-500/10';
                         let colorText = 'text-amber-400';
                         let icon = 'fa-triangle-exclamation';
 
-                        if (alert.type === 'FLOOD' || alert.type === 'SOS' || alert.msg.includes('CRITICAL')) {
-                            colorBorder = 'border-red-500/40';
-                            colorBg = 'bg-red-500/10';
-                            colorText = 'text-red-400';
+                        if (alert.priority === 'CRITICAL' || alert.type.includes('FLOOD') || alert.type.includes('SOS')) {
+                            colorBorder = 'border-rose-500/40';
+                            colorBg = 'bg-rose-500/10';
+                            colorText = 'text-rose-400';
                         }
-                        if (alert.type === 'SOS') icon = 'fa-satellite-dish';
+                        if (alert.type.includes('SOS')) icon = 'fa-satellite-dish';
+                        if (alert.type.includes('LOGISTICS')) {
+                            colorBorder = 'border-cyan-500/30';
+                            colorBg = 'bg-cyan-500/10';
+                            colorText = 'text-cyan-400';
+                            icon = 'fa-campground';
+                        }
 
                         const alertHTML = `
-                            <div class="p-4 rounded-xl border ${colorBorder} ${colorBg} flex justify-between items-start transition-all fade-in shadow-inner">
+                            <div class="p-3.5 rounded-xl border ${colorBorder} ${colorBg} flex justify-between items-start transition-all">
                                 <div>
-                                    <span class="text-xs font-bold ${colorText} uppercase tracking-widest block mb-1">
-                                        <i class="fa-solid ${icon} mr-1"></i> ${alert.type} ALERT
-                                    </span>
-                                    <p class="text-sm text-white font-medium">${alert.msg}</p>
-                                    <span class="text-[11px] text-slate-400 mt-2 block font-mono">
-                                        <i class="fa-solid fa-location-crosshairs mr-1"></i> Target: ${alert.zone} &nbsp;|&nbsp; Time: ${alert.time}
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-[10px] font-bold ${colorText} uppercase tracking-wider">
+                                            <i class="fa-solid ${icon} mr-1"></i> ${alert.type}
+                                        </span>
+                                        <span class="text-[10px] text-slate-500 font-mono">${alert.time}</span>
+                                    </div>
+                                    <p class="text-xs text-white font-medium">${alert.msg}</p>
+                                    <span class="text-[10px] text-slate-400 mt-1 block font-mono">
+                                        <i class="fa-solid fa-location-crosshairs mr-1 text-indigo-400"></i> Zone: ${alert.zone}
                                     </span>
                                 </div>
-                                <span class="px-3 py-1 bg-slate-950/50 ${colorText} border border-current rounded text-[10px] font-bold shadow">
-                                    ${alert.type}
+                                <span class="px-2 py-0.5 bg-slate-950 ${colorText} border border-current rounded text-[9px] font-bold shrink-0 ml-2">
+                                    ${alert.priority || 'NORMAL'}
                                 </span>
                             </div>
                         `;
                         feed.innerHTML += alertHTML;
                     });
                 }
-            } catch(e) {
-                console.log("Waiting for backend sync...");
-            }
+            } catch(e) {}
         }
 
-        // Start polling
-        setInterval(fetchLiveAlerts, 2000);
+        setInterval(fetchLiveAlerts, 2500);
         document.addEventListener('DOMContentLoaded', fetchLiveAlerts);
 
-        // AI BROADCAST GENERATOR
         function synthesizeAlert() {
+            RakshakAudio.playConfirm();
             const box = document.getElementById('ai-broadcast');
             box.classList.remove('hidden');
-            
-            const btn = document.querySelector('button');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner animate-spin"></i> Generating via LLM...';
+
+            document.getElementById('ai-target-city').textContent = latestCity;
+
+            if (latestRisk === 'CRITICAL') {
+                document.getElementById('msg-en').textContent = `CRITICAL FLASH ADVISORY: Imminent debris runoff breached safety thresholds in ${latestCity}. Evacuation protocol is mandatory. Proceed immediately to designated forward SDRF base camp.`;
+                document.getElementById('msg-hi').textContent = `अत्यंत गंभीर चेतावनी: ${latestCity} घाटी में अचानक भारी सैलाब का खतरा है। सभी नागरिक तुरंत अपने घरों को छोड़ कर निकटतम SDRF राहत शिविर में पहुंचे।`;
+                document.getElementById('msg-gr').textContent = `सावधान रया: ${latestCity} घाटी मा भारी जलजलो अर गदेरा उफणना खतरा च। अपणी जगह छोड़ीक तुरंत सुरक्षित SDRF शिविर मा जावा।`;
+                document.getElementById('msg-km').textContent = `सतर्क रया: ${latestCity} क्षेत्र में भारी बरसात ले नदी नाला उफान में छू। सबे लोग सुरक्षित जगह में जा।`;
+            } else if (latestRisk === 'WARNING') {
+                document.getElementById('msg-en').textContent = `WEATHER WARNING: Heavy localized precipitation detected in ${latestCity}. Avoid low-lying riverbeds and heed mountain traffic police regulations.`;
+                document.getElementById('msg-hi').textContent = `चेतावनी: ${latestCity} में तीव्र बारिश के कारण भूस्खलन की संभावना है। नदी तटों से दूर रहें और राज्य नियंत्रण कक्ष के निर्देशों का पालन करें।`;
+                document.getElementById('msg-gr').textContent = `चेतावनी: ${latestCity} मा जोरदार बरखा ह्वैणी च। नदी-नालों का किनारा नि जावा अर सतर्क रया।`;
+                document.getElementById('msg-km').textContent = `चेतावनी: ${latestCity} में तेज बारिश हुन लागी रयी। नदी का किनारा न जाया।`;
+            } else {
+                document.getElementById('msg-en').textContent = `SEOC ROUTINE BULLETIN: All hydrological basins across ${latestCity} are operating within normal discharge parameters. Char Dham corridor routes are open.`;
+                document.getElementById('msg-hi').textContent = `सामान्य बुलेटिन: ${latestCity} के सभी नदी बेसिन और मार्ग सुरक्षित सीमा में हैं। यात्रा मार्ग सुचारू रूप से संचालित हैं।`;
+                document.getElementById('msg-gr').textContent = `सामान्य जानकारी: ${latestCity} मा सब कुछ ठीक-ठाक च। चार धाम यात्रा मार्ग सुचारू च।`;
+                document.getElementById('msg-km').textContent = `सामान्य जानकारी: ${latestCity} में सब ठीक छू। क्वी डर की बात नी छू।`;
+            }
+
+            box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function speakText(elementId) {
+            RakshakAudio.playConfirm();
+            const text = document.getElementById(elementId).textContent;
+            if (!text || !window.speechSynthesis) return;
+            const utter = new SpeechSynthesisUtterance(text);
+            utter.rate = 0.95;
+            window.speechSynthesis.speak(utter);
+        }
+
+        function pushAlertToTowers() {
+            RakshakAudio.playAlert();
+            const btn = document.getElementById('push-btn');
             btn.disabled = true;
-
-            // Generate contextual messages based on live data
+            btn.innerHTML = '<i class="fa-solid fa-satellite-dish animate-pulse mr-1.5"></i> Transmitted to Cell Towers & Loudspeakers!';
+            btn.className = 'px-4 py-2 bg-indigo-700 text-white font-bold rounded-xl text-xs transition';
             setTimeout(() => {
-                document.getElementById('ai-target-city').textContent = latestCity;
-                
-                if (latestRisk === 'CRITICAL') {
-                    document.getElementById('msg-en').textContent = `FLASH ADVISORY: Imminent hazard detected in ${latestCity} sector. Evacuation protocol initiated. All residents must proceed to SDRF shelters immediately.`;
-                    document.getElementById('msg-hi').textContent = `आपातकालीन चेतावनी: ${latestCity} क्षेत्र में गंभीर खतरा है। निकासी प्रोटोकॉल शुरू कर दिया गया है। सभी नागरिक तुरंत एसडीआरएफ (SDRF) आश्रयों में जाएं।`;
-                    document.getElementById('msg-gr').textContent = `सावधान रया: ${latestCity} क्षेत्र मा भारी खतरा च। अपणी जगह छोड़ीक तुरंत सुरक्षित शरण मा जावा।`;
-                } else if (latestRisk === 'WARNING') {
-                    document.getElementById('msg-en').textContent = `WARNING: Weather systems deteriorating in ${latestCity}. Avoid low-lying areas and monitor official channels.`;
-                    document.getElementById('msg-hi').textContent = `चेतावनी: ${latestCity} में मौसम खराब हो रहा है। निचले इलाकों से बचें और सतर्क रहें।`;
-                    document.getElementById('msg-gr').textContent = `चेतावनी: ${latestCity} मा मौसम खराब ह्वै ग्या। नीचा इलाका छोड़ द्या अर सतर्क रया।`;
-                } else {
-                    document.getElementById('msg-en').textContent = `ROUTINE UPDATE: All telemetry for ${latestCity} is within safe parameters. No emergency actions required.`;
-                    document.getElementById('msg-hi').textContent = `सामान्य अपडेट: ${latestCity} के लिए सभी पैरामीटर सुरक्षित हैं। किसी आपातकालीन कार्रवाई की आवश्यकता नहीं है।`;
-                    document.getElementById('msg-gr').textContent = `सामान्य जानकारी: ${latestCity} मा सब कुछ ठीक च। डरण्या क्वी बात नी च।`;
-                }
-
-                btn.innerHTML = originalText;
                 btn.disabled = false;
-                box.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 1500);
+                btn.innerHTML = '<i class="fa-solid fa-check-double mr-1.5"></i> Broadcast Logged';
+            }, 3000);
         }
     </script>
 </body>

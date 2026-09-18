@@ -3,77 +3,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Rakshak | Tactical GIS Map</title>
+    <title>SEOC Rakshak | Tactical GIS & UAV Recon</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     
-    <!-- Leaflet CSS -->
+    <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="/app.js" defer></script>
 
     <style>
-        .leaflet-layer, .leaflet-control-zoom-in, .leaflet-control-zoom-out, .leaflet-control-attribution {
-            filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%);
+        body { font-family: 'Inter', sans-serif; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        
+        /* Tactical Leaflet Styles */
+        .leaflet-container {
+            background: #020617;
+        }
+        .leaflet-popup-content-wrapper {
+            background: #0f172a;
+            color: #f8fafc;
+            border: 1px solid #334155;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.6);
+        }
+        .leaflet-popup-tip {
+            background: #0f172a;
+        }
+        @keyframes criticalPulse {
+            0% { stroke-opacity: 0.8; stroke-width: 2px; }
+            50% { stroke-opacity: 0.2; stroke-width: 6px; }
+            100% { stroke-opacity: 0.8; stroke-width: 2px; }
+        }
+        .leaflet-critical-pulse {
+            animation: criticalPulse 2s infinite ease-in-out;
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden font-sans">
+<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
     
-    <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0">
-        <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+    <!-- SIDE NAVIGATION -->
+    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+        <!-- BRANDING -->
+        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center text-white font-bold">
-                    <i class="fa-solid fa-shield-halved"></i>
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
+                    <i class="fa-solid fa-shield-halved text-lg"></i>
                 </div>
-                <span class="font-black tracking-widest text-lg text-white">RAKSHAK</span>
+                <div>
+                    <span class="font-black tracking-widest text-base text-white block leading-none">RAKSHAK</span>
+                    <span class="text-[9px] text-indigo-400 font-mono tracking-wider font-semibold">UK-SEOC COMMAND</span>
+                </div>
             </div>
-            <span class="text-[10px] bg-slate-800 border border-slate-700 px-2 py-0.5 rounded text-indigo-400 font-mono">v2.4</span>
+            <button class="audio-toggle-btn text-slate-400 hover:text-white transition p-1.5 bg-slate-800 rounded-lg border border-slate-700 text-xs" title="Toggle Tactical Audio">
+                <i class="fa-solid fa-volume-high"></i>
+            </button>
         </div>
 
-        <nav class="flex-1 p-3 flex flex-col gap-1.5 overflow-y-auto">
-            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-chart-pie w-4"></i> Dashboard
+        <!-- NAV LINKS -->
+        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-chart-line w-4 text-slate-400"></i> Command War Room
             </a>
-            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 font-semibold text-sm">
-                <i class="fa-solid fa-map-location-dot w-4"></i> Tactical Map
+            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold text-xs tracking-wide">
+                <i class="fa-solid fa-map-location-dot w-4 text-indigo-400"></i> Tactical GIS Map
             </a>
-            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-flask-vial w-4"></i> Sandbox Simulator
+            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-flask-vial w-4 text-slate-400"></i> Crisis Sandbox
             </a>
-            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-route w-4"></i> Evacuation Hub
+            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-route w-4 text-slate-400"></i> Evacuation Hub
             </a>
-            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-tower-broadcast w-4"></i> Alert Center
+            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-tower-broadcast w-4 text-slate-400"></i> Broadcast Center
             </a>
-            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-sm">
-                <i class="fa-solid fa-microphone-lines w-4"></i> Voice AI Assistant
+            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
+                <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
             </a>
         </nav>
 
-        <div class="p-4 border-t border-slate-800 flex items-center justify-between text-xs text-slate-400">
-            <div>
-                <div class="font-bold text-slate-200">UK Command</div>
-                <div class="text-[10px] text-emerald-400">Relay Active</div>
+        <!-- WATCH OFFICER PROFILE -->
+        <div class="p-3.5 border-t border-slate-800 bg-slate-900/60">
+            <div class="flex items-center justify-between text-xs mb-1.5">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-bold text-xs">
+                        RN
+                    </div>
+                    <div>
+                        <div class="font-bold text-white text-[11px] leading-tight">Capt. R. S. Negi</div>
+                        <div class="text-[9px] text-emerald-400 font-mono">SEOC Tactical Watch</div>
+                    </div>
+                </div>
+                <a href="index.html" class="p-1.5 text-slate-400 hover:text-rose-400 transition" title="Logoff Duty"><i class="fa-solid fa-power-off text-xs"></i></a>
             </div>
-            <a href="index.html" class="p-2 hover:text-rose-400 transition"><i class="fa-solid fa-power-off"></i></a>
+            <div class="text-[10px] text-slate-500 flex justify-between font-mono pt-1 border-t border-slate-800">
+                <span>GIS Mode: Active</span>
+                <span class="text-emerald-400">25 Sectors Online</span>
+            </div>
         </div>
     </aside>
 
     <!-- CONTENT WRAPPER -->
     <div class="flex-1 flex flex-col h-full overflow-hidden">
+        
         <!-- TOPBAR -->
-        <header class="bg-slate-900 border-b border-slate-800 px-6 py-3.5 flex items-center justify-between shrink-0">
-            <div id="global-status" class="text-emerald-400 font-bold text-sm flex items-center">
-                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> SYSTEM NORMAL &bull; STATE MONITORING
+        <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
+            <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> SEOC NOMINAL &bull; GIS RADAR ACTIVE
             </div>
-            <div class="flex items-center gap-4">
-                <button onclick="sendSOS()" class="bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs py-2 px-3.5 rounded-lg shadow-lg shadow-rose-600/30 transition flex items-center gap-2">
-                    <i class="fa-solid fa-satellite-dish animate-pulse"></i> SEND GPS SOS
+            <div class="flex items-center gap-3">
+                <button onclick="sendSOS()" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] py-2 px-3.5 rounded-xl shadow-lg shadow-rose-600/30 transition flex items-center gap-2 tracking-wider">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                    <span>BROADCAST SOS</span>
                 </button>
-                <div id="clock" class="font-mono text-sm text-slate-400 hidden sm:block">00:00:00</div>
+                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
+                    00:00:00
+                </div>
             </div>
         </header>
 
@@ -81,68 +127,89 @@
         <div class="flex-1 flex flex-col lg:flex-row overflow-hidden relative">
             
             <!-- TACTICAL CONTROL PANEL (Left Drawer) -->
-            <div class="w-full lg:w-[410px] bg-slate-900 border-r border-slate-800 p-5 flex flex-col gap-3.5 overflow-y-auto shrink-0 z-10 shadow-2xl">
+            <div class="w-full lg:w-[420px] bg-slate-900 border-r border-slate-800 p-4 flex flex-col gap-3 overflow-y-auto shrink-0 z-10 shadow-2xl">
                 <div>
-                    <h2 class="text-base font-bold text-white mb-1 flex items-center gap-2">
-                        <i class="fa-solid fa-satellite text-indigo-400"></i> Region Radar Focus
-                    </h2>
-                    <p class="text-xs text-slate-400">Search sector or click map markers to initialize radar.</p>
+                    <div class="flex items-center justify-between">
+                        <h2 class="text-sm font-bold text-white flex items-center gap-2">
+                            <i class="fa-solid fa-crosshairs text-indigo-400"></i> Tactical Sector Radar
+                        </h2>
+                        <span class="text-[9px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 font-mono px-2 py-0.5 rounded font-bold">
+                            IMD DOPPLER LINKED
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Search or click any Himalayan sector on map to stream sensor telemetry.</p>
                 </div>
 
                 <!-- SEARCH FIELD -->
                 <div class="relative">
-                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
-                    <input list="cityList" id="cityInput" placeholder="Search target (e.g. Kedarnath, Joshimath)..." 
-                           class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-indigo-500 shadow-inner">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-3 text-slate-500 text-xs"></i>
+                    <input list="cityList" id="cityInput" placeholder="Select Sector (e.g. Kedarnath, Joshimath)..." 
+                           class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-indigo-500 shadow-inner font-medium">
                     <datalist id="cityList"></datalist>
                 </div>
 
                 <!-- STATUS BANNER -->
                 <div id="statusBanner" class="p-3 bg-slate-950 border border-slate-800 text-slate-400 text-xs rounded-xl font-bold text-center tracking-wide">
-                    CLICK SECTOR OR SEARCH TARGET
+                    CLICK MAP MARKER OR SEARCH TARGET SECTOR
+                </div>
+
+                <!-- SIMULATED DRONE RECON VIEWPORT (UAV HUD) -->
+                <div id="droneReconPanel" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 flex-col gap-2">
+                    <div class="flex justify-between items-center text-[10px] font-mono">
+                        <span class="text-emerald-400 font-bold flex items-center gap-1">
+                            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> UAV RECON DRONE FEED
+                        </span>
+                        <span class="text-slate-500">LIVE OPTICAL / IR</span>
+                    </div>
+                    <canvas id="droneCanvas" width="370" height="150" class="w-full rounded-lg border border-slate-800/80 bg-black"></canvas>
                 </div>
 
                 <!-- TELEMETRY SENSORS -->
                 <div id="telemetryCards" class="hidden flex-col gap-2">
                     <div class="grid grid-cols-2 gap-2">
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Precipitation</span>
-                            <span id="val-precip" class="text-base font-bold text-cyan-400">-- mm/hr</span>
+                            <span class="text-[9px] uppercase font-bold text-slate-400 block mb-1">Precipitation Flux</span>
+                            <span id="val-precip" class="text-base font-black text-cyan-400">-- mm/hr</span>
                         </div>
                         <div class="bg-slate-950 p-3 rounded-xl border border-slate-800">
-                            <span class="text-[10px] uppercase font-bold text-slate-400 block mb-1">Max Temp (24h)</span>
-                            <span id="val-temp" class="text-base font-bold text-amber-400">-- °C</span>
+                            <span class="text-[9px] uppercase font-bold text-slate-400 block mb-1">Max Temp (24h)</span>
+                            <span id="val-temp" class="text-base font-black text-amber-400">-- °C</span>
                         </div>
                     </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                        <span class="text-slate-400">Soil Condition:</span>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Soil Saturation State:</span>
                         <span id="val-soil" class="font-bold text-slate-200">--</span>
                     </div>
-                    <div class="bg-slate-950 p-3 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
-                        <span class="text-slate-400">Elevation / Slope:</span>
-                        <span class="font-bold text-indigo-400"><span id="val-elev">--</span>m &bull; <span id="val-slope">--</span>&deg;</span>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Elevation / Slope Angle:</span>
+                        <span class="font-bold text-indigo-400"><span id="val-elev">--</span> &bull; <span id="val-slope">--</span></span>
+                    </div>
+                    <div class="bg-slate-950 p-2.5 rounded-xl border border-slate-800 flex justify-between items-center text-xs">
+                        <span class="text-slate-400">Drainage River Basin:</span>
+                        <span id="val-basin" class="font-bold text-cyan-300">--</span>
                     </div>
                 </div>
 
-                <!-- MATHEMATICAL RISK FORMULA BREAKDOWN -->
-                <div id="riskBreakdown" class="hidden flex-col gap-2 bg-indigo-950/20 border border-indigo-500/30 p-4 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.15)]">
+                <!-- HYDROLOGICAL RISK FORMULA BREAKDOWN -->
+                <div id="riskBreakdown" class="hidden flex-col gap-2 bg-indigo-950/20 border border-indigo-500/30 p-3.5 rounded-xl shadow-[0_0_15px_rgba(99,102,241,0.15)]">
                     <div class="flex items-center justify-between">
-                        <span class="text-[11px] font-bold text-indigo-300 tracking-wider uppercase"><i class="fa-solid fa-calculator mr-1"></i> Calculation Trace</span>
+                        <span class="text-[10px] font-bold text-indigo-300 tracking-wider uppercase"><i class="fa-solid fa-calculator mr-1"></i> SEOC Runoff Equation</span>
                         <span id="log-total" class="text-sm font-extrabold text-white">-- / 100</span>
                     </div>
                     <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
                         <div id="riskBar" class="bg-emerald-500 h-full w-0 transition-all duration-700"></div>
                     </div>
-                    <div class="flex justify-between text-[11px] text-slate-400 pt-1">
+                    <div class="flex justify-between text-[10px] text-slate-400 pt-0.5">
                         <span>Terrain Baseline: <b id="log-terrain" class="text-white">--</b></span>
-                        <span>Precip Additive: <b id="log-weather" class="text-cyan-400">--</b></span>
+                        <span>Precip Factor: <b id="log-weather" class="text-cyan-400">--</b></span>
                     </div>
                 </div>
 
                 <!-- SYSTEM LOG STREAM -->
-                <div class="flex-1 min-h-[140px] bg-black rounded-xl border border-slate-800 p-3 overflow-y-auto font-mono text-[11px] flex flex-col gap-1 shadow-inner" id="systemLog">
-                    <div class="text-slate-500">> Rakshak Tactical Engine v2.4 initialized.</div>
-                    <div class="text-slate-500">> GIS Layer online. Select region to stream feeds.</div>
+                <div class="flex-1 min-h-[130px] bg-black rounded-xl border border-slate-800 p-3 overflow-y-auto font-mono text-[11px] flex flex-col gap-1 shadow-inner" id="systemLog">
+                    <div class="text-slate-500">> SEOC Tactical GIS Engine v3.0 initialized.</div>
+                    <div class="text-slate-500">> Satcom telemetry uplink connected. INSAT-3DR online.</div>
+                    <div class="text-slate-500">> Select sector marker to initialize telemetry & UAV feed.</div>
                 </div>
             </div>
 
@@ -150,13 +217,23 @@
             <div class="flex-1 relative bg-slate-950">
                 <div id="map" class="w-full h-full z-0"></div>
                 
-                <!-- LEGEND -->
+                <!-- TACTICAL MAP HUD OVERLAY -->
+                <div class="absolute top-4 left-4 z-[400] bg-slate-900/90 border border-slate-800 px-3.5 py-2 rounded-xl text-xs backdrop-blur-md shadow-2xl flex items-center gap-3 pointer-events-none">
+                    <div class="flex items-center gap-1.5 text-emerald-400 font-mono text-[11px] font-bold">
+                        <span class="w-2 h-2 rounded-full bg-emerald-500 inline-block animate-ping"></span>
+                        <span>GIS ACTIVE: UTTARAKHAND GRID</span>
+                    </div>
+                    <span class="text-slate-600">|</span>
+                    <span class="text-slate-400 font-mono text-[10px]">Scale: 1:250,000</span>
+                </div>
+
+                <!-- HAZARD CLASSIFICATION LEGEND -->
                 <div class="absolute bottom-5 right-5 z-[400] bg-slate-900/90 border border-slate-800 p-3.5 rounded-xl text-xs backdrop-blur-md shadow-2xl flex flex-col gap-1.5 pointer-events-none">
-                    <div class="font-bold text-slate-300 mb-1 border-b border-slate-800 pb-1 text-[11px] uppercase tracking-wider">Hazard Classification</div>
-                    <div class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-emerald-500 inline-block"></span> Normal / Safe (0-25)</div>
-                    <div class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-yellow-400 inline-block"></span> Watch (26-50)</div>
-                    <div class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-orange-500 inline-block"></span> Warning (51-75)</div>
-                    <div class="flex items-center gap-2 text-slate-300"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span> Critical Risk (76-100)</div>
+                    <div class="font-bold text-slate-300 mb-1 border-b border-slate-800 pb-1 text-[10px] uppercase tracking-wider">Civil Defense Classification</div>
+                    <div class="flex items-center gap-2 text-slate-300 text-[11px]"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> Normal / Safe (0-25)</div>
+                    <div class="flex items-center gap-2 text-slate-300 text-[11px]"><span class="w-2.5 h-2.5 rounded-full bg-yellow-400 inline-block"></span> Watch Protocol (26-50)</div>
+                    <div class="flex items-center gap-2 text-slate-300 text-[11px]"><span class="w-2.5 h-2.5 rounded-full bg-orange-500 inline-block"></span> Warning / Elevated (51-75)</div>
+                    <div class="flex items-center gap-2 text-slate-300 text-[11px]"><span class="w-2.5 h-2.5 rounded-full bg-red-500 inline-block"></span> Critical Evacuation (76-100)</div>
                 </div>
             </div>
         </div>
