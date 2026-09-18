@@ -209,6 +209,24 @@ def init_db():
         )
     """)
 
+    # ─── 11. COMMUNITY FIRST RESPONDERS & SHELTERS (P2P MUTUAL AID) ───────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS community_assists (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            volunteer_name TEXT NOT NULL,
+            phone TEXT,
+            lat REAL NOT NULL,
+            lng REAL NOT NULL,
+            location_name TEXT,
+            action_type TEXT NOT NULL,  -- OFFERING_SHELTER / OFFERING_FOOD / EN_ROUTE_TO_HELP / FIRST_AID
+            details TEXT NOT NULL,
+            capacity INTEGER DEFAULT 5,
+            target_sos_id TEXT,
+            status TEXT DEFAULT 'ACTIVE',
+            created_at TEXT NOT NULL
+        )
+    """)
+
     conn.commit()
     _seed_initial_data(conn)
     conn.close()
@@ -327,6 +345,20 @@ def _seed_initial_data(conn: sqlite3.Connection):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, [(p[0], p[1], p[2], p[3], p[4], p[5], p[6], p[7], p[8], p[9], now) for p in packets])
         print("[DB] Seeded initial LoRa RF packet stream.")
+
+    # Seed Community First Responders & Safe Havens (P2P Mutual Aid)
+    c.execute("SELECT COUNT(*) FROM community_assists")
+    if c.fetchone()[0] == 0:
+        assists = [
+            ("Rameshwar Semwal (Shiv Shakti Dhaba)", "+91 98371 44520", 30.6975, 79.0435, "Rambara Gorge Upper", "OFFERING_SHELTER", "Concrete 2nd floor hall dry & safe. 25 dry blankets, boiled water & warm tea ready for stranded pilgrims.", 25, None),
+            ("Swami Vishuddhanand (Gaurikund Temple Trust)", "+91 94115 88912", 30.6558, 79.0289, "Gaurikund Main Bazaar", "OFFERING_SHELTER", "Temple Dharmshala upper wing open. Hot food, solar battery charging, and first-aid kits available for up to 40 people.", 40, None),
+            ("Devender Rawat (Sonprayag Taxi & Mule Union)", "+91 97580 33140", 30.6375, 78.9950, "Sonprayag Confluence", "EN_ROUTE_TO_HELP", "4 volunteer mountain drivers with 4x4 Boleros stationed at Sonprayag barrier. Ready for emergency elderly evacuation.", 15, "SOS-701"),
+        ]
+        c.executemany("""
+            INSERT INTO community_assists (volunteer_name, phone, lat, lng, location_name, action_type, details, capacity, target_sos_id, status, created_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+        """, [(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], now) for a in assists])
+        print("[DB] Seeded 3 community first responder shelters.")
 
     conn.commit()
 

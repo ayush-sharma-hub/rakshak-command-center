@@ -103,3 +103,22 @@ async def get_all_weather():
     from backend.services.weather_api import fetch_all_weather
     return await asyncio.to_thread(fetch_all_weather)
 
+
+@router.post("/alerts/phone-test")
+def trigger_phone_test(city: Optional[str] = "Kedarnath Mandakini Basin"):
+    """
+    Generates an emergency crisis payload for testing real smartphone alerts,
+    including haptic vibration patterns and high-decibel tactical sirens.
+    """
+    now = datetime.now(timezone.utc).isoformat()
+    return {
+        "success": True,
+        "title": "⚠️ SEOC CRITICAL EMERGENCY: FLASH FLOOD ALERT",
+        "body": f"Urgent Evacuation Warning: Cloudburst detected upstream of {city}! Runoff velocity 45 km/h. Move to designated high ground immediately!",
+        "vibrate_pattern": [500, 150, 500, 150, 800],
+        "audio_siren": True,
+        "timestamp": now,
+        "emergency_helpline": "1070 (Disaster Call) / 112 (Police & SDRF)"
+    }
+
+

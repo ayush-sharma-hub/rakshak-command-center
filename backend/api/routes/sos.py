@@ -7,9 +7,21 @@ from typing import Optional
 from datetime import datetime, timezone
 
 from backend.core.database import get_db
-from backend.services.geo_engine import find_nearest_unit
+from backend.services.geo_engine import find_nearest_unit, haversine
 
 router = APIRouter(prefix="/api/sos", tags=["SOS"])
+
+
+class CommunityAssistCreate(BaseModel):
+    volunteer_name: str
+    phone: Optional[str] = None
+    lat: float
+    lng: float
+    location_name: Optional[str] = None
+    action_type: str  # OFFERING_SHELTER / OFFERING_FOOD / EN_ROUTE_TO_HELP / FIRST_AID
+    details: str
+    capacity: Optional[int] = 5
+    target_sos_id: Optional[str] = None
 
 
 class SOSCreate(BaseModel):
@@ -131,4 +143,92 @@ def update_sos(payload: SOSUpdate):
         "new_status": payload.status.upper(),
         "updated_at": now,
     }
+
+
+@router.get("/nearby")
+def get_nearby_community_sos(lat: float, lng: float, radius_km: float = 10.0):
+    """
+    Returns active SOS distress signals and community safe shelters
+    within specified kilometer radius of user GPS coordinates.
+    Directly powers the Citizen Mobile 'Community First Responder Radar'.
+    """
+    conn = get_db()
+
+    # Fetch active SOS signals
+    sos_rows = conn.execute("""
+        SELECT * FROM sos_signals 
+        WHERE status IN ('PENDING', 'DISPATCHED', 'EN ROUTE')
+        ORDER BY created_at DESC
+    """).fetchall()
+
+    nearby_sos = []
+    for r in sos_rows:
+        dist = haversine(lat, lng, r["lat"], r["lng"])
+        if dist <= radius_km:
+            item = dict(r)
+            item["distance_km"] = dist
+            item["distance_meters"] = int(dist * 1000)
+            nearby_sos.append(item)
+
+    # Fetch active community shelters & volunteer assists
+    assist_rows = conn.execute("""
+        SELECT * FROM community_assists 
+        WHERE status='ACTIVE'
+        ORDER BY created_at DESC
+    """).fetchall()
+
+    nearby_assists = []
+    for a in assist_rows:
+        dist = haversine(lat, lng, a["lat"], a["lng"])
+        if dist <= radius_km:
+            item = dict(a)
+            item["distance_km"] = dist
+            item["distance_meters"] = int(dist * 1000)
+            nearby_assists.append(item)
+
+    conn.close()
+
+    nearby_sos.sort(key=lambda x: x["distance_km"])
+    nearby_assists.sort(key=lambda x: x["distance_km"])
+
+    return {
+        "user_coords": {"lat": lat, "lng": lng},
+        "search_radius_km": radius_km,
+        "total_active_sos_nearby": len(nearby_sos),
+        "total_community_helpers_nearby": len(nearby_assists),
+        "nearby_sos": nearby_sos,
+        "nearby_helpers": nearby_assists
+    }
+
+
+@router.post("/community-assist")
+def register_community_assist(payload: CommunityAssistCreate):
+    """
+    Allows a nearby citizen, shopkeeper, temple trust, or dhaba owner
+    to register emergency assistance (shelter, hot food, rescue transport).
+    """
+    conn = get_db()
+    now = datetime.now(timezone.utc).isoformat()
+
+    conn.execute("""
+        INSERT INTO community_assists 
+        (volunteer_name, phone, lat, lng, location_name, action_type, details, capacity, target_sos_id, status, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
+    """, (
+        payload.volunteer_name, payload.phone, payload.lat, payload.lng,
+        payload.location_name or "Nearby Mountain Sector",
+        payload.action_type, payload.details, payload.capacity or 5,
+        payload.target_sos_id, now
+    ))
+
+    conn.commit()
+    conn.close()
+
+    return {
+        "success": True,
+        "message": f"Thank you {payload.volunteer_name}! Your assistance offer has been broadcast to nearby citizens and SEOC dispatch.",
+        "action_type": payload.action_type,
+        "timestamp": now
+    }
+
 

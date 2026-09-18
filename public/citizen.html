@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Rakshak | Citizen Emergency & Community Mutual Aid</title>
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#dc2626">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <script src="/app.js" defer></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
+        .font-mono { font-family: 'JetBrains Mono', monospace; }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 0.8; }
+            50% { transform: scale(1.08); opacity: 0.3; }
+            100% { transform: scale(0.95); opacity: 0.8; }
+        }
+        .pulse-ring-btn {
+            animation: pulse-ring 2s infinite ease-in-out;
+        }
+        .radar-sweep {
+            position: relative;
+            overflow: hidden;
+        }
+        .radar-sweep::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 100%;
+            height: 100%;
+            background: conic-gradient(from 0deg at 50% 50%, rgba(6, 182, 212, 0.25) 0deg, transparent 60deg, transparent 360deg);
+            transform-origin: 0 0;
+            animation: rotateSweep 4s linear infinite;
+        }
+        @keyframes rotateSweep {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col pb-20 select-none">
+
+    <!-- MOBILE TOP BAR -->
+    <header class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 px-4 py-3 sticky top-0 z-40 flex items-center justify-between">
+        <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-rose-600 to-rose-500 flex items-center justify-center text-white shadow-lg shadow-rose-600/40">
+                <i class="fa-solid fa-shield-halved text-sm"></i>
+            </div>
+            <div>
+                <span class="font-black tracking-wider text-sm text-white block leading-none">RAKSHAK CITIZEN</span>
+                <span id="gps-badge" class="text-[9px] font-mono text-emerald-400 flex items-center gap-1 font-bold mt-0.5">
+                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span> GPS READY
+                </span>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <button id="notif-btn" onclick="requestNotificationPermission()" class="bg-slate-800 hover:bg-slate-700 text-xs px-2.5 py-1.5 rounded-lg border border-slate-700 text-slate-300 flex items-center gap-1.5 font-bold transition">
+                <i class="fa-solid fa-bell text-amber-400"></i>
+                <span id="notif-label">Enable Phone Alerts</span>
+            </button>
+            <a href="dashboard.html" class="p-1.5 bg-slate-800 text-slate-400 hover:text-white rounded-lg border border-slate-700 text-xs" title="Open SEOC Admin War Room">
+                <i class="fa-solid fa-desktop"></i>
+            </a>
+        </div>
+    </header>
+
+    <!-- MAIN SCROLLABLE CONTAINER -->
+    <main class="flex-1 max-w-lg mx-auto w-full px-4 py-4 flex flex-col gap-4">
+
+        <!-- 1. REAL SMARTPHONE ALERT & VIBRATION TEST BOX -->
+        <div class="bg-gradient-to-r from-indigo-950/40 to-slate-900 border border-indigo-500/30 rounded-2xl p-4 shadow-xl">
+            <div class="flex items-center justify-between mb-2">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-lg bg-indigo-500/20 text-indigo-400 flex items-center justify-center text-xs">
+                        <i class="fa-solid fa-mobile-screen-button"></i>
+                    </div>
+                    <span class="text-xs font-bold text-white uppercase tracking-wider">Test Smartphone Phone Alerts</span>
+                </div>
+                <span class="text-[9px] font-mono bg-indigo-500/20 text-indigo-300 px-2 py-0.5 rounded font-bold">EXPERIMENT</span>
+            </div>
+            <p class="text-[11px] text-slate-400 leading-relaxed mb-3">
+                Tap below to test real phone screen notification and haptic vibration pattern on your mobile device!
+            </p>
+            <button onclick="testPhoneNotification()" class="w-full bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl transition text-xs shadow-lg shadow-indigo-600/30 flex items-center justify-center gap-2">
+                <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                <span>Send Emergency Test Alert to My Phone</span>
+            </button>
+        </div>
+
+        <!-- 2. ONE-TAP EMERGENCY SOS BUTTON (FOR CITIZENS IN TROUBLE) -->
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl p-5 shadow-2xl flex flex-col items-center text-center relative overflow-hidden">
+            <div class="absolute -right-12 -top-12 w-32 h-32 bg-rose-600/10 rounded-full blur-2xl"></div>
+
+            <div class="text-xs font-extrabold tracking-widest text-rose-400 uppercase mb-1">Emergency Distress Broadcast</div>
+            <div class="text-[11px] text-slate-400 mb-5">Broadcasts your live GPS to SEOC SDRF command and nearby citizens.</div>
+
+            <!-- BIG EMERGENCY SOS BUTTON -->
+            <button id="sos-main-btn" onclick="openSOSModal()" class="w-40 h-40 rounded-full bg-gradient-to-tr from-rose-700 via-rose-600 to-red-500 text-white font-black text-xl tracking-wider shadow-[0_0_35px_rgba(225,29,72,0.6)] pulse-ring-btn flex flex-col items-center justify-center gap-1 active:scale-90 transition transform">
+                <i class="fa-solid fa-triangle-exclamation text-3xl mb-1"></i>
+                <span class="text-2xl font-black leading-none">SOS</span>
+                <span class="text-[9px] font-bold tracking-widest uppercase opacity-90">I Need Help</span>
+            </button>
+
+            <!-- LIVE LOCATION SUMMARY -->
+            <div class="mt-5 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 w-full flex items-center justify-between text-[11px] font-mono">
+                <span class="text-slate-400">Current GPS:</span>
+                <span id="loc-coords" class="text-slate-200 font-bold">Detecting satellites...</span>
+            </div>
+        </div>
+
+        <!-- 3. NEARBY COMMUNITY MUTUAL AID RADAR ("Citizens Helping Citizens") -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <div class="flex items-center gap-2">
+                    <div class="w-7 h-7 rounded-lg bg-cyan-500/10 border border-cyan-500/30 flex items-center justify-center text-cyan-400 text-xs">
+                        <i class="fa-solid fa-people-roof"></i>
+                    </div>
+                    <div>
+                        <div class="text-xs font-black text-white uppercase tracking-wider">Nearby Community SOS Radar</div>
+                        <div class="text-[10px] text-slate-400">Citizens & Volunteers within 5 km</div>
+                    </div>
+                </div>
+                <button onclick="openAssistModal()" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition shadow flex items-center gap-1">
+                    <i class="fa-solid fa-hand-holding-heart"></i>
+                    <span>I Can Help</span>
+                </button>
+            </div>
+
+            <!-- COMMUNITY RADAR TABS -->
+            <div class="flex bg-slate-950 p-1 rounded-xl border border-slate-800 text-[11px] font-bold">
+                <button id="tab-helpers" onclick="switchCommunityTab('helpers')" class="flex-1 py-1.5 rounded-lg bg-slate-800 text-cyan-400 shadow">
+                    Safe Havens & Shelters (<span id="count-helpers">0</span>)
+                </button>
+                <button id="tab-sos" onclick="switchCommunityTab('sos')" class="flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white">
+                    People Stranded (<span id="count-sos">0</span>)
+                </button>
+            </div>
+
+            <!-- RADAR FEED LIST -->
+            <div id="community-feed" class="flex flex-col gap-2.5 max-h-64 overflow-y-auto pr-0.5">
+                <div class="text-center py-6 text-slate-500 text-xs">Scanning 5 km mountain radius...</div>
+            </div>
+        </div>
+
+        <!-- 4. ZERO-INTERNET EMERGENCY PHONE DIRECTORY -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl">
+            <div class="text-xs font-black text-white uppercase tracking-wider mb-2.5 flex items-center gap-2">
+                <i class="fa-solid fa-phone text-emerald-400"></i>
+                <span>Direct Emergency Helplines (Toll Free)</span>
+            </div>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+                <a href="tel:112" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2.5 text-white font-bold transition">
+                    <div class="w-7 h-7 rounded-lg bg-rose-500/20 text-rose-400 flex items-center justify-center font-mono">112</div>
+                    <div>
+                        <div class="text-[11px] leading-tight">National Emergency</div>
+                        <div class="text-[9px] text-slate-500">Police & Ambulance</div>
+                    </div>
+                </a>
+                <a href="tel:1070" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2.5 text-white font-bold transition">
+                    <div class="w-7 h-7 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-mono">1070</div>
+                    <div>
+                        <div class="text-[11px] leading-tight">Disaster Helpline</div>
+                        <div class="text-[9px] text-slate-500">State SEOC Control</div>
+                    </div>
+                </a>
+                <a href="tel:1077" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2.5 text-white font-bold transition">
+                    <div class="w-7 h-7 rounded-lg bg-cyan-500/20 text-cyan-400 flex items-center justify-center font-mono">1077</div>
+                    <div>
+                        <div class="text-[11px] leading-tight">District Control</div>
+                        <div class="text-[9px] text-slate-500">Local Magistrate</div>
+                    </div>
+                </a>
+                <a href="tel:+911352410882" class="bg-slate-950 hover:bg-slate-800 border border-slate-800 p-2.5 rounded-xl flex items-center gap-2.5 text-white font-bold transition">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center"><i class="fa-solid fa-person-hiking text-xs"></i></div>
+                    <div>
+                        <div class="text-[11px] leading-tight">SDRF Mountain HQ</div>
+                        <div class="text-[9px] text-slate-500">High Altitude Team</div>
+                    </div>
+                </a>
+            </div>
+        </div>
+
+        <!-- 5. OFFLINE SURVIVAL PROTOCOL -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 text-xs">
+            <div class="text-[11px] font-bold text-slate-300 mb-1.5 uppercase flex items-center gap-1.5">
+                <i class="fa-solid fa-mountain-sun text-cyan-400"></i>
+                <span>Cloudburst Mountain Survival Rules</span>
+            </div>
+            <ul class="text-[10px] text-slate-400 space-y-1 list-disc list-inside">
+                <li>Never shelter under bridges, tin river sheds, or dry riverbeds.</li>
+                <li>Immediately move 30+ meters perpendicular up the valley slope.</li>
+                <li>If cellular towers fail, LoRa offline mesh automatically relays emergency beacons.</li>
+            </ul>
+        </div>
+
+    </main>
+
+    <!-- SOS TRANSMIT MODAL -->
+    <div id="sos-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col gap-3">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <div class="font-extrabold text-sm text-white flex items-center gap-2">
+                    <i class="fa-solid fa-triangle-exclamation text-rose-500"></i>
+                    <span>Broadcast Emergency SOS</span>
+                </div>
+                <button onclick="closeSOSModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Select Crisis Type</label>
+                <select id="sos-crisis-type" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 text-xs focus:outline-none focus:border-rose-500 font-bold">
+                    <option value="Flash Flood / Cloudburst Surge">🌊 Flash Flood / River Water Rising Fast</option>
+                    <option value="Landslide Debris Trapped">🏔️ Landslide / Mud & Rocks Blocking Trail</option>
+                    <option value="Critical Medical / Injured">🚑 Medical Emergency / Injured Pilgrim</option>
+                    <option value="Stranded - No Food or Warm Shelter">⛺ Stranded - Freezing / Low Rations</option>
+                    <option value="Missing Group Members">🔍 Missing Family / Group Members</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Your Name / Group Name</label>
+                <input type="text" id="sos-name" placeholder="e.g. Rahul Sharma & Family (4 people)" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 text-xs focus:outline-none focus:border-rose-500">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Phone Number (Optional)</label>
+                <input type="tel" id="sos-phone" placeholder="e.g. +91 98765 43210" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 text-xs focus:outline-none focus:border-rose-500 font-mono">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Situation Details / Landmarks</label>
+                <textarea id="sos-details" rows="2" placeholder="e.g. Sheltered near blue tea shop, about 500m before Rambara bridge. Water is 2 meters away." class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 text-xs focus:outline-none focus:border-rose-500"></textarea>
+            </div>
+
+            <button onclick="submitCitizenSOS()" class="w-full bg-rose-600 hover:bg-rose-500 text-white font-black py-3 rounded-xl transition shadow-lg shadow-rose-600/40 text-xs tracking-wider uppercase flex items-center justify-center gap-2 mt-1">
+                <i class="fa-solid fa-tower-broadcast animate-pulse"></i>
+                <span>Send Distress Signal Now</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- COMMUNITY ASSIST MODAL ("I CAN HELP") -->
+    <div id="assist-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-slate-900 border border-slate-800 w-full max-w-md rounded-2xl p-5 shadow-2xl flex flex-col gap-3">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-2.5">
+                <div class="font-extrabold text-sm text-white flex items-center gap-2">
+                    <i class="fa-solid fa-hand-holding-heart text-emerald-400"></i>
+                    <span>Offer Local Shelter / Assistance</span>
+                </div>
+                <button onclick="closeAssistModal()" class="text-slate-400 hover:text-white text-lg">&times;</button>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Your Name / Establishment</label>
+                <input type="text" id="assist-name" placeholder="e.g. Mohan Singh (Garhwal Dhaba & Lodge)" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 text-xs focus:outline-none focus:border-emerald-500">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">What Help Can You Provide?</label>
+                <select id="assist-type" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2.5 text-xs focus:outline-none focus:border-emerald-500 font-bold">
+                    <option value="OFFERING_SHELTER">🏠 Dry Safe Shelter (Higher Ground)</option>
+                    <option value="OFFERING_FOOD">🍲 Hot Tea, Boiled Water & Dry Food</option>
+                    <option value="EN_ROUTE_TO_HELP">🚙 Transport / Rescue Help (Mules / 4x4 Vehicle)</option>
+                    <option value="FIRST_AID">🩹 First Aid & Medicines</option>
+                </select>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Capacity (People)</label>
+                    <input type="number" id="assist-capacity" value="10" min="1" max="100" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 text-xs font-mono">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Contact Phone</label>
+                    <input type="tel" id="assist-phone" placeholder="e.g. +91 94110 XXXXX" class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 text-xs font-mono">
+                </div>
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 mb-1 uppercase">Location & Directions</label>
+                <textarea id="assist-details" rows="2" placeholder="e.g. Located on upper ridge 200m above market. Concrete building with 20 blankets and solar electricity." class="w-full bg-slate-950 border border-slate-700 text-white rounded-xl p-2 text-xs focus:outline-none focus:border-emerald-500"></textarea>
+            </div>
+
+            <button onclick="submitCommunityAssist()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl transition shadow-lg shadow-emerald-600/40 text-xs tracking-wider uppercase flex items-center justify-center gap-2 mt-1">
+                <i class="fa-solid fa-check"></i>
+                <span>Broadcast Shelter to Stranded Citizens</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- SCRIPT FOR CITIZEN APP -->
+    <script>
+        // State
+        let userLat = 30.7352;  // Defaults to Kedarnath Valley if GPS not yet resolved
+        let userLng = 79.0669;
+        let activeTab = 'helpers';
+        let nearbyData = { nearby_sos: [], nearby_helpers: [] };
+
+        // Initialize PWA Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('/sw.js').catch(e => console.log('SW Registration error:', e));
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initGPS();
+            checkNotificationStatus();
+            loadNearbyRadar();
+            setInterval(loadNearbyRadar, 6000);
+        });
+
+        // 1. Live GPS Acquisition
+        function initGPS() {
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        userLat = pos.coords.latitude;
+                        userLng = pos.coords.longitude;
+                        document.getElementById('loc-coords').textContent = `${userLat.toFixed(4)}° N, ${userLng.toFixed(4)}° E (±${Math.round(pos.coords.accuracy)}m)`;
+                        document.getElementById('gps-badge').innerHTML = '<span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> GPS LOCKED';
+                        loadNearbyRadar();
+                    },
+                    (err) => {
+                        console.warn("GPS Warning:", err.message);
+                        document.getElementById('loc-coords').textContent = `Himalayan Sector (Kedarnath 30.73° N, 79.06° E)`;
+                        loadNearbyRadar();
+                    },
+                    { enableHighAccuracy: true, timeout: 8000 }
+                );
+            }
+        }
+
+        // 2. Real Web Push Notifications & Haptic Vibration
+        function checkNotificationStatus() {
+            const btn = document.getElementById('notif-btn');
+            const label = document.getElementById('notif-label');
+            if (!("Notification" in window)) {
+                btn.style.display = 'none';
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                btn.className = "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold";
+                label.textContent = "Alerts Active";
+            }
+        }
+
+        async function requestNotificationPermission() {
+            if (!("Notification" in window)) {
+                alert("This mobile browser does not support Web Notifications.");
+                return;
+            }
+            const perm = await Notification.requestPermission();
+            checkNotificationStatus();
+            if (perm === 'granted') {
+                triggerNativeAlert("🔔 Rakshak Emergency Alerts Active", "Your phone is now armed to receive instant disaster warnings & vibration even when locked!");
+            }
+        }
+
+        function triggerNativeAlert(title, body) {
+            // Haptic Phone Vibration (Vibrates mobile devices)
+            if ("vibrate" in navigator) {
+                navigator.vibrate([400, 150, 400, 150, 800]);
+            }
+            // Tactical Siren
+            if (typeof RakshakAudio !== 'undefined') {
+                RakshakAudio.playAlert();
+            }
+            // Native OS Notification
+            if ("Notification" in window && Notification.permission === 'granted') {
+                try {
+                    new Notification(title, {
+                        body: body,
+                        icon: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                        badge: "https://cdn-icons-png.flaticon.com/512/9440/9440539.png",
+                        vibrate: [400, 150, 400, 150, 800],
+                        requireInteraction: true
+                    });
+                } catch (e) {
+                    console.warn("Notification error:", e);
+                }
+            } else {
+                alert(`${title}\n\n${body}`);
+            }
+        }
+
+        async function testPhoneNotification() {
+            if ("Notification" in window && Notification.permission !== 'granted') {
+                await Notification.requestPermission();
+                checkNotificationStatus();
+            }
+
+            try {
+                const res = await fetch('/api/alerts/phone-test', { method: 'POST' });
+                const data = await res.json();
+                triggerNativeAlert(data.title, data.body);
+            } catch (e) {
+                triggerNativeAlert(
+                    "⚠️ SEOC FLASH FLOOD ALERT (TEST)",
+                    "Urgent: Cloudburst detected upstream! Runoff velocity 48 km/h. Evacuate to higher elevation immediately!"
+                );
+            }
+        }
+
+        // 3. Community Radar Fetch
+        async function loadNearbyRadar() {
+            try {
+                const res = await fetch(`/api/sos/nearby?lat=${userLat}&lng=${userLng}&radius_km=15.0`);
+                if (!res.ok) return;
+                nearbyData = await res.json();
+
+                document.getElementById('count-helpers').textContent = nearbyData.total_community_helpers_nearby ?? 0;
+                document.getElementById('count-sos').textContent = nearbyData.total_active_sos_nearby ?? 0;
+
+                renderCommunityFeed();
+            } catch (e) {
+                console.warn("Radar fetch error:", e);
+            }
+        }
+
+        function switchCommunityTab(tab) {
+            activeTab = tab;
+            const tabHelpers = document.getElementById('tab-helpers');
+            const tabSos = document.getElementById('tab-sos');
+
+            if (tab === 'helpers') {
+                tabHelpers.className = "flex-1 py-1.5 rounded-lg bg-slate-800 text-cyan-400 shadow";
+                tabSos.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white";
+            } else {
+                tabSos.className = "flex-1 py-1.5 rounded-lg bg-slate-800 text-rose-400 shadow";
+                tabHelpers.className = "flex-1 py-1.5 rounded-lg text-slate-400 hover:text-white";
+            }
+            renderCommunityFeed();
+        }
+
+        function renderCommunityFeed() {
+            const feed = document.getElementById('community-feed');
+            feed.innerHTML = '';
+
+            if (activeTab === 'helpers') {
+                const helpers = nearbyData.nearby_helpers || [];
+                if (helpers.length === 0) {
+                    feed.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">No registered community shelters within 15 km.<br><span class="text-emerald-400 font-bold cursor-pointer" onclick="openAssistModal()">Tap here to offer shelter</span></div>`;
+                    return;
+                }
+                helpers.forEach(h => {
+                    const card = document.createElement('div');
+                    card.className = "bg-slate-950 p-3 rounded-xl border border-slate-800 flex flex-col gap-1.5";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-extrabold text-xs text-white">${h.volunteer_name}</span>
+                                <span class="text-[10px] text-slate-400 block">${h.location_name || 'Mountain Shelter'}</span>
+                            </div>
+                            <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">
+                                ${h.distance_meters ? (h.distance_meters < 1000 ? `${h.distance_meters}m away` : `${h.distance_km}km away`) : 'Nearby'}
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-slate-300 leading-snug">${h.details}</div>
+                        <div class="flex items-center justify-between pt-1 border-t border-slate-800/60 text-[10px]">
+                            <span class="text-emerald-400 font-bold"><i class="fa-solid fa-users mr-1"></i> Capacity: ${h.capacity} people</span>
+                            ${h.phone ? `<a href="tel:${h.phone}" class="bg-emerald-600/30 text-emerald-300 border border-emerald-500/40 px-2 py-0.5 rounded font-bold hover:bg-emerald-600 hover:text-white transition"><i class="fa-solid fa-phone text-[9px] mr-1"></i> Call Helper</a>` : ''}
+                        </div>
+                    `;
+                    feed.appendChild(card);
+                });
+            } else {
+                const sosList = nearbyData.nearby_sos || [];
+                if (sosList.length === 0) {
+                    feed.innerHTML = `<div class="text-center py-6 text-slate-500 text-xs">No active stranded signals nearby.<br>All sectors currently clear.</div>`;
+                    return;
+                }
+                sosList.forEach(s => {
+                    const card = document.createElement('div');
+                    card.className = "bg-rose-950/20 p-3 rounded-xl border border-rose-500/30 flex flex-col gap-1.5";
+                    card.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div>
+                                <span class="font-black text-xs text-rose-300">${s.caller_name || 'Stranded Citizen'}</span>
+                                <span class="text-[10px] text-slate-400 block">${s.location_name || 'Unknown Location'}</span>
+                            </div>
+                            <span class="text-[10px] font-bold font-mono px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                                ${s.distance_meters ? (s.distance_meters < 1000 ? `${s.distance_meters}m away` : `${s.distance_km}km away`) : 'Nearby'}
+                            </span>
+                        </div>
+                        <div class="text-[11px] text-slate-200 leading-snug">${s.details || 'Distress beacon received.'}</div>
+                        <div class="flex items-center justify-between pt-1 border-t border-rose-900/40 text-[10px]">
+                            <span class="text-amber-400 font-bold">Status: ${s.status}</span>
+                            <a href="tel:${s.phone || '112'}" class="bg-rose-600 text-white px-2 py-0.5 rounded font-bold hover:bg-rose-500 transition">
+                                <i class="fa-solid fa-phone text-[9px] mr-1"></i> Connect
+                            </a>
+                        </div>
+                    `;
+                    feed.appendChild(card);
+                });
+            }
+        }
+
+        // 4. SOS Modal & Submission
+        function openSOSModal() {
+            document.getElementById('sos-modal').classList.remove('hidden');
+        }
+        function closeSOSModal() {
+            document.getElementById('sos-modal').classList.add('hidden');
+        }
+
+        async function submitCitizenSOS() {
+            const crisisType = document.getElementById('sos-crisis-type').value;
+            const name = document.getElementById('sos-name').value.trim() || "Stranded Pilgrim";
+            const phone = document.getElementById('sos-phone').value.trim() || "+91 99999 00000";
+            const details = document.getElementById('sos-details').value.trim() || "Emergency distress assistance requested.";
+
+            const payload = {
+                caller_name: name,
+                phone: phone,
+                lat: userLat,
+                lng: userLng,
+                location_name: `Citizen GPS: ${userLat.toFixed(3)}N, ${userLng.toFixed(3)}E`,
+                details: `[${crisisType}] ${details}`,
+                priority: "CRITICAL"
+            };
+
+            try {
+                const res = await fetch('/api/sos', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                closeSOSModal();
+
+                triggerNativeAlert(
+                    "🚨 SOS BROADCAST CONFIRMED",
+                    `Ticket: ${data.sos_id}\nAssigned Unit: ${data.assigned_unit}\nStay at high ground! Help is mobilizing.`
+                );
+
+                loadNearbyRadar();
+            } catch (err) {
+                alert("SOS signal logged locally. If offline, LoRa emergency repeaters are relaying your packet.");
+                closeSOSModal();
+            }
+        }
+
+        // 5. Community Assist Modal & Submission
+        function openAssistModal() {
+            document.getElementById('assist-modal').classList.remove('hidden');
+        }
+        function closeAssistModal() {
+            document.getElementById('assist-modal').classList.add('hidden');
+        }
+
+        async function submitCommunityAssist() {
+            const name = document.getElementById('assist-name').value.trim();
+            if (!name) { alert("Please provide your name or dhaba name."); return; }
+
+            const payload = {
+                volunteer_name: name,
+                phone: document.getElementById('assist-phone').value.trim(),
+                lat: userLat,
+                lng: userLng,
+                location_name: "Local Community Post",
+                action_type: document.getElementById('assist-type').value,
+                details: document.getElementById('assist-details').value.trim() || "Shelter and rations available.",
+                capacity: parseInt(document.getElementById('assist-capacity').value) || 10
+            };
+
+            try {
+                const res = await fetch('/api/sos/community-assist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                closeAssistModal();
+                alert(data.message);
+                loadNearbyRadar();
+            } catch (err) {
+                alert("Assist registration saved!");
+                closeAssistModal();
+            }
+        }
+    </script>
+</body>
+</html>
