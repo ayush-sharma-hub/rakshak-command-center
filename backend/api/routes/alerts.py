@@ -1,12 +1,16 @@
 """Routes: Emergency broadcast management with AI multi-language generation."""
 
-from fastapi import APIRouter
-from pydantic import BaseModel
-from typing import Optional
+import asyncio
+import json
 from datetime import datetime, timezone
+from typing import Optional, List, Dict, Any
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel
 
 from backend.core.database import get_db
 from backend.services.gemini_service import generate_broadcast
+from backend.services.weather_api import fetch_weather, fetch_all_weather
 
 router = APIRouter(prefix="/api", tags=["Alerts & Broadcasts"])
 
@@ -17,15 +21,13 @@ class BroadcastRequest(BaseModel):
     rainfall_mm: Optional[float] = 0.0
     slope_deg: Optional[float] = 30.0
     details: Optional[str] = ""
-    channels: Optional[list] = None
+    channels: Optional[List[str]] = None
     operator_id: Optional[str] = "SEOC-DUTY-OFFICER"
 
 
 @router.post("/broadcast/synthesize")
 async def synthesize_broadcast(payload: BroadcastRequest):
     """Generate AI-powered multi-language emergency broadcast and log it."""
-    import asyncio
-
     result = await asyncio.to_thread(
         generate_broadcast,
         risk_level=payload.risk_level.upper(),
@@ -40,7 +42,6 @@ async def synthesize_broadcast(payload: BroadcastRequest):
     now = datetime.now(timezone.utc).isoformat()
 
     conn = get_db()
-    import json
     conn.execute("""
         INSERT INTO broadcasts
         (target_city, risk_level, msg_english, msg_hindi, msg_garhwali, msg_kumaoni,
@@ -88,8 +89,6 @@ def get_broadcasts(city: Optional[str] = None, limit: int = 20):
 @router.get("/weather/{city}")
 async def get_weather(city: str):
     """Get live weather for a named Uttarakhand city."""
-    import asyncio
-    from backend.services.weather_api import fetch_weather
     result = await asyncio.to_thread(fetch_weather, city)
     if not result:
         return {"error": f"Weather data unavailable for {city}"}
@@ -99,8 +98,6 @@ async def get_weather(city: str):
 @router.get("/weather")
 async def get_all_weather():
     """Get weather for all high-priority cities."""
-    import asyncio
-    from backend.services.weather_api import fetch_all_weather
     return await asyncio.to_thread(fetch_all_weather)
 
 
@@ -113,9 +110,9 @@ def trigger_phone_test(city: Optional[str] = "Kedarnath Mandakini Basin"):
     now = datetime.now(timezone.utc).isoformat()
     return {
         "success": True,
-        "title": "⚠️ SEOC CRITICAL EMERGENCY: FLASH FLOOD ALERT",
+        "title": "🚨 SEOC CRITICAL EMERGENCY: FLASH FLOOD ALERT",
         "body": f"Urgent Evacuation Warning: Cloudburst detected upstream of {city}! Runoff velocity 45 km/h. Move to designated high ground immediately!",
-        "vibrate_pattern": [500, 150, 500, 150, 800],
+        "vibrate_pattern": [300, 100, 300, 100, 300, 300, 700, 150, 700, 150, 700, 300, 300, 100, 300, 100, 300],
         "audio_siren": True,
         "timestamp": now,
         "emergency_helpline": "1070 (Disaster Call) / 112 (Police & SDRF)"
@@ -124,9 +121,9 @@ def trigger_phone_test(city: Optional[str] = "Kedarnath Mandakini Basin"):
 
 class BroadcastPublishRequest(BaseModel):
     city: str
-    risk_level: Optional[str] = "CRITICAL"
     message: str
-    channels: Optional[list] = None
+    risk_level: Optional[str] = "CRITICAL"
+    channels: Optional[List[str]] = None
     operator_id: Optional[str] = "UK-SEOC-OFFICER-04"
     operator_token: Optional[str] = None
 
@@ -137,12 +134,10 @@ def publish_broadcast(payload: BroadcastPublishRequest):
     Publish a live multi-channel disaster broadcast.
     STRICT SECURITY: Restricted to verified SEOC Command Officers to prevent unauthorized mass alarms.
     """
-    from fastapi import HTTPException
-
     # Validate Operator Credentials
     valid_tokens = ["seoc-access-2026", "UK-SEOC-OFFICER-04", "SEOC-ALPHA-WATCH"]
     is_valid_token = payload.operator_token in valid_tokens
-    is_valid_officer = payload.operator_id and payload.operator_id.startswith("UK-SEOC-")
+    is_valid_officer = bool(payload.operator_id and payload.operator_id.startswith("UK-SEOC-"))
 
     if not (is_valid_token or is_valid_officer):
         raise HTTPException(
@@ -167,7 +162,6 @@ def publish_broadcast(payload: BroadcastPublishRequest):
         now
     ))
 
-    import json
     c.execute("""
         INSERT INTO broadcasts (target_city, risk_level, msg_english, channels, operator_id, created_at)
         VALUES (?, ?, ?, ?, ?, ?)
@@ -215,7 +209,6 @@ def subscribe_push(payload: PushSubscriptionPayload):
     return {"success": True, "message": "Phone push subscription registered for background disaster radar."}
 
 
-
 @router.get("/alerts/latest")
 def get_latest_alerts(since: Optional[str] = None):
     """Lightweight polling endpoint for smartphone client notifications."""
@@ -231,6 +224,3 @@ def get_latest_alerts(since: Optional[str] = None):
         ).fetchall()
     conn.close()
     return [dict(r) for r in rows]
-
-
-
