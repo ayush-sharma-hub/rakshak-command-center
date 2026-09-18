@@ -181,11 +181,11 @@
                     <div>
                         <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex justify-between">
                             <span>Incident Commander / Operator ID</span>
-                            <span class="text-emerald-400 font-mono text-[10px]">Verified Credentials</span>
+                            <span class="text-indigo-400 font-mono text-[10px]">Officer Credentials</span>
                         </label>
                         <div class="relative">
                             <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
-                            <input type="text" id="op-id" value="UK-SEOC-OFFICER-04" 
+                            <input type="text" id="op-id" placeholder="e.g. UK-SEOC-OFFICER-04" autocomplete="off"
                                    class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
                         </div>
                     </div>
@@ -207,14 +207,20 @@
                         <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Passcode / Cryptographic Token</label>
                         <div class="relative">
                             <i class="fa-solid fa-key absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
-                            <input type="password" id="passcode" value="seoc-access-2026" 
+                            <input type="password" id="passcode" placeholder="Enter Command Passcode" autocomplete="current-password"
                                    class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
                         </div>
                     </div>
 
+                    <!-- ERROR MESSAGE BANNER (If wrong password) -->
+                    <div id="login-error-msg" class="hidden text-rose-400 text-[11px] font-bold bg-rose-950/60 border border-rose-500/40 p-2.5 rounded-xl flex items-center gap-2">
+                        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
+                        <span id="login-error-text">Access Denied: Invalid Officer ID or Security Passcode.</span>
+                    </div>
+
                     <!-- BIOMETRIC TOUCH BUTTON -->
                     <button type="submit" id="auth-btn" 
-                            class="w-full mt-3 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
+                            class="w-full mt-2 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
                         <i class="fa-solid fa-fingerprint text-base"></i>
                         <span id="auth-text">Authorize & Enter Command Center</span>
                         <i class="fa-solid fa-arrow-right text-xs"></i>
@@ -274,9 +280,36 @@
             e.preventDefault();
             const btn = document.getElementById('auth-btn');
             const text = document.getElementById('auth-text');
-            const opId = document.getElementById('op-id').value.trim() || 'UK-SEOC-OFFICER-04';
+            const errorBox = document.getElementById('login-error-msg');
+            const errorText = document.getElementById('login-error-text');
+            const opId = document.getElementById('op-id').value.trim();
+            const passcode = document.getElementById('passcode').value.trim();
             const shift = document.getElementById('duty-shift').value;
-            
+
+            errorBox.classList.add('hidden');
+
+            // Accepted Officer IDs and Passcodes
+            const validOfficers = ['UK-SEOC-OFFICER-04', 'UK-SEOC-COMMANDER', 'UK-SEOC-ADMIN', 'ADMIN'];
+            const validPasscodes = ['seoc-access-2026', 'rakshak@2026', 'admin123'];
+
+            const isOfficerValid = validOfficers.includes(opId.toUpperCase()) || opId.toUpperCase().startsWith('UK-SEOC-');
+            const isPasscodeValid = validPasscodes.includes(passcode);
+
+            if (!isOfficerValid || !isPasscodeValid) {
+                if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
+                    try { RakshakAudio.initCtx(); RakshakAudio.playAlert(); } catch(e){}
+                }
+                errorBox.classList.remove('hidden');
+                errorText.textContent = "Access Denied: Invalid Officer ID or Passcode. Command facility access rejected.";
+                btn.classList.add('bg-rose-700', 'border-rose-500');
+                text.textContent = "ACCESS DENIED - AUTHENTICATION FAILED";
+                setTimeout(() => {
+                    btn.classList.remove('bg-rose-700', 'border-rose-500');
+                    text.textContent = "Authorize & Enter Command Center";
+                }, 2000);
+                return;
+            }
+
             if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
                 RakshakAudio.initCtx();
                 RakshakAudio.playSquelch();
