@@ -352,9 +352,10 @@ function initTacticalMap() {
     leafletMap = L.map('map', { zoomControl: false }).setView([30.35, 79.15], 8);
     L.control.zoom({ position: 'topright' }).addTo(leafletMap);
 
-    // Layer 1: Dark Tactical Vector (Default)
-    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    // Layer 1: Dark Tactical Vector (100% Free, No Watermark, No API Key)
+    const darkLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '&copy; SEOC Rakshak | OpenStreetMap',
+        className: 'tactical-dark-tiles',
         maxZoom: 18
     });
 

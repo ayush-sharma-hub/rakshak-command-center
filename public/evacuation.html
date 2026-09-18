@@ -105,10 +105,14 @@
                 <p class="text-xs text-slate-400 mt-1.5 max-w-md mx-auto leading-relaxed">
                     No critical flash-evacuation threshold breached in the last telemetry cycle. All 28 SDRF shelter camps across the Char Dham axis remain on ready reserve.
                 </p>
-                <div class="mt-6 flex justify-center gap-3">
+                <div class="mt-6 flex flex-wrap justify-center gap-3">
+                    <button onclick="triggerDrillMode('Kedarnath Valley Axis')" class="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-rose-600/30 flex items-center gap-2">
+                        <i class="fa-solid fa-bullhorn animate-pulse"></i>
+                        <span>Initiate Tactical Evacuation Drill (Kedarnath)</span>
+                    </button>
                     <a href="simulator.html" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold transition shadow-lg shadow-indigo-600/20 flex items-center gap-2">
                         <i class="fa-solid fa-sliders"></i>
-                        <span>Simulate Valley Cloudburst (Kedarnath)</span>
+                        <span>Simulate Valley Cloudburst</span>
                     </a>
                 </div>
             </div>
@@ -124,9 +128,14 @@
                                 <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Priority Evacuation Sector</span>
                                 <h2 id="evac-city-name" class="text-3xl font-black text-white mt-0.5">--</h2>
                             </div>
-                            <span id="evac-badge" class="bg-rose-500/20 border border-rose-500/50 text-rose-400 px-3.5 py-1 text-[11px] font-black rounded-full animate-pulse">
-                                CRITICAL BREACH
-                            </span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="endDrillMode()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-mono px-2.5 py-1 rounded-lg border border-slate-700 transition" title="Return to Standby Monitoring">
+                                    <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Standby
+                                </button>
+                                <span id="evac-badge" class="bg-rose-500/20 border border-rose-500/50 text-rose-400 px-3.5 py-1 text-[11px] font-black rounded-full animate-pulse">
+                                    CRITICAL BREACH
+                                </span>
+                            </div>
                         </div>
 
                         <!-- POP & TERRAIN SUMMARY -->
@@ -266,6 +275,22 @@
 
     <script>
         let isDispatching = false;
+        let drillModeActive = false;
+        let drillCity = "Kedarnath Valley Corridor";
+
+        function triggerDrillMode(cityName = 'Kedarnath Valley Corridor') {
+            drillModeActive = true;
+            drillCity = cityName;
+            RakshakAudio.playAlert();
+            fetchLiveEvacState();
+        }
+
+        function endDrillMode() {
+            drillModeActive = false;
+            RakshakAudio.playConfirm();
+            resetDispatchUI();
+            fetchLiveEvacState();
+        }
 
         async function fetchLiveEvacState() {
             if (isDispatching) return;
@@ -275,19 +300,34 @@
                 const res = await fetch(`/api/state?t=${timestamp}`, { cache: 'no-store' });
                 const data = await res.json();
 
-                if (data.simulatedCity && data.risk && data.risk.score > 75) {
+                const isCritical = data.risk && data.risk.score >= 50;
+                const hasSimulation = Boolean(data.simulatedCity);
+
+                if (drillModeActive || (hasSimulation && isCritical)) {
                     document.getElementById('no-evac-state').classList.add('hidden');
                     document.getElementById('active-evac-state').classList.remove('hidden');
 
-                    document.getElementById('evac-city-name').textContent = data.simulatedCity;
-                    document.getElementById('evac-pop').textContent = `${(data.risk.popAtRisk || 6500).toLocaleString()} Civilians`;
-                    document.getElementById('evac-shelter-name').textContent = `State SDRF Base - ${data.simulatedCity} Sector Camp`;
+                    const targetCity = drillModeActive ? drillCity : data.simulatedCity;
+                    const popRisk = drillModeActive ? 4850 : (data.risk.popAtRisk || 6500);
+
+                    document.getElementById('evac-city-name').textContent = targetCity;
+                    document.getElementById('evac-pop').textContent = `${popRisk.toLocaleString()} Civilians`;
+                    document.getElementById('evac-shelter-name').textContent = `State SDRF Base - ${targetCity} Sector Camp`;
                 } else {
                     document.getElementById('no-evac-state').classList.remove('hidden');
                     document.getElementById('active-evac-state').classList.add('hidden');
                     resetDispatchUI();
                 }
-            } catch(e) {}
+            } catch(e) {
+                // If offline, still allow drill mode
+                if (drillModeActive) {
+                    document.getElementById('no-evac-state').classList.add('hidden');
+                    document.getElementById('active-evac-state').classList.remove('hidden');
+                    document.getElementById('evac-city-name').textContent = drillCity;
+                    document.getElementById('evac-pop').textContent = `4,850 Civilians`;
+                    document.getElementById('evac-shelter-name').textContent = `State SDRF Base - ${drillCity} Sector Camp`;
+                }
+            }
         }
 
         setInterval(fetchLiveEvacState, 2500);
@@ -315,6 +355,21 @@
                         btn.innerHTML = '<i class="fa-solid fa-check-double mr-2"></i> PROTOCOL FULLY DEPLOYED & SIGNED';
                         btn.className = 'w-full bg-emerald-600 text-white font-bold py-4 rounded-xl transition shadow-lg shadow-emerald-600/30 tracking-wide text-xs';
                         document.getElementById('dispatch-report').classList.remove('hidden');
+
+                        // Relay formal order to backend SQLite database
+                        const targetCity = document.getElementById('evac-city-name').textContent || 'Mandakini Axis';
+                        fetch('/api/dispatch', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                unit_id: 'NDRF-8',
+                                target_sector: targetCity,
+                                objective: 'Four-Stage Civilian Evacuation Mandate Executed',
+                                authorized_by: 'SEOC-CHIEF-WATCH'
+                            })
+                        }).then(r => r.json()).then(d => {
+                            console.log('Dispatch order logged:', d.order_ref);
+                        }).catch(() => {});
                     }
                 }, i * 900);
             });
