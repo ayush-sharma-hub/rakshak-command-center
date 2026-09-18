@@ -282,48 +282,62 @@
             RakshakAudio.playSquelch();
             const cityName = document.getElementById('sim-region').value;
             const cityData = ukCities.find(c => c.name === cityName);
-            
+            const rainfallVal = parseFloat(document.getElementById('sim-rain').value) || 80;
+
             const payload = {
-                cityName: cityName,
-                rainfall: document.getElementById('sim-rain').value,
-                slope: cityData.slope,
-                elevation: cityData.elevation,
-                population: cityData.population || 15000,
-                soil: document.getElementById('sim-soil').value,
+                city: cityName,
+                rainfall: rainfallVal,
+                slope: cityData ? cityData.slope : 35,
+                elevation: cityData ? cityData.elevation : 2000,
+                soil: document.getElementById('sim-soil').value || 'Clay',
                 cloudburst: document.getElementById('sim-cloudburst').checked
             };
 
-            const res = await fetch('/api/simulate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            const data = await res.json();
+            try {
+                const res = await fetch('/api/simulate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
 
-            if (data.success) {
-                const score = data.state.risk.score;
+                // Map new Python API response fields
+                const score = data.riskScore ?? 0;
+                const level = data.riskLevel ?? 'LOW';
+                const explanation = data.explanation ?? 'Analysis unavailable.';
+                const runoff = data.runoff ?? {};
+                const leadTime = data.leadTimeMinutes ?? 30;
+                const popAtRisk = data.populationAtRisk ?? 0;
+
                 document.getElementById('sim-score').textContent = score;
-                document.getElementById('sim-exp').textContent = data.state.risk.explanation;
-                
-                // Calculated realistic physics metrics
-                const velocity = Math.round((cityData.slope * 0.9) + (payload.rainfall * 0.3));
-                const leadtime = Math.max(15, Math.round(90 - (velocity * 0.8)));
-                document.getElementById('sim-velocity').textContent = `${velocity} km/h`;
-                document.getElementById('sim-leadtime').textContent = `${leadtime} mins`;
+                document.getElementById('sim-exp').textContent = explanation;
+
+                // Physics metrics from real backend data
+                const velocityKmh = Math.round((runoff.velocity_ms ?? 0) * 3.6);
+                document.getElementById('sim-velocity').textContent = velocityKmh > 0 ? `${velocityKmh} km/h` : `${Math.round((payload.slope * 0.9) + (rainfallVal * 0.3))} km/h`;
+                document.getElementById('sim-leadtime').textContent = `${leadTime} mins`;
 
                 const b = document.getElementById('sim-badge');
-                b.textContent = data.state.risk.level;
+                b.textContent = level;
                 b.className = "px-3 py-1 rounded-full font-bold text-[10px] border ";
-                
-                if (data.state.risk.level === 'CRITICAL') {
+
+                if (level === 'CRITICAL') {
                     b.classList.add("bg-rose-500/20", "text-rose-400", "border-rose-500/40", "animate-pulse");
                     RakshakAudio.playAlert();
-                } else if (data.state.risk.level === 'WARNING') {
+                } else if (level === 'HIGH') {
                     b.classList.add("bg-amber-500/20", "text-amber-400", "border-amber-500/40");
+                    RakshakAudio.playAlert();
+                } else if (level === 'MEDIUM') {
+                    b.classList.add("bg-yellow-500/20", "text-yellow-300", "border-yellow-500/40");
                 } else {
                     b.classList.add("bg-emerald-500/20", "text-emerald-400", "border-emerald-500/40");
                     RakshakAudio.playConfirm();
                 }
+
+                addLog(`[SIM] ${cityName}: Risk ${level} (${score}/100) — Pop at risk: ${popAtRisk.toLocaleString()} — Lead time: ${leadTime} min`, 'warn');
+            } catch (err) {
+                console.error('Simulation error:', err);
+                addLog('[SIM ERROR] Backend simulation failed. Check server connection.', 'crit');
             }
         }
     </script>

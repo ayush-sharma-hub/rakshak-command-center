@@ -901,27 +901,29 @@ function renderLiveSOSList(sosSignals) {
 async function dispatchRescueTeam(sosId, teamName) {
     RakshakAudio.playConfirm();
     try {
-        await fetch('/api/sos/update', {
+        const resp = await fetch('/api/sos/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: sosId, status: 'DISPATCHED', assignedUnit: teamName })
+            body: JSON.stringify({ id: sosId, status: 'DISPATCHED', assigned_unit: teamName })
         });
+        if (!resp.ok) throw new Error(await resp.text());
         addLog(`COMMAND DISPATCH: ${teamName} assigned to ${sosId}. Mission order relayed via SATCOM.`, 'warn');
         syncBackendStatus();
-    } catch (e) {}
+    } catch (e) { console.error('dispatchRescueTeam error:', e); }
 }
 
 async function resolveDistressCall(sosId) {
     RakshakAudio.playConfirm();
     try {
-        await fetch('/api/sos/update', {
+        const resp = await fetch('/api/sos/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: sosId, status: 'RESOLVED', assignedUnit: 'Mission Accomplished' })
+            body: JSON.stringify({ id: sosId, status: 'CLEARED', assigned_unit: 'Mission Accomplished' })
         });
+        if (!resp.ok) throw new Error(await resp.text());
         addLog(`MISSION CLEARED: Civilians under ${sosId} confirmed safe at forward relief base.`, 'sys');
         syncBackendStatus();
-    } catch (e) {}
+    } catch (e) { console.error('resolveDistressCall error:', e); }
 }
 
 // Geolocation SOS Sender
@@ -931,7 +933,7 @@ function sendSOS() {
         alert('Geolocation services not available on this device.');
         return;
     }
-    
+
     addLog('Acquiring high-precision GPS coordinates for emergency civilian broadcast...', 'crit');
     navigator.geolocation.getCurrentPosition(async (pos) => {
         try {
@@ -941,34 +943,36 @@ function sendSOS() {
                 body: JSON.stringify({
                     lat: pos.coords.latitude,
                     lng: pos.coords.longitude,
-                    callerName: 'Field Mobile Operator',
-                    locationName: `GPS Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)}`,
+                    caller_name: 'Field Mobile Operator',
+                    location_name: `GPS Lat ${pos.coords.latitude.toFixed(4)}, Lng ${pos.coords.longitude.toFixed(4)}`,
                     details: 'Immediate emergency rescue requested from active field mobile terminal.'
                 })
             });
+            const data = await res.json();
             RakshakAudio.playConfirm();
-            addLog('BEACON BROADCAST: Coordinates relayed to SEOC Central Command Desk!', 'sys');
-            alert('SOS Distress Coordinates Successfully Broadcast to Central Command Room!');
+            addLog(`BEACON BROADCAST: SOS ${data.sos_id} logged. Nearest unit: ${data.assigned_unit} (ETA ${data.eta_minutes} min).`, 'sys');
+            alert(`SOS ${data.sos_id} transmitted! ${data.assigned_unit} dispatched — ETA ${data.eta_minutes} minutes.`);
             syncBackendStatus();
         } catch (err) {
             alert('Could not relay beacon to server.');
         }
-    }, (err) => {
-        // Fallback simulated SOS for testing
+    }, () => {
+        // Fallback simulated SOS for testing (geolocation denied)
         fetch('/api/sos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 lat: 30.7352,
                 lng: 79.0669,
-                callerName: 'Kedarnath Valley Pilgrim Group (6)',
-                locationName: 'Kedarnath Base Camp Post',
+                caller_name: 'Kedarnath Valley Pilgrim Group (6)',
+                location_name: 'Kedarnath Base Camp Post',
                 details: 'Heavy snowmelt runoff cut off river crossing. 6 civilians stranded.'
             })
-        }).then(() => {
+        }).then(r => r.json()).then(data => {
             RakshakAudio.playConfirm();
-            alert('Simulation SOS coordinates sent to Central Command!');
+            addLog(`SIMULATION SOS ${data.sos_id}: Nearest unit ${data.assigned_unit} assigned, ETA ${data.eta_minutes} min.`, 'sys');
+            alert(`Simulation SOS sent! ${data.assigned_unit} dispatched — ETA ${data.eta_minutes} minutes.`);
             syncBackendStatus();
-        });
+        }).catch(err => console.error('SOS fallback error:', err));
     });
 }
