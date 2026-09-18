@@ -108,7 +108,7 @@ JSON format:
     try:
         _rate_limit()
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
+            model="gemini-3.5-flash-lite",
             contents=prompt,
         )
         text = response.text.strip()
@@ -181,7 +181,7 @@ Maximum 60 words."""
     try:
         _rate_limit()
         response = client.models.generate_content(
-            model="gemini-2.0-flash-lite",
+            model="gemini-3.5-flash-lite",
             contents=prompt,
         )
         analysis = response.text.strip()

@@ -166,3 +166,4 @@ $env:GEMINI_API_KEY="AIzaSy..."
 
 *Built for Hackathon 2026 — Uttarakhand Disaster Intelligence Initiative*
 *"Technology in Service of the Hills"*
+

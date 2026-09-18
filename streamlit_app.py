@@ -427,3 +427,4 @@ st.markdown(
 if auto_refresh:
     time.sleep(refresh_rate)
     st.rerun()
+
