@@ -61,6 +61,7 @@ async def lifespan(app: FastAPI):
         priority_cities = ["Rudraprayag", "Chamoli", "Joshimath", "Dehradun"]
         for city in priority_cities:
             await asyncio.to_thread(fetch_weather, city)
+            await asyncio.sleep(0.4)
         logger.info("[OK] Weather cache warmed for %d cities.", len(priority_cities))
     except Exception as e:
         logger.warning("[WARN] Weather pre-warm failed (will retry): %s", e)

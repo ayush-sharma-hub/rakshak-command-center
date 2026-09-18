@@ -237,5 +237,23 @@ def _seed_initial_data(conn: sqlite3.Connection):
         """, [(s[0], s[1], s[2], s[3], s[4], s[5], s[6], s[7], s[8], s[9], s[10], s[11], now, now) for s in sos])
         print("[DB] Seeded initial alerts and SOS signals.")
 
+    # Seed initial weather cache
+    c.execute("SELECT COUNT(*) FROM weather_cache")
+    if c.fetchone()[0] == 0:
+        weather_seeds = [
+            ("Rudraprayag", 30.2844, 78.9811, 24.5, 14.0, 8.2, 72.0),
+            ("Chamoli", 30.4000, 79.3300, 21.0, 28.5, 11.4, 78.0),
+            ("Joshimath", 30.5506, 79.5660, 16.5, 36.0, 15.0, 81.0),
+            ("Dehradun", 30.3165, 78.0322, 28.0, 8.0, 6.5, 62.0),
+            ("Kedarnath", 30.7352, 79.0669, 11.2, 42.0, 18.5, 88.0),
+        ]
+        from datetime import timedelta
+        expires = (datetime.now(timezone.utc) + timedelta(hours=6)).isoformat()
+        c.executemany("""
+            INSERT INTO weather_cache (city_name, lat, lng, temperature, precipitation, wind_speed, humidity, raw_json, fetched_at, expires_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, '{}', ?, ?)
+        """, [(w[0], w[1], w[2], w[3], w[4], w[5], w[6], now, expires) for w in weather_seeds])
+        print("[DB] Seeded baseline weather cache.")
+
     conn.commit()
 
