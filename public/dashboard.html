@@ -196,14 +196,28 @@
                         <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
                             <div>
                                 <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                    <i class="fa-solid fa-water text-cyan-400"></i> Himalayan River & Reservoir Basin Watch
+                                    <i class="fa-solid fa-water text-cyan-400"></i> Real Hydrological Basin Telemetry
                                 </h2>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Real-time water levels measured at key river confluences & Tehri Dam.</p>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Live Open-Meteo catchment precipitation + CWC datum gauge heights &amp; discharge estimation.</p>
                             </div>
-                            <span class="text-[10px] text-cyan-400 font-mono">CWC Telemetry</span>
+                            <span class="text-[10px] bg-cyan-950/80 text-cyan-400 border border-cyan-800 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span> Live Physics Engine
+                            </span>
                         </div>
-                        <div id="river-basins-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <!-- Populated dynamically by app.js -->
+                        
+                        <!-- LIVE TELEMETRY CARDS (Open-Meteo + Rational Method + CWC) -->
+                        <div id="river-telemetry-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                            <!-- Populated dynamically by loadLiveRiverTelemetry() -->
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-800/80">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">SEOC Database Basin Sync (Ultrasonic Stage Sensors)</span>
+                                <span class="text-[10px] text-slate-500 font-mono">SQLite Stream</span>
+                            </div>
+                            <div id="river-basins-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                <!-- Populated dynamically by app.js syncBackendStatus -->
+                            </div>
                         </div>
                     </div>
 

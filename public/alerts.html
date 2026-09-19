@@ -226,11 +226,18 @@
                             class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-xs text-white focus:outline-none focus:border-rose-500 transition resize-none"></textarea>
                     </div>
                     <div id="mass-notif-status" class="hidden text-[11px] font-mono p-2.5 rounded-xl border"></div>
-                    <button onclick="sendMassNotification()" id="mass-notif-btn"
-                        class="w-full bg-gradient-to-r from-rose-700 to-rose-600 hover:from-rose-600 hover:to-rose-500 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition shadow-lg shadow-rose-700/30 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-satellite-dish animate-pulse"></i>
-                        <span id="mass-notif-btn-text">📢 Broadcast to All Enrolled Citizens</span>
-                    </button>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                        <button onclick="sendMassNotification()" id="mass-notif-btn"
+                            class="w-full bg-gradient-to-r from-rose-700 to-rose-600 hover:from-rose-600 hover:to-rose-500 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition shadow-lg shadow-rose-700/30 flex items-center justify-center gap-2">
+                            <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                            <span id="mass-notif-btn-text">📢 Push to Enrolled Citizens</span>
+                        </button>
+                        <button onclick="sendLoraEmergencyAlert(document.getElementById('mass-notif-title').value.trim() || 'CIVIL DEFENSE ALERT', document.getElementById('mass-notif-body').value.trim() || 'Flash flood siren activated for Mandakini corridor')" id="lora-manual-broadcast-btn"
+                            class="w-full bg-gradient-to-r from-cyan-800 to-cyan-700 hover:from-cyan-700 hover:to-cyan-600 text-white font-extrabold text-xs py-2.5 px-4 rounded-xl transition shadow-lg shadow-cyan-800/30 flex items-center justify-center gap-2 border border-cyan-500/40">
+                            <i class="fa-solid fa-circle-nodes text-cyan-300"></i>
+                            <span>📡 LoRa Mesh Broadcast (865MHz)</span>
+                        </button>
+                    </div>
                 </div>
             </div>
 

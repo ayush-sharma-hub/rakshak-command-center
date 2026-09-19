@@ -1642,9 +1642,103 @@ function sendSOS() {
             })
         }).then(r => r.json()).then(data => {
             RakshakAudio.playConfirm();
-            addLog(`SIMULATION SOS ${data.sos_id}: Nearest unit ${data.assigned_unit} assigned, ETA ${data.eta_minutes} min.`, 'sys');
-            alert(`Simulation SOS sent! ${data.assigned_unit} dispatched — ETA ${data.eta_minutes} minutes.`);
-            syncBackendStatus();
         }).catch(err => console.error('SOS fallback error:', err));
     });
 }
+
+// =========================================================================
+// 11. REAL HYDROLOGICAL TELEMETRY & LORA MESH BROADCAST ENGINE
+// =========================================================================
+
+/**
+ * loadLiveRiverTelemetry()
+ * Fetches real river telemetry derived from upstream Open-Meteo catchment precipitation
+ * and Central Water Commission (CWC) official datums.
+ * Automatically populates #river-telemetry-container if present on the page.
+ */
+async function loadLiveRiverTelemetry() {
+    try {
+        const res = await fetch('/api/river-basins/live');
+        if (!res.ok) return;
+        const data = await res.json();
+        
+        const container = document.getElementById('river-telemetry-container');
+        if (!container || !data.rivers) return;
+
+        container.innerHTML = data.rivers.map(r => {
+            const isDanger = r.status === 'DANGER' || r.status === 'EXTREME_FLOOD';
+            const isWarning = r.status === 'WARNING';
+            const bedDatum = Math.round((r.current_level - r.gauge_height_m) * 100) / 100;
+            const pct = Math.min(100, Math.max(5, (r.current_level / r.danger_level_m) * 100));
+
+            return `
+            <div class="bg-slate-900 border ${isDanger ? 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : (isWarning ? 'border-amber-500' : 'border-slate-800')} p-4 rounded-2xl flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-white text-sm">${r.river}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${isDanger ? 'bg-rose-950 text-rose-400 border border-rose-800' : (isWarning ? 'bg-amber-950 text-amber-400 border border-amber-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800')}">
+                            ${r.status}
+                        </span>
+                    </div>
+                    <div class="text-2xl font-black text-white font-mono">${r.current_level} <span class="text-xs text-slate-400 font-sans">m MSL</span></div>
+                    <div class="text-[11px] text-slate-400 mt-1">Upstream Rain: <span class="text-white font-mono">${r.upstream_precip_mmhr} mm/h</span> | Discharge: <span class="text-white font-mono">${r.discharge_m3s} m³/s</span></div>
+                    <div class="w-full bg-slate-950 h-2 rounded-full mt-3 overflow-hidden">
+                        <div class="h-full ${isDanger ? 'bg-rose-500' : (isWarning ? 'bg-amber-500' : 'bg-emerald-500')} transition-all duration-500" 
+                             style="width: ${pct}%"></div>
+                    </div>
+                    <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                        <span>Bed: ${bedDatum}m</span>
+                        <span>Warning: ${r.warning_level_m}m</span>
+                        <span>Danger: ${r.danger_level_m}m</span>
+                    </div>
+                </div>
+                <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
+                    <span class="text-slate-400 truncate max-w-[220px]" title="${r.action_required}">
+                        <i class="fa-solid fa-gauge-high mr-1 text-cyan-400"></i> ${r.action_required}
+                    </span>
+                    <span class="font-mono text-slate-500 shrink-0 font-semibold">Gauge: ${r.gauge_height_m}m</span>
+                </div>
+            </div>
+            `;
+        }).join('');
+    } catch (err) {
+        console.error('Failed to load river telemetry:', err);
+    }
+}
+window.loadLiveRiverTelemetry = loadLiveRiverTelemetry;
+
+/**
+ * sendLoraEmergencyAlert(title, messageText)
+ * Triggers physical and simulated emergency LoRa mesh packet broadcast across
+ * Himalayan gorge repeaters (865–867 MHz India ISM Band).
+ */
+async function sendLoraEmergencyAlert(title, messageText) {
+    try {
+        const response = await fetch('/api/lora/broadcast', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                message: `${title}: ${messageText}`,
+                priority: 'CRITICAL'
+            })
+        });
+        const result = await response.json();
+        if (response.ok) {
+            alert(`LoRa Mesh Broadcast Transmitted! Reached ${result.nodes_count} mountain nodes. Packet Hash: ${result.packet_hash}`);
+        } else {
+            alert('LoRa transmission failed: ' + (result.detail || 'Unknown error'));
+        }
+        return result;
+    } catch (e) {
+        alert('LoRa transmission failed: ' + e.message);
+    }
+}
+window.sendLoraEmergencyAlert = sendLoraEmergencyAlert;
+
+// Auto-run river telemetry if container exists
+document.addEventListener('DOMContentLoaded', () => {
+    if (document.getElementById('river-telemetry-container')) {
+        loadLiveRiverTelemetry();
+        setInterval(loadLiveRiverTelemetry, 60000);
+    }
+});
