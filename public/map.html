@@ -14,8 +14,20 @@
     <script src="/app.js" defer></script>
 
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root { color-scheme:dark; --map-canvas:#050a12; --line:rgba(148,163,184,.15); --cyan:#4ee9ff; --violet:#8b7cff; }
+        body { font-family: 'Inter', sans-serif; background:#050a12!important; background-image:radial-gradient(circle at 70% 0,rgba(71,59,167,.22),transparent 32%)!important; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        body > aside { background:linear-gradient(180deg,rgba(12,19,32,.98),rgba(5,9,16,.99))!important; border-color:var(--line)!important; box-shadow:18px 0 55px rgba(0,0,0,.23); }
+        header { background:rgba(9,15,26,.82)!important; border-color:var(--line)!important; backdrop-filter:blur(20px); }
+        nav a { border-color:transparent!important; transition:transform .18s ease,background .18s ease!important; }
+        nav a:hover { transform:translateX(3px); background:rgba(83,102,140,.13)!important; }
+        nav a.bg-indigo-600\/20 { background:linear-gradient(90deg,rgba(104,92,255,.24),rgba(48,74,178,.08))!important; border-color:rgba(139,124,255,.35)!important; box-shadow:inset 3px 0 var(--cyan); }
+        #tacticalPanel { background:linear-gradient(180deg,rgba(13,21,36,.96),rgba(7,12,22,.98))!important; border-color:var(--line)!important; }
+        #tacticalPanel .bg-slate-950 { background:rgba(3,8,17,.72)!important; border-color:rgba(148,163,184,.13)!important; }
+        #tacticalPanel input { background:rgba(4,9,18,.86)!important; border-color:rgba(111,130,163,.3)!important; transition:border-color .2s ease,box-shadow .2s ease; }
+        #tacticalPanel input:focus { border-color:var(--cyan)!important; box-shadow:0 0 0 3px rgba(78,233,255,.1),0 0 22px rgba(78,233,255,.08); }
+        #statusBanner { background:linear-gradient(90deg,rgba(35,31,83,.72),rgba(6,31,46,.72))!important; border-color:rgba(99,102,241,.36)!important; }
+        #map { box-shadow:inset 0 0 80px rgba(0,0,0,.65); }
         
         /* Tactical Leaflet Styles */
         .leaflet-container {
@@ -35,6 +47,11 @@
         .leaflet-popup-tip {
             background: #0f172a;
         }
+        .leaflet-control-zoom a, .leaflet-control-layers { background:rgba(10,17,30,.88)!important; color:#dce9ff!important; border-color:rgba(148,163,184,.2)!important; backdrop-filter:blur(12px); }
+        .leaflet-control-zoom a:hover { background:rgba(30,43,70,.95)!important; color:var(--cyan)!important; }
+        .leaflet-bar { border:1px solid rgba(148,163,184,.2)!important; border-radius:12px!important; overflow:hidden; box-shadow:0 12px 28px rgba(0,0,0,.32)!important; }
+        .leaflet-control-attribution { background:rgba(3,8,17,.6)!important; color:#7f91aa!important; }
+        .leaflet-control-attribution a { color:#73d9f2!important; }
         @keyframes criticalPulse {
             0% { stroke-opacity: 0.8; stroke-width: 2px; }
             50% { stroke-opacity: 0.2; stroke-width: 6px; }
@@ -43,6 +60,7 @@
         .leaflet-critical-pulse {
             animation: criticalPulse 2s infinite ease-in-out;
         }
+        @media (max-width: 1023px) { #tacticalPanel { box-shadow:0 -20px 54px rgba(0,0,0,.43)!important; } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">

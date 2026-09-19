@@ -9,8 +9,31 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
     <script src="/app.js" defer></script>
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        :root { color-scheme: dark; --canvas:#060a12; --surface:rgba(13, 20, 34, .78); --surface-strong:#111a2a; --line:rgba(148,163,184,.14); --ink:#edf5ff; --muted:#8da1bd; --cyan:#4ee9ff; --violet:#8b7cff; --danger:#ff5470; }
+        * { scrollbar-width: thin; scrollbar-color: #34445d transparent; }
+        body { font-family: 'Inter', sans-serif; background:var(--canvas)!important; background-image:radial-gradient(circle at 82% -15%,rgba(75,64,162,.25),transparent 36%),radial-gradient(circle at 16% 70%,rgba(7,109,137,.13),transparent 30%)!important; }
         .font-mono { font-family: 'JetBrains Mono', monospace; }
+        body > aside { background:linear-gradient(180deg,rgba(12,19,32,.96),rgba(6,10,18,.98))!important; border-color:var(--line)!important; box-shadow:18px 0 55px rgba(0,0,0,.18); }
+        header { background:rgba(10,16,28,.78)!important; border-color:var(--line)!important; backdrop-filter:blur(20px); }
+        main { background:linear-gradient(180deg,rgba(8,13,23,.1),rgba(5,9,16,.66))!important; }
+        main > div, main .bg-slate-900 { border-color:var(--line)!important; box-shadow:0 14px 34px rgba(0,0,0,.16); }
+        main .bg-slate-900 { background:linear-gradient(145deg,rgba(18,28,46,.86),rgba(10,16,28,.84))!important; backdrop-filter:blur(16px); }
+        main .bg-slate-950 { background:rgba(4,9,18,.72)!important; border-color:rgba(148,163,184,.1)!important; }
+        main > div:first-child { background:linear-gradient(112deg,rgba(18,29,48,.93),rgba(23,24,65,.78),rgba(8,39,55,.67))!important; border-color:rgba(112,133,255,.25)!important; position:relative; overflow:hidden; }
+        main > div:first-child::after { content:''; position:absolute; inset:auto -6% -100px auto; width:330px; height:240px; background:radial-gradient(ellipse,rgba(78,233,255,.16),transparent 67%); pointer-events:none; }
+        nav a { border-color:transparent!important; transition:transform .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease!important; }
+        nav a:hover { transform:translateX(3px); background:rgba(83,102,140,.13)!important; }
+        nav a.bg-indigo-600\/20 { background:linear-gradient(90deg,rgba(104,92,255,.24),rgba(48,74,178,.08))!important; border-color:rgba(139,124,255,.35)!important; box-shadow:inset 3px 0 var(--cyan),0 8px 20px rgba(28,40,101,.16); }
+        button, a { -webkit-tap-highlight-color:transparent; }
+        button { transition:transform .16s ease,filter .16s ease,box-shadow .16s ease!important; }
+        button:hover { filter:brightness(1.08); } button:active { transform:scale(.97); }
+        .bg-rose-600 { box-shadow:0 0 0 1px rgba(255,84,112,.24),0 10px 26px rgba(225,29,72,.26)!important; }
+        #live-ticker-text { letter-spacing:.01em; } #live-ticker-text::before { content:'LIVE'; color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:800; margin-right:.65rem; }
+        #sos-incident-list > div { border-left:2px solid rgba(255,84,112,.8)!important; box-shadow:0 8px 22px rgba(0,0,0,.12); }
+        #river-basins-grid > div, #river-telemetry-container > div { transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
+        #river-basins-grid > div:hover, #river-telemetry-container > div:hover { transform:translateY(-2px); border-color:rgba(78,233,255,.38)!important; box-shadow:0 12px 25px rgba(0,0,0,.2); }
+        #systemLog { background:linear-gradient(145deg,#030712,#0b1220)!important; border-color:rgba(78,233,255,.14)!important; }
+        @media (max-width: 767px) { body { background-image:radial-gradient(circle at 70% 0,rgba(75,64,162,.22),transparent 35%)!important; } main { padding-bottom:5.2rem!important; } }
     </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen md:h-screen flex flex-col md:flex-row md:overflow-hidden overflow-y-auto">

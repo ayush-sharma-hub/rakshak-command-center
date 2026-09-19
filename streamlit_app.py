@@ -118,6 +118,31 @@ st.markdown("""
 
     /* Plotly background fix */
     .js-plotly-plot .plotly .bg { fill: #0a0e1a !important; }
+
+    /* Command-center design system overrides */
+    :root { --canvas:#060a12; --panel:#0e1728; --line:rgba(148,163,184,.16); --ink:#edf5ff; --muted:#8da1bd; --cyan:#4ee9ff; --violet:#8b7cff; }
+    .stApp {
+        background: radial-gradient(circle at 88% -8%, rgba(88,72,188,.24), transparent 33%),
+                    radial-gradient(circle at 10% 72%, rgba(5,117,148,.13), transparent 27%), var(--canvas) !important;
+        color:var(--ink);
+    }
+    .main .block-container { max-width:1540px; padding:1.5rem 2.2rem 2rem; }
+    .rakshak-header { background:linear-gradient(115deg,rgba(19,30,50,.94),rgba(30,29,75,.82),rgba(6,38,54,.7)); border-color:rgba(117,138,255,.3); border-radius:18px; box-shadow:0 18px 45px rgba(0,0,0,.23); }
+    .rakshak-header h1 { color:#f5f7ff; font-family:'Rajdhani',sans-serif; font-weight:700; text-shadow:none; }
+    .rakshak-header .status-pill { background:rgba(34,197,94,.1); border-color:rgba(74,222,128,.35); letter-spacing:.06em; }
+    .metric-card { background:linear-gradient(145deg,rgba(20,31,52,.84),rgba(10,16,29,.86)); border-color:var(--line); border-radius:16px; box-shadow:0 12px 28px rgba(0,0,0,.15); padding:18px; transition:transform .18s ease,border-color .18s ease; }
+    .metric-card:hover { transform:translateY(-3px); border-color:rgba(78,233,255,.35); }
+    .metric-card .label { color:var(--muted); }.metric-card .value { color:var(--cyan); text-shadow:0 0 18px rgba(78,233,255,.13); }
+    .basin-row,.sos-card { background:linear-gradient(135deg,rgba(15,25,42,.88),rgba(7,13,24,.82)); border-color:var(--line); box-shadow:0 8px 22px rgba(0,0,0,.12); }
+    .basin-row { border-radius:12px; }.sos-card { border-radius:0 12px 12px 0; }
+    h1,h2,h3 { letter-spacing:.015em!important; color:var(--ink)!important; }
+    [data-testid="stSidebar"] { background:linear-gradient(180deg,#0d1423,#060a12)!important; border-right:1px solid var(--line); }
+    [data-testid="stSidebar"] .stButton > button { border-color:rgba(139,124,255,.42)!important; background:linear-gradient(100deg,#5b4acb,#3d67bb)!important; color:white!important; border-radius:10px!important; }
+    .stButton > button { border-radius:10px!important; transition:transform .16s ease,filter .16s ease!important; }.stButton > button:hover { transform:translateY(-1px); filter:brightness(1.1); }
+    [data-testid="stDataFrame"] { border:1px solid var(--line); border-radius:14px; overflow:hidden; }
+    div[data-baseweb="select"] > div, [data-testid="stTextInput"] input, [data-testid="stTextArea"] textarea { background:#0a1220!important; border-color:rgba(148,163,184,.25)!important; color:var(--ink)!important; border-radius:10px!important; }
+    hr { border-color:var(--line)!important; }
+    @media(max-width: 720px) { .main .block-container { padding:1rem; }.rakshak-header { padding:16px 18px; }.rakshak-header h1 { font-size:1.55rem; } }
 </style>
 """, unsafe_allow_html=True)
 
@@ -427,4 +452,3 @@ st.markdown(
 if auto_refresh:
     time.sleep(refresh_rate)
     st.rerun()
-

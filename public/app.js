@@ -1521,7 +1521,7 @@ function renderRiverBasins(basins) {
         }
 
         return `
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between">
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between group relative overflow-hidden">
                 <div class="flex justify-between items-start mb-2">
                     <div>
                         <span class="text-xs font-bold text-white block">${b.river}</span>
@@ -1534,8 +1534,8 @@ function renderRiverBasins(basins) {
                         <span class="text-white font-bold">${curr.toFixed(1)} m</span>
                         <span class="text-slate-400">${trend}</span>
                     </div>
-                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
-                        <div class="${barColor} h-full" style="width: ${percent}%"></div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden shadow-inner">
+                        <div class="${barColor} h-full transition-all duration-700 ease-out" style="width: ${percent}%"></div>
                     </div>
                 </div>
             </div>
@@ -1570,7 +1570,7 @@ function renderLiveSOSList(sosSignals) {
         if (sos.status === 'CLEARED' || sos.status === 'RESOLVED') statusBadge = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
 
         return `
-            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800/90 hover:border-slate-700 transition flex flex-col gap-2.5">
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800/90 hover:border-rose-400/50 hover:-translate-y-0.5 transition duration-200 flex flex-col gap-2.5 shadow-lg shadow-black/10">
                 <div class="flex justify-between items-start">
                     <div>
                         <div class="flex items-center gap-2">
@@ -1711,7 +1711,7 @@ async function loadLiveRiverTelemetry() {
             const pct = Math.min(100, Math.max(5, (r.current_level / r.danger_level_m) * 100));
 
             return `
-            <div class="bg-slate-900 border ${isDanger ? 'border-rose-500 shadow-[0_0_15px_rgba(244,63,94,0.2)]' : (isWarning ? 'border-amber-500' : 'border-slate-800')} p-4 rounded-2xl flex flex-col justify-between">
+            <div class="bg-slate-900 border ${isDanger ? 'border-rose-500 shadow-[0_0_22px_rgba(244,63,94,0.22)]' : (isWarning ? 'border-amber-500 shadow-[0_0_18px_rgba(245,158,11,0.12)]' : 'border-slate-800')} p-4 rounded-2xl flex flex-col justify-between transition duration-200 hover:-translate-y-0.5">
                 <div>
                     <div class="flex justify-between items-center mb-2">
                         <span class="font-bold text-white text-sm">${r.river}</span>
@@ -1721,8 +1721,8 @@ async function loadLiveRiverTelemetry() {
                     </div>
                     <div class="text-2xl font-black text-white font-mono">${r.current_level} <span class="text-xs text-slate-400 font-sans">m MSL</span></div>
                     <div class="text-[11px] text-slate-400 mt-1">Upstream Rain: <span class="text-white font-mono">${r.upstream_precip_mmhr} mm/h</span> | Discharge: <span class="text-white font-mono">${r.discharge_m3s} m³/s</span></div>
-                    <div class="w-full bg-slate-950 h-2 rounded-full mt-3 overflow-hidden">
-                        <div class="h-full ${isDanger ? 'bg-rose-500' : (isWarning ? 'bg-amber-500' : 'bg-emerald-500')} transition-all duration-500" 
+                    <div class="w-full bg-slate-950 h-2 rounded-full mt-3 overflow-hidden shadow-inner">
+                        <div class="h-full ${isDanger ? 'bg-rose-500' : (isWarning ? 'bg-amber-500' : 'bg-emerald-500')} transition-all duration-700 ease-out"
                              style="width: ${pct}%"></div>
                     </div>
                     <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
