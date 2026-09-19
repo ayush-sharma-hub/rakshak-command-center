@@ -58,9 +58,73 @@ def get_vapid_public_key() -> str:
     return pub_key
 
 
+def send_ntfy_push(title: str, body: str, url: str = "/map.html", priority: str = "CRITICAL") -> bool:
+    """
+    100% Free universal push notification via ntfy.sh gateway.
+    Wakes up phones with screen OFF and Chrome CLOSED, with high-priority audio alarm.
+    Topic: rakshak_emergency_alerts (or NTFY_TOPIC env var).
+    """
+    import urllib.request
+    try:
+        topic = os.environ.get("NTFY_TOPIC", "rakshak_emergency_alerts")
+        p_val = 5 if priority.upper() in ("CRITICAL", "EMERGENCY") else (4 if priority.upper() == "HIGH" else 3)
+        payload = json.dumps({
+            "topic": topic,
+            "title": title,
+            "message": body,
+            "priority": p_val,
+            "tags": ["warning", "rotating_light"],
+            "click": url if url.startswith("http") else f"https://rakshak.org{url}"
+        }).encode("utf-8")
+
+        req = urllib.request.Request(
+            "https://ntfy.sh",
+            data=payload,
+            headers={"Content-Type": "application/json", "User-Agent": "ProjectRakshak-SEOC/1.0"}
+        )
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            logger.info(f"[ntfy.sh] Universal offline push sent to topic '{topic}' (status: {resp.status})")
+            return True
+    except Exception as e:
+        logger.warning(f"[ntfy.sh] Push delivery notice: {e}")
+        return False
+
+
+def send_telegram_alert(title: str, body: str) -> bool:
+    """
+    100% Free broadcast to Telegram channel or bot chat (if TELEGRAM_BOT_TOKEN & TELEGRAM_CHAT_ID are set in .env).
+    """
+    import urllib.request
+    bot_token = os.environ.get("TELEGRAM_BOT_TOKEN")
+    chat_id = os.environ.get("TELEGRAM_CHAT_ID")
+    if not bot_token or not chat_id:
+        return False
+    try:
+        tg_url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
+        text = f"🚨 <b>{title}</b>\n\n{body}\n\n<i>Project Rakshak — Uttarakhand SEOC Command</i>"
+        payload = json.dumps({
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": "HTML"
+        }).encode("utf-8")
+        req = urllib.request.Request(tg_url, data=payload, headers={"Content-Type": "application/json"})
+        with urllib.request.urlopen(req, timeout=5) as resp:
+            logger.info(f"[Telegram] Alert sent to chat {chat_id} (status: {resp.status})")
+            return True
+    except Exception as e:
+        logger.warning(f"[Telegram] Failed to send: {e}")
+        return False
+
+
 def _dispatch_push_worker(title: str, body: str, url: str, priority: str):
     """Background worker that pushes to all registered phone endpoints."""
     try:
+        # 1. Dispatch 100% free universal push to ntfy.sh (reaches phones with screen OFF and Chrome CLOSED)
+        send_ntfy_push(title, body, url, priority)
+
+        # 2. Dispatch to Telegram channel/bot if configured
+        send_telegram_alert(title, body)
+
         _, _ = get_vapid_keys()
         conn = get_db()
         rows = conn.execute("SELECT id, endpoint, p256dh, auth, device_info FROM push_subscriptions").fetchall()
@@ -132,16 +196,23 @@ def _dispatch_push_worker(title: str, body: str, url: str, priority: str):
 def send_push_to_all(title: str, body: str, url: str = "/map.html", priority: str = "CRITICAL") -> dict:
     """
     Synchronous push dispatcher — returns {'sent': N, 'failed': M, 'total': T}.
+    Dispatches to ntfy.sh universal gateway, Telegram (if configured), and browser WebPush.
     Use asyncio.to_thread() from async callers.
     """
     try:
+        # 1. Universal Screen-Off / Closed-Chrome Push via ntfy.sh
+        ntfy_ok = send_ntfy_push(title, body, url, priority)
+
+        # 2. Telegram Alert
+        tg_ok = send_telegram_alert(title, body)
+
         _, _ = get_vapid_keys()
         conn = get_db()
         rows = conn.execute("SELECT id, endpoint, p256dh, auth FROM push_subscriptions").fetchall()
         conn.close()
 
         if not rows:
-            return {"sent": 0, "failed": 0, "total": 0}
+            return {"sent": 1 if ntfy_ok else 0, "failed": 0, "total": 0, "ntfy_delivered": ntfy_ok}
 
         payload_json = json.dumps({
             "title": title,
@@ -193,8 +264,14 @@ def send_push_to_all(title: str, body: str, url: str = "/map.html", priority: st
             conn2.commit()
             conn2.close()
 
-        logger.info(f"Mass push: sent={sent_count}, failed={failed_count}, total={len(rows)}")
-        return {"sent": sent_count, "failed": failed_count, "total": len(rows)}
+        logger.info(f"Mass push: sent={sent_count}, failed={failed_count}, total={len(rows)}, ntfy={ntfy_ok}")
+        return {
+            "sent": sent_count + (1 if ntfy_ok else 0),
+            "webpush_sent": sent_count,
+            "failed": failed_count,
+            "total": len(rows),
+            "ntfy_delivered": ntfy_ok
+        }
 
     except Exception as e:
         logger.error(f"Error in send_push_to_all: {e}")
