@@ -147,15 +147,22 @@ function urlB64ToUint8Array(base64String) {
 }
 
 async function syncPushSubscriptionToServer() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return;
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
     try {
         const reg = await navigator.serviceWorker.ready;
         const vRes = await fetch('/api/alerts/vapid-public-key');
-        if (!vRes.ok) return;
+        if (!vRes.ok) return false;
         const { public_key } = await vRes.json();
-        if (!public_key) return;
+        if (!public_key) return false;
 
         let sub = await reg.pushManager.getSubscription();
+        if (sub) {
+            const subJson = sub.toJSON();
+            if (!subJson.keys || !subJson.keys.p256dh) {
+                try { await sub.unsubscribe(); } catch(e) {}
+                sub = null;
+            }
+        }
         if (!sub) {
             sub = await reg.pushManager.subscribe({
                 userVisibleOnly: true,
@@ -163,7 +170,7 @@ async function syncPushSubscriptionToServer() {
             });
         }
         const subJson = sub.toJSON();
-        await fetch('/api/alerts/subscribe-push', {
+        const res = await fetch('/api/alerts/subscribe-push', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -173,11 +180,38 @@ async function syncPushSubscriptionToServer() {
                 device_info: navigator.userAgent
             })
         });
-        console.log("Smartphone registered with SEOC WebPush server.");
+        const data = await res.json();
+        console.log("Smartphone registered with SEOC WebPush server:", data);
+
+        const badges = document.querySelectorAll('.push-status-badge');
+        badges.forEach(b => {
+            b.innerHTML = '<i class="fa-solid fa-satellite text-emerald-400 mr-1.5"></i> <span class="text-emerald-400 font-bold">Screen-Off Push Active (FCM Connected)</span>';
+            b.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-300');
+            b.classList.add('bg-emerald-500/20', 'border-emerald-500/30', 'text-emerald-300');
+        });
+        return true;
     } catch (e) {
-        console.log("Push subscription sync (local fallback active):", e);
+        console.warn("Push subscription sync:", e);
+        return false;
     }
 }
+window.syncPushSubscriptionToServer = syncPushSubscriptionToServer;
+
+function toggleTacticalPanel(forceOpen) {
+    const panel = document.getElementById('tacticalPanel');
+    if (!panel) return;
+    if (forceOpen === true) {
+        panel.classList.remove('translate-y-[120%]');
+        panel.classList.add('translate-y-0');
+    } else if (forceOpen === false) {
+        panel.classList.add('translate-y-[120%]');
+        panel.classList.remove('translate-y-0');
+    } else {
+        panel.classList.toggle('translate-y-[120%]');
+        panel.classList.toggle('translate-y-0');
+    }
+}
+window.toggleTacticalPanel = toggleTacticalPanel;
 
 async function requestCitizenNotificationPermission() {
     if (!("Notification" in window)) {
@@ -1087,6 +1121,7 @@ function selectCityByName(cityName) {
         const input = document.getElementById('cityInput');
         if (input) input.value = city.name;
         loadCityData(city);
+        if (typeof toggleTacticalPanel === 'function') toggleTacticalPanel(true);
     }
 }
 

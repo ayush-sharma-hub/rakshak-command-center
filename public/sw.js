@@ -1,5 +1,5 @@
 // Project Rakshak — Progressive Web App Service Worker
-const CACHE_NAME = 'rakshak-v3.1';
+const CACHE_NAME = 'rakshak-v3.2';
 const OFFLINE_URLS = [
   '/citizen.html',
   '/map.html',

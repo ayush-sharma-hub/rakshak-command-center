@@ -13,10 +13,10 @@
         .font-mono { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col md:flex-row overflow-y-auto pb-16 md:pb-0">
     
     <!-- SIDEBAR -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+    <aside class="hidden md:flex md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
         <!-- BRANDING -->
         <div class="p-4 border-b border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -493,5 +493,29 @@
             }
         }
     </script>
+
+    <!-- MOBILE BOTTOM NAVIGATION (Fixed, Native App Bar) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 border-t border-slate-800 backdrop-blur-xl flex items-center justify-around py-2 z-50 shadow-2xl">
+        <a href="citizen.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-400 transition">
+            <i class="fa-solid fa-shield-halved text-base text-rose-500"></i>
+            <span class="text-[10px] font-bold">SOS</span>
+        </a>
+        <a href="map.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 transition">
+            <i class="fa-solid fa-map-location-dot text-base"></i>
+            <span class="text-[10px] font-bold">Map</span>
+        </a>
+        <a href="dashboard.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-chart-line text-base"></i>
+            <span class="text-[10px] font-bold">War Room</span>
+        </a>
+        <a href="alerts.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-tower-broadcast text-base"></i>
+            <span class="text-[10px] font-bold">Alerts</span>
+        </a>
+        <a href="evacuation.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-route text-base"></i>
+            <span class="text-[10px] font-bold">Routes</span>
+        </a>
+    </nav>
 </body>
 </html>

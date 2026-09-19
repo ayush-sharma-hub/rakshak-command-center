@@ -104,7 +104,8 @@ def _dispatch_push_worker(title: str, body: str, url: str, priority: str):
                     vapid_private_key=VAPID_PEM_PATH,
                     vapid_claims=VAPID_CLAIMS,
                     timeout=5,
-                    ttl=120  # Keep alert alive for 2 minutes on push server if phone is momentarily offline
+                    ttl=120,  # Keep alert alive for 2 minutes on push server if phone is momentarily offline
+                    headers={"Urgency": "high", "Topic": "emergency"}
                 )
                 sent_count += 1
             except WebPushException as ex:

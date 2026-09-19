@@ -13,10 +13,10 @@
         .font-mono { font-family: 'JetBrains Mono', monospace; }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 h-screen flex flex-col md:flex-row overflow-hidden">
+<body class="bg-slate-950 text-slate-100 min-h-screen md:h-screen flex flex-col md:flex-row md:overflow-hidden overflow-y-auto">
     
-    <!-- SIDE NAVIGATION -->
-    <aside class="w-full md:w-64 bg-slate-900 border-r border-slate-800 flex flex-col shrink-0 z-30">
+    <!-- SIDE NAVIGATION (Desktop Only) -->
+    <aside class="hidden md:flex md:w-64 bg-slate-900 border-r border-slate-800 flex-col shrink-0 z-30">
         <!-- BRANDING -->
         <div class="p-4 border-b border-slate-800 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -83,7 +83,7 @@
     </aside>
 
     <!-- MAIN DASHBOARD CONTENT -->
-    <div class="flex-1 flex flex-col h-full overflow-hidden bg-slate-950">
+    <div class="flex-1 flex flex-col h-full md:overflow-hidden overflow-y-auto bg-slate-950 pb-16 md:pb-0">
         
         <!-- GLOBAL TOPBAR -->
         <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
@@ -384,5 +384,29 @@
     connect();
 })();
 </script>
+
+<!-- MOBILE BOTTOM NAVIGATION (Fixed, Native App Bar) -->
+<nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 border-t border-slate-800 backdrop-blur-xl flex items-center justify-around py-2 z-50 shadow-2xl">
+    <a href="citizen.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-400 transition">
+        <i class="fa-solid fa-shield-halved text-base text-rose-500"></i>
+        <span class="text-[10px] font-bold">SOS</span>
+    </a>
+    <a href="map.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 transition">
+        <i class="fa-solid fa-map-location-dot text-base"></i>
+        <span class="text-[10px] font-bold">Map</span>
+    </a>
+    <a href="dashboard.html" class="flex flex-col items-center gap-1 text-indigo-400">
+        <i class="fa-solid fa-chart-line text-base text-indigo-400"></i>
+        <span class="text-[10px] font-black">War Room</span>
+    </a>
+    <a href="alerts.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-tower-broadcast text-base"></i>
+        <span class="text-[10px] font-bold">Alerts</span>
+    </a>
+    <a href="evacuation.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+        <i class="fa-solid fa-route text-base"></i>
+        <span class="text-[10px] font-bold">Routes</span>
+    </a>
+</nav>
 </body>
 </html>

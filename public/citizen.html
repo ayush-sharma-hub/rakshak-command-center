@@ -92,6 +92,10 @@
                 <i class="fa-solid fa-satellite-dish animate-pulse"></i>
                 <span>Send Emergency Test Alert to My Phone</span>
             </button>
+            <div class="mt-2.5 text-[10px] font-mono px-3 py-1.5 rounded-xl bg-slate-950/90 border border-slate-800 flex items-center justify-between push-status-badge">
+                <span class="text-slate-400"><i class="fa-solid fa-satellite text-indigo-400 mr-1.5"></i> Screen-Off Push:</span>
+                <span class="text-amber-400 font-bold">Arming...</span>
+            </div>
         </div>
 
         <!-- 2. ONE-TAP EMERGENCY SOS BUTTON (FOR CITIZENS IN TROUBLE) -->
@@ -334,10 +338,13 @@
             loadNearbyRadar();
             setInterval(loadNearbyRadar, 6000);
 
-            // Auto-start emergency alert polling if permissions are already armed
+            // Auto-start emergency alert polling & sync push subscription if permissions are already armed
             if (("Notification" in window) && (Notification.permission === 'granted' || localStorage.getItem('rakshak_notifications_enabled') === 'true')) {
                 localStorage.setItem('rakshak_notifications_enabled', 'true');
                 if (typeof startAlertPolling === 'function') startAlertPolling();
+                if (typeof window.syncPushSubscriptionToServer === 'function') {
+                    window.syncPushSubscriptionToServer();
+                }
             }
         });
 
@@ -367,14 +374,19 @@
             const btn = document.getElementById('notif-btn');
             const label = document.getElementById('notif-label');
             if (!("Notification" in window)) {
-                btn.style.display = 'none';
+                if (btn) btn.style.display = 'none';
                 return;
             }
             if (Notification.permission === 'granted') {
-                btn.className = "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold";
-                label.textContent = "Alerts Active";
+                if (btn) {
+                    btn.className = "bg-emerald-950/60 text-emerald-400 border border-emerald-500/40 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 font-bold";
+                    label.textContent = "Alerts Active";
+                }
                 const radarInfo = document.getElementById('radar-live-status');
                 if (radarInfo) radarInfo.textContent = "Radar Armed & Syncing Every 2.5s";
+                if (typeof window.syncPushSubscriptionToServer === 'function') {
+                    window.syncPushSubscriptionToServer();
+                }
             }
         }
 
@@ -387,6 +399,9 @@
             checkNotificationStatus();
             if (perm === 'granted') {
                 localStorage.setItem('rakshak_notifications_enabled', 'true');
+                if (typeof window.syncPushSubscriptionToServer === 'function') {
+                    await window.syncPushSubscriptionToServer();
+                }
                 if (typeof startAlertPolling === 'function') startAlertPolling();
                 triggerNativeAlert("🔔 Rakshak Emergency Alerts Active", "Your phone is now permanently armed to receive instant disaster warnings & vibration even when locked!");
             }
@@ -441,6 +456,9 @@
             if ("Notification" in window && Notification.permission !== 'granted') {
                 await Notification.requestPermission();
                 checkNotificationStatus();
+            }
+            if (typeof window.syncPushSubscriptionToServer === 'function') {
+                await window.syncPushSubscriptionToServer();
             }
 
             try {
@@ -633,6 +651,30 @@
             }
         }
     </script>
+
+    <!-- MOBILE BOTTOM NAVIGATION (Fixed, Native App Bar) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 border-t border-slate-800 backdrop-blur-xl flex items-center justify-around py-2 z-50 shadow-2xl">
+        <a href="citizen.html" class="flex flex-col items-center gap-1 text-rose-400">
+            <i class="fa-solid fa-shield-halved text-base text-rose-500"></i>
+            <span class="text-[10px] font-black">SOS</span>
+        </a>
+        <a href="map.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 transition">
+            <i class="fa-solid fa-map-location-dot text-base"></i>
+            <span class="text-[10px] font-bold">Map</span>
+        </a>
+        <a href="dashboard.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-chart-line text-base"></i>
+            <span class="text-[10px] font-bold">War Room</span>
+        </a>
+        <a href="alerts.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-tower-broadcast text-base"></i>
+            <span class="text-[10px] font-bold">Alerts</span>
+        </a>
+        <a href="evacuation.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-route text-base"></i>
+            <span class="text-[10px] font-bold">Routes</span>
+        </a>
+    </nav>
 </body>
 </html>
 
