@@ -297,3 +297,4 @@ When the user gives the command `proceed`, execute these steps in order:
   - Test Citizen signup and login with a new Gmail address.
   - Verify Citizen cannot navigate to `dashboard.html` (auto-redirected to `citizen.html`).
   - Verify Admin can broadcast notification to all devices.
+

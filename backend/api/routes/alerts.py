@@ -266,3 +266,29 @@ def get_latest_alerts(after_id: Optional[int] = None, since: Optional[str] = Non
     conn.close()
     return [dict(r) for r in rows]
 
+
+# ── MASS PUSH NOTIFICATION BROADCAST ───────────────────────────────────────────
+class MassPushRequest(BaseModel):
+    title: str
+    body: str
+
+@router.post("/push/broadcast")
+async def mass_push_broadcast(payload: MassPushRequest):
+    """Send a push notification to ALL enrolled subscribers. Admin-only operation."""
+    if not payload.title or not payload.body:
+        raise HTTPException(status_code=400, detail="title and body are required")
+
+    try:
+        results = await asyncio.to_thread(
+            send_push_to_all,
+            title=payload.title,
+            body=payload.body,
+        )
+        return {
+            "status": "ok",
+            "sent": results.get("sent", 0),
+            "failed": results.get("failed", 0),
+            "total": results.get("total", 0)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

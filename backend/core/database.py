@@ -5,10 +5,19 @@ SQLite Database Schema, Initialization, and Connection Manager
 
 import sqlite3
 import os
+import hashlib
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
 DB_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "rakshak.db")
+
+def hash_password(password: str, salt: bytes = None) -> tuple[bytes, bytes]:
+    """Hashes a password using PBKDF2 HMAC SHA-256."""
+    if salt is None:
+        salt = os.urandom(16)
+    pw_hash = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+    return pw_hash, salt
+
 
 
 def get_db() -> sqlite3.Connection:
@@ -239,6 +248,18 @@ def init_db():
         )
     """)
 
+    # ─── 13. USERS TABLE (AUTHENTICATION) ─────────────────────────────────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            email TEXT UNIQUE NOT NULL,
+            password_hash BLOB NOT NULL,
+            salt BLOB NOT NULL,
+            role TEXT NOT NULL DEFAULT 'citizen',
+            created_at TEXT NOT NULL
+        )
+    """)
+
     conn.commit()
     _seed_initial_data(conn)
     conn.close()
@@ -371,6 +392,18 @@ def _seed_initial_data(conn: sqlite3.Connection):
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', ?)
         """, [(a[0], a[1], a[2], a[3], a[4], a[5], a[6], a[7], a[8], now) for a in assists])
         print("[DB] Seeded 3 community first responder shelters.")
+
+    # Seed Admin User
+    c.execute("SELECT COUNT(*) FROM users")
+    if c.fetchone()[0] == 0:
+        admin_email = "ayushsharma.cseaiml2026@ritroorkee.com"
+        admin_pass = "ashu@123"
+        pw_hash, salt = hash_password(admin_pass)
+        c.execute("""
+            INSERT INTO users (email, password_hash, salt, role, created_at)
+            VALUES (?, ?, ?, ?, ?)
+        """, (admin_email, pw_hash, salt, "admin", now))
+        print("[DB] Seeded initial admin user.")
 
     conn.commit()
 

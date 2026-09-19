@@ -119,6 +119,56 @@
             </div>
         </div>
 
+        <!-- 2b. SAFE ZONE GUIDANCE CARD -->
+        <div id="safe-zone-card" class="bg-slate-900 border border-emerald-600/40 rounded-3xl p-5 shadow-2xl relative overflow-hidden">
+            <div class="absolute -left-10 -bottom-10 w-32 h-32 bg-emerald-600/10 rounded-full blur-2xl"></div>
+            <div class="flex items-start gap-3 mb-3">
+                <div class="w-10 h-10 rounded-2xl bg-emerald-600/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-base shrink-0">
+                    <i class="fa-solid fa-person-shelter"></i>
+                </div>
+                <div>
+                    <div class="text-xs font-extrabold tracking-wider text-emerald-400 uppercase">Safe Zone Finder</div>
+                    <div class="text-[11px] text-slate-400">If conditions are dangerous, find the nearest SDRF shelter or safe community point near you.</div>
+                </div>
+            </div>
+
+            <button onclick="findNearestSafeZone()" id="safe-zone-btn"
+                class="w-full bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-bold py-2.5 px-3 rounded-xl transition text-xs shadow-lg shadow-emerald-600/30 flex items-center justify-center gap-2 mb-3">
+                <i class="fa-solid fa-location-crosshairs"></i>
+                <span>Find Nearest Safe Zone</span>
+            </button>
+
+            <!-- Result panel (hidden until a safe zone is found) -->
+            <div id="safe-zone-result" class="hidden space-y-2">
+                <div class="bg-slate-950/80 border border-emerald-500/30 rounded-xl p-3">
+                    <div class="flex items-center gap-2 mb-1">
+                        <i class="fa-solid fa-map-pin text-emerald-400 text-sm"></i>
+                        <span id="safe-zone-name" class="text-xs font-bold text-emerald-300"></span>
+                        <span id="safe-zone-distance" class="ml-auto text-[10px] font-mono text-slate-400"></span>
+                    </div>
+                    <div id="safe-zone-detail" class="text-[11px] text-slate-400 leading-relaxed"></div>
+                    <div class="flex gap-2 mt-2">
+                        <a id="safe-zone-directions" href="#" target="_blank"
+                            class="flex-1 bg-emerald-700 hover:bg-emerald-600 text-white text-[11px] font-bold py-1.5 rounded-lg flex items-center justify-center gap-1 transition">
+                            <i class="fa-solid fa-diamond-turn-right"></i> Directions
+                        </a>
+                        <a id="safe-zone-call" href="#"
+                            class="flex-1 bg-slate-700 hover:bg-slate-600 text-white text-[11px] font-bold py-1.5 rounded-lg flex items-center justify-center gap-1 transition">
+                            <i class="fa-solid fa-phone"></i> Call
+                        </a>
+                    </div>
+                </div>
+                <div class="text-[10px] text-slate-500 text-center flex items-center justify-center gap-1">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i>
+                    Move immediately if water level is rising near you
+                </div>
+            </div>
+            <div id="safe-zone-loading" class="hidden text-center py-2">
+                <i class="fa-solid fa-satellite-dish animate-pulse text-emerald-400 text-lg"></i>
+                <div class="text-[11px] text-slate-400 mt-1">Locating nearest safe point...</div>
+            </div>
+        </div>
+
         <!-- 3. NEARBY COMMUNITY MUTUAL AID RADAR ("Citizens Helping Citizens") -->
         <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 shadow-xl flex flex-col gap-3">
             <div class="flex items-center justify-between border-b border-slate-800 pb-3">
@@ -650,6 +700,73 @@
                 closeAssistModal();
             }
         }
+        // ── SAFE ZONE FINDER ──────────────────────────────────────────────────────
+        // Hardcoded safe zones from seeded community_assists + known SDRF shelters
+        const SAFE_ZONES = [
+            { name: "Sonprayag SDRF Forward Shelter", lat: 30.6375, lng: 78.9950, detail: "SDRF staging area with 4 Bolero taxis for elderly evacuation. Capacity: 15.", phone: "+917958033140" },
+            { name: "Gaurikund Temple Dharmshala", lat: 30.6558, lng: 79.0289, detail: "Temple shelter — hot food, solar charging, first-aid kits. Capacity: 40.", phone: "+919411588912" },
+            { name: "Rambara Gorge Shiv Shakti Dhaba", lat: 30.6975, lng: 79.0435, detail: "2nd floor concrete hall, 25 blankets, boiled water & warm tea. Capacity: 25.", phone: "+919837144520" },
+            { name: "Rudraprayag SEOC Relief Camp", lat: 30.2844, lng: 78.9811, detail: "State EOC forward relief centre — medical & logistics hub.", phone: "1070" },
+            { name: "Joshimath BRO Road Clearing Base", lat: 30.5506, lng: 79.5660, detail: "BRO Task Force base — shelter & food available for stranded civilians.", phone: "+911352710334" },
+        ];
+
+        function haversineKm(lat1, lng1, lat2, lng2) {
+            const R = 6371;
+            const dLat = (lat2 - lat1) * Math.PI / 180;
+            const dLng = (lng2 - lng1) * Math.PI / 180;
+            const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180) * Math.cos(lat2*Math.PI/180) * Math.sin(dLng/2)**2;
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        }
+
+        async function findNearestSafeZone() {
+            const btn = document.getElementById('safe-zone-btn');
+            const loading = document.getElementById('safe-zone-loading');
+            const result = document.getElementById('safe-zone-result');
+            
+            result.classList.add('hidden');
+            loading.classList.remove('hidden');
+            btn.disabled = true;
+
+            navigator.geolocation.getCurrentPosition(pos => {
+                const { latitude, longitude } = pos.coords;
+
+                // Find nearest zone
+                let nearest = null;
+                let minDist = Infinity;
+                for (const zone of SAFE_ZONES) {
+                    const d = haversineKm(latitude, longitude, zone.lat, zone.lng);
+                    if (d < minDist) { minDist = d; nearest = zone; }
+                }
+
+                loading.classList.add('hidden');
+                btn.disabled = false;
+
+                if (!nearest) { result.classList.add('hidden'); return; }
+
+                document.getElementById('safe-zone-name').textContent = nearest.name;
+                document.getElementById('safe-zone-distance').textContent = minDist < 1 
+                    ? `${Math.round(minDist * 1000)}m away` 
+                    : `${minDist.toFixed(1)} km away`;
+                document.getElementById('safe-zone-detail').textContent = nearest.detail;
+                document.getElementById('safe-zone-directions').href = 
+                    `https://www.google.com/maps/dir/${latitude},${longitude}/${nearest.lat},${nearest.lng}`;
+                document.getElementById('safe-zone-call').href = `tel:${nearest.phone}`;
+                result.classList.remove('hidden');
+
+                // Speak guidance
+                if (window.speechSynthesis) {
+                    const msg = new SpeechSynthesisUtterance(
+                        `Nearest safe zone is ${nearest.name}, ${minDist.toFixed(1)} kilometres away. Please move there immediately.`
+                    );
+                    msg.lang = 'en-IN';
+                    window.speechSynthesis.speak(msg);
+                }
+            }, err => {
+                loading.classList.add('hidden');
+                btn.disabled = false;
+                alert('Could not get your location. Please enable GPS and try again.');
+            }, { enableHighAccuracy: true, timeout: 10000 });
+        }
     </script>
 
     <!-- MOBILE BOTTOM NAVIGATION (Fixed, Native App Bar) -->
@@ -662,19 +779,16 @@
             <i class="fa-solid fa-map-location-dot text-base"></i>
             <span class="text-[10px] font-bold">Map</span>
         </a>
-        <a href="dashboard.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-            <i class="fa-solid fa-chart-line text-base"></i>
-            <span class="text-[10px] font-bold">War Room</span>
+        <a href="index.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
+            <i class="fa-solid fa-house text-base"></i>
+            <span class="text-[10px] font-bold">Home</span>
         </a>
-        <a href="alerts.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-            <i class="fa-solid fa-tower-broadcast text-base"></i>
-            <span class="text-[10px] font-bold">Alerts</span>
-        </a>
-        <a href="evacuation.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-            <i class="fa-solid fa-route text-base"></i>
-            <span class="text-[10px] font-bold">Routes</span>
+        <a href="tel:112" class="flex flex-col items-center gap-1 text-amber-400 hover:text-amber-300 transition">
+            <i class="fa-solid fa-phone-volume text-base"></i>
+            <span class="text-[10px] font-bold">112</span>
         </a>
     </nav>
 </body>
 </html>
+
 

@@ -129,11 +129,80 @@ def _dispatch_push_worker(title: str, body: str, url: str, priority: str):
         logger.error(f"Error in push worker: {e}")
 
 
-def send_push_to_all(title: str, body: str, url: str = "/map.html", priority: str = "CRITICAL"):
+def send_push_to_all(title: str, body: str, url: str = "/map.html", priority: str = "CRITICAL") -> dict:
     """
-    Non-blocking push dispatcher.
-    Spawns background thread so admin API response is instantaneous.
+    Synchronous push dispatcher — returns {'sent': N, 'failed': M, 'total': T}.
+    Use asyncio.to_thread() from async callers.
     """
+    try:
+        _, _ = get_vapid_keys()
+        conn = get_db()
+        rows = conn.execute("SELECT id, endpoint, p256dh, auth FROM push_subscriptions").fetchall()
+        conn.close()
+
+        if not rows:
+            return {"sent": 0, "failed": 0, "total": 0}
+
+        payload_json = json.dumps({
+            "title": title,
+            "body": body,
+            "url": url,
+            "priority": priority,
+            "timestamp": datetime.now(timezone.utc).isoformat()
+        })
+
+        sent_count = 0
+        failed_count = 0
+        dead_ids = []
+
+        for r in rows:
+            endpoint = r["endpoint"]
+            if not endpoint or not endpoint.startswith("http"):
+                continue
+
+            sub_info = {
+                "endpoint": endpoint,
+                "keys": {"p256dh": r["p256dh"], "auth": r["auth"]}
+            }
+            try:
+                webpush(
+                    subscription_info=sub_info,
+                    data=payload_json,
+                    vapid_private_key=VAPID_PEM_PATH,
+                    vapid_claims=VAPID_CLAIMS,
+                    timeout=5,
+                    ttl=120,
+                    headers={"Urgency": "high", "Topic": "emergency"}
+                )
+                sent_count += 1
+            except WebPushException as ex:
+                status_code = getattr(ex.response, "status_code", None) if hasattr(ex, "response") else None
+                if status_code in (404, 410):
+                    dead_ids.append(r["id"])
+                failed_count += 1
+                logger.warning(f"WebPush failed for device {r['id']}: {ex}")
+            except Exception as ex:
+                failed_count += 1
+                logger.warning(f"General push error for device {r['id']}: {ex}")
+
+        # Prune expired subscriptions
+        if dead_ids:
+            conn2 = get_db()
+            placeholders = ",".join("?" * len(dead_ids))
+            conn2.execute(f"DELETE FROM push_subscriptions WHERE id IN ({placeholders})", dead_ids)
+            conn2.commit()
+            conn2.close()
+
+        logger.info(f"Mass push: sent={sent_count}, failed={failed_count}, total={len(rows)}")
+        return {"sent": sent_count, "failed": failed_count, "total": len(rows)}
+
+    except Exception as e:
+        logger.error(f"Error in send_push_to_all: {e}")
+        return {"sent": 0, "failed": 0, "total": 0, "error": str(e)}
+
+
+def send_push_async(title: str, body: str, url: str = "/map.html", priority: str = "CRITICAL"):
+    """Fire-and-forget async push (original non-blocking behavior)."""
     thread = threading.Thread(
         target=_dispatch_push_worker,
         args=(title, body, url, priority),

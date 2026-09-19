@@ -156,76 +156,117 @@
                 </div>
             </div>
 
-            <!-- RIGHT / BOTTOM: SEOC OFFICER LOGIN (COMMAND OPERATIONS) -->
+    <!-- RIGHT / BOTTOM: SEOC OFFICER LOGIN (COMMAND OPERATIONS) -->
             <div class="lg:col-span-6 bg-slate-900/95 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative">
                 
                 <!-- Security watermark badge -->
                 <div class="flex items-center justify-between mb-4">
                     <div class="text-[10px] font-mono font-bold bg-slate-800/80 border border-slate-700 px-2.5 py-1 rounded text-indigo-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-lock"></i> COMMAND ACCESS ONLY
+                        <i class="fa-solid fa-lock"></i> SEOC RAKSHAK PORTAL
                     </div>
                     <span class="text-[10px] font-mono text-emerald-400">SEOC Dehradun HQ</span>
                 </div>
 
-                <div class="mb-5">
-                    <h2 class="text-xl font-black text-white flex items-center gap-2">
-                        <i class="fa-solid fa-shield-halved text-indigo-400"></i>
-                        <span>Incident Commander Login</span>
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-1">
-                        Authorizes access to Command War Room, Evacuation Hub, Broadcast Center, Simulator, and LoRa Mesh Console.
-                    </p>
+                <!-- Tab Toggle: Login / Signup -->
+                <div class="flex bg-slate-950/60 rounded-xl p-1 mb-5 border border-slate-800">
+                    <button id="tab-login" onclick="switchTab('login')"
+                        class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow">
+                        <i class="fa-solid fa-right-to-bracket mr-1"></i> Login
+                    </button>
+                    <button id="tab-signup" onclick="switchTab('signup')"
+                        class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">
+                        <i class="fa-solid fa-user-plus mr-1"></i> Citizen Signup
+                    </button>
                 </div>
 
-                <form onsubmit="handleLogin(event)" class="space-y-3.5">
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex justify-between">
-                            <span>Incident Commander / Operator ID</span>
-                            <span class="text-indigo-400 font-mono text-[10px]">Officer Credentials</span>
-                        </label>
-                        <div class="relative">
-                            <i class="fa-solid fa-id-card absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
-                            <input type="text" id="op-id" placeholder="e.g. UK-SEOC-OFFICER-04" autocomplete="off"
-                                   class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+                <!-- LOGIN FORM -->
+                <div id="form-login">
+                    <div class="mb-4">
+                        <h2 class="text-xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-shield-halved text-indigo-400"></i>
+                            <span>Rakshak Login</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Admin gets full Command Center access. Citizens get the safety map & SOS hub.</p>
+                    </div>
+
+                    <form onsubmit="handleLogin(event)" class="space-y-3.5">
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
+                                <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email"
+                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Duty Shift & Protocol</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-clock absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
-                            <select id="duty-shift" class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs text-white focus:outline-none focus:border-indigo-500 transition appearance-none">
-                                <option value="alpha">Crisis Watch Alpha (High Monsoon / Cloudburst Alert)</option>
-                                <option value="bravo">Char Dham Pilgrimage Axis Surveillance</option>
-                                <option value="routine">Routine Regional Sensor Telemetry Review</option>
-                            </select>
-                            <i class="fa-solid fa-chevron-down absolute right-3.5 top-3.5 text-slate-500 text-xs pointer-events-none"></i>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-key absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
+                                <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password"
+                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+                            </div>
                         </div>
-                    </div>
 
-                    <div>
-                        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Passcode / Cryptographic Token</label>
-                        <div class="relative">
-                            <i class="fa-solid fa-key absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
-                            <input type="password" id="passcode" placeholder="Enter Command Passcode" autocomplete="current-password"
-                                   class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
+                        <div id="login-error-msg" class="hidden text-rose-400 text-[11px] font-bold bg-rose-950/60 border border-rose-500/40 p-2.5 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
+                            <span id="login-error-text">Access Denied.</span>
                         </div>
+
+                        <button type="submit" id="auth-btn"
+                                class="w-full mt-2 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
+                            <i class="fa-solid fa-fingerprint text-base"></i>
+                            <span id="auth-text">Login to Rakshak</span>
+                            <i class="fa-solid fa-arrow-right text-xs"></i>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- SIGNUP FORM (Citizens only) -->
+                <div id="form-signup" class="hidden">
+                    <div class="mb-4">
+                        <h2 class="text-xl font-black text-white flex items-center gap-2">
+                            <i class="fa-solid fa-user-shield text-emerald-400"></i>
+                            <span>Citizen Registration</span>
+                        </h2>
+                        <p class="text-xs text-slate-400 mt-1">Create your account to receive emergency alerts & access the safety map.</p>
                     </div>
 
-                    <!-- ERROR MESSAGE BANNER (If wrong password) -->
-                    <div id="login-error-msg" class="hidden text-rose-400 text-[11px] font-bold bg-rose-950/60 border border-rose-500/40 p-2.5 rounded-xl flex items-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
-                        <span id="login-error-text">Access Denied: Invalid Officer ID or Security Passcode.</span>
-                    </div>
+                    <form onsubmit="handleSignup(event)" class="space-y-3.5">
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-emerald-400 text-sm"></i>
+                                <input type="email" id="signup-email" placeholder="your@email.com" autocomplete="email"
+                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-emerald-500 transition" required>
+                            </div>
+                        </div>
 
-                    <!-- BIOMETRIC TOUCH BUTTON -->
-                    <button type="submit" id="auth-btn" 
-                            class="w-full mt-2 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
-                        <i class="fa-solid fa-fingerprint text-base"></i>
-                        <span id="auth-text">Authorize & Enter Command Center</span>
-                        <i class="fa-solid fa-arrow-right text-xs"></i>
-                    </button>
-                </form>
+                        <div>
+                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
+                            <div class="relative">
+                                <i class="fa-solid fa-lock absolute left-3.5 top-3 text-emerald-400 text-sm"></i>
+                                <input type="password" id="signup-password" placeholder="Choose a strong password" autocomplete="new-password"
+                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-emerald-500 transition" required>
+                            </div>
+                        </div>
+
+                        <div id="signup-error-msg" class="hidden text-rose-400 text-[11px] font-bold bg-rose-950/60 border border-rose-500/40 p-2.5 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
+                            <span id="signup-error-text">Signup failed.</span>
+                        </div>
+                        <div id="signup-success-msg" class="hidden text-emerald-400 text-[11px] font-bold bg-emerald-950/60 border border-emerald-500/40 p-2.5 rounded-xl flex items-center gap-2">
+                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
+                            <span>Account created! Logging you in...</span>
+                        </div>
+
+                        <button type="submit" id="signup-btn"
+                                class="w-full mt-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
+                            <i class="fa-solid fa-user-plus text-base"></i>
+                            <span id="signup-text">Create Citizen Account</span>
+                        </button>
+                    </form>
+                </div>
 
                 <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
                     <span class="flex items-center gap-1.5">
@@ -253,6 +294,14 @@
     </footer>
 
     <script>
+        function switchTab(tab) {
+            const isLogin = tab === 'login';
+            document.getElementById('form-login').classList.toggle('hidden', !isLogin);
+            document.getElementById('form-signup').classList.toggle('hidden', isLogin);
+            document.getElementById('tab-login').className = `flex-1 py-2 text-xs font-bold rounded-lg transition ${isLogin ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`;
+            document.getElementById('tab-signup').className = `flex-1 py-2 text-xs font-bold rounded-lg transition ${!isLogin ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`;
+        }
+
         // Check URL parameters for redirect alerts
         document.addEventListener("DOMContentLoaded", () => {
             const params = new URLSearchParams(window.location.search);
@@ -263,84 +312,131 @@
             if (params.get('auth_required') === 'true') {
                 const target = params.get('target') || 'Command Center';
                 title.textContent = `SEOC Officer Authentication Required for ${target}`;
-                desc.textContent = `The requested module (${target}) is restricted to authorized disaster management officers. Please authenticate below, or browse public emergency maps without login.`;
+                desc.textContent = `The requested module (${target}) is restricted to authorized personnel. Please login below.`;
                 banner.classList.remove('hidden');
-                if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
-                    try { RakshakAudio.playAlert(); } catch(e){}
-                }
             } else if (params.get('logged_out') === 'true') {
-                title.textContent = `SEOC Watch Officer Duty Concluded`;
-                desc.textContent = `You have successfully ended your command watch shift and logged off.`;
+                title.textContent = `Session Ended`;
+                desc.textContent = `You have successfully logged out.`;
                 banner.className = "w-full mb-6 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl p-4 text-emerald-200 flex items-center justify-between shadow-2xl backdrop-blur-md";
                 banner.classList.remove('hidden');
             }
         });
 
-        function handleLogin(e) {
+        async function handleLogin(e) {
             e.preventDefault();
             const btn = document.getElementById('auth-btn');
             const text = document.getElementById('auth-text');
             const errorBox = document.getElementById('login-error-msg');
             const errorText = document.getElementById('login-error-text');
-            const opId = document.getElementById('op-id').value.trim();
-            const passcode = document.getElementById('passcode').value.trim();
-            const shift = document.getElementById('duty-shift').value;
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
 
             errorBox.classList.add('hidden');
-
-            // Accepted Officer IDs and Passcodes
-            const validOfficers = ['UK-SEOC-OFFICER-04', 'UK-SEOC-COMMANDER', 'UK-SEOC-ADMIN', 'ADMIN'];
-            const validPasscodes = ['seoc-access-2026', 'rakshak@2026', 'admin123'];
-
-            const isOfficerValid = validOfficers.includes(opId.toUpperCase()) || opId.toUpperCase().startsWith('UK-SEOC-');
-            const isPasscodeValid = validPasscodes.includes(passcode);
-
-            if (!isOfficerValid || !isPasscodeValid) {
-                if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
-                    try { RakshakAudio.initCtx(); RakshakAudio.playAlert(); } catch(e){}
-                }
-                errorBox.classList.remove('hidden');
-                errorText.textContent = "Access Denied: Invalid Officer ID or Passcode. Command facility access rejected.";
-                btn.classList.add('bg-rose-700', 'border-rose-500');
-                text.textContent = "ACCESS DENIED - AUTHENTICATION FAILED";
-                setTimeout(() => {
-                    btn.classList.remove('bg-rose-700', 'border-rose-500');
-                    text.textContent = "Authorize & Enter Command Center";
-                }, 2000);
-                return;
-            }
-
-            if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
-                RakshakAudio.initCtx();
-                RakshakAudio.playSquelch();
-            }
-
             btn.disabled = true;
-            btn.classList.add('animate-pulse', 'bg-indigo-700');
-            text.textContent = "VALIDATING BIOMETRIC SECURITY CLEARANCE...";
+            text.textContent = 'AUTHENTICATING...';
 
-            // Persist valid SEOC Officer session
-            localStorage.setItem('rakshak_auth', JSON.stringify({
-                role: 'ADMIN',
-                operatorId: opId,
-                dutyShift: shift,
-                loginTime: new Date().toISOString()
-            }));
+            try {
+                const resp = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
 
-            setTimeout(() => {
-                if (typeof RakshakAudio !== 'undefined' && RakshakAudio) {
-                    RakshakAudio.playConfirm();
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    errorText.textContent = data.detail || 'Access Denied: Invalid email or password.';
+                    errorBox.classList.remove('hidden');
+                    btn.disabled = false;
+                    text.textContent = 'Login to Rakshak';
+                    return;
                 }
-                text.textContent = "CLEARANCE GRANTED. INITIALIZING SEOC WAR ROOM...";
-                
+
+                // Save session
+                localStorage.setItem('rakshak_auth', JSON.stringify({
+                    role: data.role,
+                    email: data.email,
+                    loginTime: new Date().toISOString()
+                }));
+
+                text.textContent = 'ACCESS GRANTED. REDIRECTING...';
+
+                // Redirect based on role
                 const params = new URLSearchParams(window.location.search);
                 const target = params.get('target');
-                const dest = (target && target.endsWith('.html')) ? target : 'dashboard.html';
+                
+                if (data.role === 'admin') {
+                    const dest = (target && target.endsWith('.html')) ? target : 'dashboard.html';
+                    setTimeout(() => window.location.href = dest, 600);
+                } else {
+                    // Citizens only get citizen hub and map
+                    setTimeout(() => window.location.href = 'citizen.html', 600);
+                }
 
-                setTimeout(() => {
-                    window.location.href = dest;
-                }, 600);
-            }, 800);
+            } catch (err) {
+                errorText.textContent = 'Network error. Is the server running?';
+                errorBox.classList.remove('hidden');
+                btn.disabled = false;
+                text.textContent = 'Login to Rakshak';
+            }
+        }
+
+        async function handleSignup(e) {
+            e.preventDefault();
+            const btn = document.getElementById('signup-btn');
+            const text = document.getElementById('signup-text');
+            const errorBox = document.getElementById('signup-error-msg');
+            const errorText = document.getElementById('signup-error-text');
+            const successBox = document.getElementById('signup-success-msg');
+            const email = document.getElementById('signup-email').value.trim();
+            const password = document.getElementById('signup-password').value;
+
+            errorBox.classList.add('hidden');
+            successBox.classList.add('hidden');
+            btn.disabled = true;
+            text.textContent = 'CREATING ACCOUNT...';
+
+            try {
+                const resp = await fetch('/api/auth/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await resp.json();
+
+                if (!resp.ok) {
+                    errorText.textContent = data.detail || 'Signup failed. Please try again.';
+                    errorBox.classList.remove('hidden');
+                    btn.disabled = false;
+                    text.textContent = 'Create Citizen Account';
+                    return;
+                }
+
+                successBox.classList.remove('hidden');
+
+                // Auto-login after signup
+                const loginResp = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+                const loginData = await loginResp.json();
+                if (loginResp.ok) {
+                    localStorage.setItem('rakshak_auth', JSON.stringify({
+                        role: loginData.role,
+                        email: loginData.email,
+                        loginTime: new Date().toISOString()
+                    }));
+                    setTimeout(() => window.location.href = 'citizen.html', 1000);
+                }
+
+            } catch (err) {
+                errorText.textContent = 'Network error. Is the server running?';
+                errorBox.classList.remove('hidden');
+                btn.disabled = false;
+                text.textContent = 'Create Citizen Account';
+            }
         }
     </script>
 </body>

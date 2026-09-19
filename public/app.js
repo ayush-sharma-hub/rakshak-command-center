@@ -15,28 +15,49 @@ const ADMIN_PROTECTED_PAGES = [
     'lora.html'
 ];
 
+/**
+ * getRakshakAuth - returns parsed auth object or null
+ */
+function getRakshakAuth() {
+    const rawAuth = localStorage.getItem('rakshak_auth');
+    if (!rawAuth) return null;
+    try {
+        return JSON.parse(rawAuth);
+    } catch(e) {
+        localStorage.removeItem('rakshak_auth');
+        return null;
+    }
+}
+
+/**
+ * isAdmin - true if the current session is an admin role
+ */
+function isAdmin() {
+    const auth = getRakshakAuth();
+    if (!auth) return false;
+    const role = (auth.role || '').toLowerCase();
+    return role === 'admin' || role === 'officer';
+}
+
 function checkPageAuth() {
     const path = window.location.pathname.toLowerCase();
     const currentPage = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
     const isAdminPage = ADMIN_PROTECTED_PAGES.some(p => currentPage === p || path.endsWith('/' + p));
 
     if (isAdminPage) {
-        const rawAuth = localStorage.getItem('rakshak_auth');
-        let isAuthenticated = false;
-        if (rawAuth) {
-            try {
-                const parsed = JSON.parse(rawAuth);
-                if (parsed && (parsed.role === 'ADMIN' || parsed.role === 'OFFICER')) {
-                    isAuthenticated = true;
-                }
-            } catch (e) {
-                localStorage.removeItem('rakshak_auth');
-            }
-        }
+        const auth = getRakshakAuth();
 
-        if (!isAuthenticated) {
+        if (!auth) {
+            // Not logged in at all
             console.warn('[SEOC Security Guard] Unauthorized access blocked to:', currentPage);
             window.location.replace(`index.html?auth_required=true&target=${encodeURIComponent(currentPage)}`);
+            return false;
+        }
+
+        if (!isAdmin()) {
+            // Logged in as citizen — redirect to citizen hub
+            console.warn('[SEOC Security Guard] Citizen tried to access admin page:', currentPage);
+            window.location.replace('citizen.html');
             return false;
         }
     }
@@ -56,11 +77,7 @@ function rakshakLogout() {
 window.rakshakLogout = rakshakLogout;
 
 function syncNavAuth() {
-    const rawAuth = localStorage.getItem('rakshak_auth');
-    let auth = null;
-    if (rawAuth) {
-        try { auth = JSON.parse(rawAuth); } catch(e) {}
-    }
+    const auth = getRakshakAuth();
 
     const path = window.location.pathname.toLowerCase();
     const currentPage = path.substring(path.lastIndexOf('/') + 1) || 'index.html';
