@@ -147,7 +147,22 @@ function urlB64ToUint8Array(base64String) {
 }
 
 async function syncPushSubscriptionToServer() {
-    if (!('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+    const badges = document.querySelectorAll('.push-status-badge');
+    if (!window.isSecureContext) {
+        console.warn("WebPush requires a secure context (HTTPS).");
+        badges.forEach(b => {
+            b.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1.5"></i> <span class="text-amber-300 font-bold">HTTPS Required for Screen-Off Push</span>';
+            b.classList.add('bg-amber-500/20', 'border-amber-500/30');
+        });
+        return false;
+    }
+    if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+        badges.forEach(b => {
+            b.innerHTML = '<i class="fa-solid fa-triangle-exclamation text-amber-400 mr-1.5"></i> <span class="text-amber-300 font-bold">PushManager Not Available</span>';
+            b.classList.add('bg-amber-500/20', 'border-amber-500/30');
+        });
+        return false;
+    }
     try {
         const reg = await navigator.serviceWorker.ready;
         const vRes = await fetch('/api/alerts/vapid-public-key');
@@ -183,7 +198,6 @@ async function syncPushSubscriptionToServer() {
         const data = await res.json();
         console.log("Smartphone registered with SEOC WebPush server:", data);
 
-        const badges = document.querySelectorAll('.push-status-badge');
         badges.forEach(b => {
             b.innerHTML = '<i class="fa-solid fa-satellite text-emerald-400 mr-1.5"></i> <span class="text-emerald-400 font-bold">Screen-Off Push Active (FCM Connected)</span>';
             b.classList.remove('bg-amber-500/20', 'border-amber-500/30', 'text-amber-300');
@@ -192,6 +206,9 @@ async function syncPushSubscriptionToServer() {
         return true;
     } catch (e) {
         console.warn("Push subscription sync:", e);
+        badges.forEach(b => {
+            b.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-rose-400 mr-1.5"></i> <span class="text-rose-300 font-bold">Push: ${e.name || 'Failed'}</span>`;
+        });
         return false;
     }
 }
