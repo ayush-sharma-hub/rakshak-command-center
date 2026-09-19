@@ -357,6 +357,8 @@
             const utter = new SpeechSynthesisUtterance(text);
             utter.rate = 0.95;
             window.speechSynthesis.speak(utter);
+        }
+
         function showAlertToast(msg) {
             let toast = document.getElementById('broadcast-toast');
             if (!toast) {
