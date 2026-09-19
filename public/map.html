@@ -149,6 +149,10 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
+                <button onclick="openCrowdReportModal()" class="bg-cyan-500/15 hover:bg-cyan-500/25 text-cyan-200 border border-cyan-400/30 text-[11px] font-bold px-2.5 py-1.5 rounded-xl transition flex items-center gap-1.5" title="Submit field intelligence">
+                    <i class="fa-solid fa-triangle-exclamation text-cyan-300"></i>
+                    <span class="hidden sm:inline">Report Hazard</span>
+                </button>
                 <!-- 1-TAP NOTIFICATION BUTTON -->
                 <button onclick="requestCitizenNotificationPermission()" class="citizen-notif-status text-[11px] font-bold px-2.5 py-1.5 rounded-xl border transition flex items-center gap-1.5 bg-amber-500/20 border-amber-500/30 text-amber-300">
                     <i class="fa-solid fa-bell-slash text-amber-400"></i>
@@ -209,6 +213,20 @@
                 <div id="statusBanner" class="p-3 bg-slate-950 border border-slate-800 text-slate-400 text-xs rounded-xl font-bold text-center tracking-wide">
                     CLICK MAP MARKER OR SEARCH TARGET SECTOR
                 </div>
+
+                <!-- SAFE-ROUTE PLANNER: uses only the new /api/routes/safe endpoint -->
+                <section class="bg-slate-950 border border-slate-800 rounded-xl p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold text-emerald-300 uppercase tracking-wider"><i class="fa-solid fa-route mr-1"></i> Safe-route planner</span>
+                        <span id="route-confidence" class="text-[10px] font-mono text-slate-500">AWAITING POINTS</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500">Click <b class="text-slate-300">Set start</b>, then target a map sector. Routes are checked against verified hazards.</p>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button id="route-start-btn" onclick="setRouteStartFromMap()" class="px-2 py-2 rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 text-[10px] font-bold text-slate-200 transition">Set start</button>
+                        <button onclick="clearSafeRoute()" class="px-2 py-2 rounded-lg border border-slate-700 text-[10px] font-bold text-slate-400 hover:text-white transition">Clear route</button>
+                    </div>
+                    <div id="route-status" class="text-[10px] text-slate-500">No active route.</div>
+                </section>
 
                 <!-- SIMULATED DRONE RECON VIEWPORT (UAV HUD) -->
                 <div id="droneReconPanel" class="hidden bg-slate-950 border border-slate-800 rounded-xl p-3 flex-col gap-2">
@@ -316,6 +334,24 @@
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Field intelligence modal. File controls are intentionally mock evidence flags; no media is uploaded. -->
+    <div id="crowd-report-modal" class="hidden fixed inset-0 z-[1000] bg-slate-950/75 backdrop-blur-sm p-4 items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="crowd-report-title">
+        <form id="crowd-report-form" class="w-full max-w-md rounded-2xl border border-cyan-400/25 bg-slate-900 shadow-2xl p-5 space-y-4">
+            <div class="flex items-start justify-between gap-4">
+                <div><h2 id="crowd-report-title" class="text-sm font-bold text-white">Submit field intelligence</h2><p class="text-[11px] text-slate-400 mt-1">AI verifies the report before it is shown as a map hazard.</p></div>
+                <button type="button" onclick="closeCrowdReportModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <textarea id="crowd-description" required minlength="8" maxlength="1200" rows="4" placeholder="Example: Bridge damaged near Gaurikund; road unsafe for vehicles." class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400"></textarea>
+            <input id="crowd-location" maxlength="200" placeholder="Location / landmark (optional)" class="w-full rounded-xl bg-slate-950 border border-slate-700 p-3 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:border-cyan-400" />
+            <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-300">
+                <label class="flex items-center gap-2 rounded-lg bg-slate-950 border border-slate-800 p-2 cursor-pointer"><input id="crowd-photo" type="checkbox" class="accent-cyan-400" /> Photo available</label>
+                <label class="flex items-center gap-2 rounded-lg bg-slate-950 border border-slate-800 p-2 cursor-pointer"><input id="crowd-voice" type="checkbox" class="accent-cyan-400" /> Voice note available</label>
+            </div>
+            <p id="crowd-report-feedback" class="hidden text-[11px]"></p>
+            <button type="submit" class="w-full rounded-xl bg-cyan-500 hover:bg-cyan-400 text-slate-950 py-2.5 text-xs font-black transition">Verify &amp; submit report</button>
+        </form>
     </div>
 
     <!-- MOBILE BOTTOM NAVIGATION (Fixed, Native App Bar) -->

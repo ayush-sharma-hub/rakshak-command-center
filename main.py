@@ -122,6 +122,9 @@ from backend.api.routes.dispatch import router as dispatch_router
 from backend.api.routes.ws import router as ws_router
 from backend.api.routes.lora import router as lora_router
 from backend.api.routes.auth import router as auth_router
+from backend.api.routes.reports import router as reports_router
+from backend.api.routes.routes import router as safe_routes_router
+from backend.api.routes.ttn import router as ttn_router
 
 app.include_router(state_router)
 app.include_router(sos_router)
@@ -131,6 +134,9 @@ app.include_router(dispatch_router)
 app.include_router(ws_router)
 app.include_router(lora_router)
 app.include_router(auth_router, prefix="/api/auth")
+app.include_router(reports_router)
+app.include_router(safe_routes_router)
+app.include_router(ttn_router)
 
 # ─── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/api/health")
@@ -160,4 +166,3 @@ if __name__ == "__main__":
         reload=False,
         log_level="info",
     )
-

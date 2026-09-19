@@ -260,6 +260,43 @@ def init_db():
         )
     """)
 
+    # ─── 14. CROWDSOURCED REPORTS (isolated from authoritative incidents) ────
+    # These reports stay separate until their confidence threshold is met. This
+    # protects the established incidents feed from unverified public input.
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS crowd_reports (
+            id TEXT PRIMARY KEY,
+            description TEXT NOT NULL,
+            incident_type TEXT NOT NULL,
+            location_name TEXT,
+            severity TEXT NOT NULL,
+            confidence_score INTEGER NOT NULL,
+            lat REAL NOT NULL,
+            lng REAL NOT NULL,
+            has_voice INTEGER DEFAULT 0,
+            has_photo INTEGER DEFAULT 0,
+            ai_source TEXT NOT NULL,
+            corroboration_count INTEGER DEFAULT 1,
+            status TEXT NOT NULL DEFAULT 'PENDING_REVIEW',
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )
+    """)
+    c.execute("CREATE INDEX IF NOT EXISTS idx_crowd_reports_location ON crowd_reports(lat, lng)")
+    c.execute("CREATE INDEX IF NOT EXISTS idx_crowd_reports_confidence ON crowd_reports(confidence_score, status)")
+
+    # ─── 15. TTN WEBHOOK EVENT LEDGER (idempotency / audit trail) ────────────
+    c.execute("""
+        CREATE TABLE IF NOT EXISTS ttn_webhook_events (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_hash TEXT UNIQUE NOT NULL,
+            device_id TEXT NOT NULL,
+            event_type TEXT NOT NULL,
+            payload_json TEXT NOT NULL,
+            received_at TEXT NOT NULL
+        )
+    """)
+
     conn.commit()
     _seed_initial_data(conn)
     conn.close()
@@ -406,4 +443,3 @@ def _seed_initial_data(conn: sqlite3.Connection):
         print("[DB] Seeded initial admin user.")
 
     conn.commit()
-

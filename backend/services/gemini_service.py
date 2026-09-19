@@ -214,3 +214,75 @@ def _fallback_analysis(risk_level: str, city: str, rainfall: float) -> str:
         f"Monitor river gauge levels closely and maintain SDRF units on standby deployment readiness."
     )
 
+
+# ─── Crowdsourced incident verification ──────────────────────────────────────
+def extract_crowd_report(
+    description: str,
+    location_name: str,
+    has_voice: bool = False,
+    has_photo: bool = False,
+) -> Dict[str, Any]:
+    """Classify a public report into a small, safe JSON contract.
+
+    Gemini is used only as an extractor; geographic coordinates remain supplied
+    by the reporting client and confidence is calibrated by the route/report
+    service. A deterministic fallback keeps the feature usable without a key.
+    """
+    fallback = _fallback_crowd_report(description, location_name)
+    client = _get_client()
+    if not client:
+        return {**fallback, "source": "fallback"}
+
+    prompt = f"""You classify disaster field reports for Uttarakhand SEOC.
+Return ONLY a JSON object, no markdown. Do not invent facts.
+
+Report text: {description[:1200]}
+Location label: {location_name[:200] or 'not supplied'}
+Voice evidence supplied: {has_voice}
+Photo evidence supplied: {has_photo}
+
+Use exactly these keys:
+{{"incident_type":"ROAD_BLOCKED|BRIDGE_DAMAGED|LANDSLIDE|FLOOD|POWER_OUTAGE|SOS|OTHER", "severity":"LOW|MEDIUM|HIGH|CRITICAL", "location_hint":"short location or empty", "model_confidence":0}}
+model_confidence must be an integer 0-100 reflecting only how clearly the report supports the classification."""
+    try:
+        _rate_limit()
+        response = client.models.generate_content(
+            model="gemini-3.5-flash-lite",
+            contents=prompt,
+        )
+        text = response.text.strip()
+        if text.startswith("```"):
+            text = "\n".join(text.split("\n")[1:-1])
+        parsed = json.loads(text)
+        incident_type = str(parsed.get("incident_type", "OTHER")).upper()
+        if incident_type not in {"ROAD_BLOCKED", "BRIDGE_DAMAGED", "LANDSLIDE", "FLOOD", "POWER_OUTAGE", "SOS", "OTHER"}:
+            incident_type = "OTHER"
+        severity = str(parsed.get("severity", "MEDIUM")).upper()
+        if severity not in {"LOW", "MEDIUM", "HIGH", "CRITICAL"}:
+            severity = "MEDIUM"
+        return {
+            "incident_type": incident_type,
+            "severity": severity,
+            "location_hint": str(parsed.get("location_hint", location_name))[:200],
+            "model_confidence": max(0, min(100, int(parsed.get("model_confidence", 55)))),
+            "source": "gemini",
+        }
+    except Exception as exc:
+        logger.warning("Crowd report Gemini extraction failed: %s", exc)
+        return {**fallback, "source": "fallback_error"}
+
+
+def _fallback_crowd_report(description: str, location_name: str) -> Dict[str, Any]:
+    """Conservative keyword classifier used when Gemini is offline."""
+    text = description.lower()
+    rules = [
+        ("BRIDGE_DAMAGED", ("bridge", "pul", "collapse")),
+        ("ROAD_BLOCKED", ("road blocked", "road closed", "highway", "traffic")),
+        ("LANDSLIDE", ("landslide", "debris", "rockfall", "slope")),
+        ("FLOOD", ("flood", "river", "water level", "flash flood")),
+        ("POWER_OUTAGE", ("power", "electricity", "transformer")),
+        ("SOS", ("help", "trapped", "injured", "sos")),
+    ]
+    incident_type = next((kind for kind, words in rules if any(word in text for word in words)), "OTHER")
+    severity = "CRITICAL" if any(word in text for word in ("trapped", "collapsed", "life threatening")) else "HIGH" if any(word in text for word in ("blocked", "flood", "landslide")) else "MEDIUM"
+    return {"incident_type": incident_type, "severity": severity, "location_hint": location_name[:200], "model_confidence": 58}

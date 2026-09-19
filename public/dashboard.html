@@ -214,6 +214,20 @@
                         </div>
                     </div>
 
+                    <!-- VERIFIED CROWD INTELLIGENCE: only reports >= 76 confidence are rendered by app.js -->
+                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+                        <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                            <div>
+                                <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-shield-halved text-cyan-400"></i> Verified Ground Intelligence</h2>
+                                <p class="text-[11px] text-slate-400 mt-0.5">Crowd reports are hidden until AI + corroboration confidence reaches 76%.</p>
+                            </div>
+                            <a href="map.html" class="text-[10px] text-cyan-300 hover:text-cyan-200 font-bold">Report hazard <i class="fa-solid fa-arrow-right ml-1"></i></a>
+                        </div>
+                        <div id="crowd-report-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                            <p class="text-xs text-slate-500">Checking verified field reports…</p>
+                        </div>
+                    </div>
+
                     <!-- HIMALAYAN RIVER & RESERVOIR BASIN WATCH -->
                     <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
                         <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">

@@ -819,6 +819,11 @@ let unitMarkers = [];
 let rescueUnitLayerGroup = typeof L !== 'undefined' ? L.layerGroup() : null;
 let loraLayerGroup = typeof L !== 'undefined' ? L.layerGroup() : null;
 let activeDroneAnim = null;
+let crowdHazardLayerGroup = typeof L !== 'undefined' ? L.layerGroup() : null;
+let safeRouteLayer = null;
+let safeRouteStart = null;
+let safeRouteDestination = null;
+let verifiedHazardFingerprint = '';
 
 // =========================================================================
 // 3. SITUATIONAL BULLETIN & TICKER ENGINE
@@ -920,6 +925,10 @@ document.addEventListener('DOMContentLoaded', () => {
         initTacticalMap();
     }
 
+    initCrowdReportForm();
+    refreshVerifiedCrowdReports();
+    setInterval(refreshVerifiedCrowdReports, 30000);
+
     // 6. Live Ticker
     initLiveTicker();
 
@@ -973,6 +982,7 @@ function initTacticalMap() {
 
     if (rescueUnitLayerGroup) rescueUnitLayerGroup.addTo(leafletMap);
     if (loraLayerGroup) loraLayerGroup.addTo(leafletMap);
+    if (crowdHazardLayerGroup) crowdHazardLayerGroup.addTo(leafletMap);
 
     // Tactical Layer Control
     const baseMaps = {
@@ -990,6 +1000,7 @@ function initTacticalMap() {
     renderMapMarkers();
     renderRescueUnits();
     renderLoraNodes();
+    renderVerifiedHazardMarkers();
 }
 
 function renderMapMarkers() {
@@ -1183,6 +1194,165 @@ async function renderLoraNodes() {
     });
 }
 
+// =========================================================================
+// 6B. VERIFIED CROWD INTELLIGENCE & SAFE ROUTING (ADDITIVE MODULE)
+// =========================================================================
+function openCrowdReportModal() {
+    const modal = document.getElementById('crowd-report-modal');
+    if (modal) { modal.classList.remove('hidden'); modal.classList.add('flex'); }
+}
+
+function closeCrowdReportModal() {
+    const modal = document.getElementById('crowd-report-modal');
+    if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
+}
+
+function initCrowdReportForm() {
+    const form = document.getElementById('crowd-report-form');
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = 'true';
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const feedback = document.getElementById('crowd-report-feedback');
+        const center = leafletMap ? leafletMap.getCenter() : { lat: 30.2844, lng: 78.9811 };
+        const payload = {
+            description: document.getElementById('crowd-description').value.trim(),
+            location_name: document.getElementById('crowd-location').value.trim(),
+            lat: center.lat,
+            lng: center.lng,
+            has_photo: document.getElementById('crowd-photo').checked,
+            has_voice: document.getElementById('crowd-voice').checked,
+        };
+        feedback.className = 'text-[11px] text-cyan-300';
+        feedback.textContent = 'Verifying report and checking nearby corroboration…';
+        feedback.classList.remove('hidden');
+        try {
+            const response = await fetch('/api/reports', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.detail || 'Report submission failed.');
+            const visible = data.publicly_visible ? ' It is now visible to the command team.' : ' It remains private until corroborated.';
+            feedback.className = 'text-[11px] text-emerald-300';
+            feedback.textContent = `Report received — confidence ${data.confidence_score}%.${visible}`;
+            form.reset();
+            refreshVerifiedCrowdReports();
+        } catch (error) {
+            feedback.className = 'text-[11px] text-rose-300';
+            feedback.textContent = error.message || 'Report could not be submitted.';
+        }
+    });
+}
+
+async function refreshVerifiedCrowdReports() {
+    try {
+        const response = await fetch('/api/reports/verified');
+        if (!response.ok) return;
+        const data = await response.json();
+        const reports = data.reports || [];
+        const fingerprint = reports.map(r => `${r.id}:${r.confidence_score}:${r.updated_at || ''}`).join('|');
+        const hazardsChanged = fingerprint !== verifiedHazardFingerprint;
+        verifiedHazardFingerprint = fingerprint;
+        renderCrowdReportList(reports);
+        renderVerifiedHazardMarkers(reports);
+        if (hazardsChanged && safeRouteStart && safeRouteDestination) {
+            planSafeRoute(safeRouteStart, safeRouteDestination, true);
+        }
+    } catch (error) {
+        console.debug('Verified crowd report feed unavailable:', error);
+    }
+}
+
+function renderCrowdReportList(reports) {
+    const list = document.getElementById('crowd-report-list');
+    if (!list) return;
+    if (!reports.length) {
+        list.innerHTML = '<p class="text-xs text-slate-500">No verified field hazards at this time.</p>';
+        return;
+    }
+    list.innerHTML = reports.slice(0, 6).map(report => `
+        <article class="rounded-xl border border-cyan-500/20 bg-slate-950/80 p-3">
+            <div class="flex justify-between gap-2"><strong class="text-xs text-white">${report.incident_type.replaceAll('_', ' ')}</strong><span class="text-[10px] font-mono text-cyan-300">${report.confidence_score}% CONF.</span></div>
+            <p class="mt-1 text-[11px] text-slate-400 truncate">${report.location_name || 'Mapped field position'}</p>
+            <p class="mt-2 text-[10px] text-slate-500">${report.severity} · ${report.corroboration_count} corroboration${report.corroboration_count === 1 ? '' : 's'}</p>
+        </article>`).join('');
+}
+
+async function renderVerifiedHazardMarkers(reports = null) {
+    if (!leafletMap || !crowdHazardLayerGroup) return;
+    let verified = reports;
+    if (!verified) {
+        try {
+            const response = await fetch('/api/reports/verified');
+            if (!response.ok) return;
+            verified = (await response.json()).reports || [];
+        } catch (_) { return; }
+    }
+    crowdHazardLayerGroup.clearLayers();
+    verified.forEach(report => {
+        const marker = L.circleMarker([report.lat, report.lng], {
+            radius: 9, color: '#f43f5e', fillColor: '#fb7185', fillOpacity: .78, weight: 2,
+        }).addTo(crowdHazardLayerGroup);
+        marker.bindPopup(`<strong>${report.incident_type.replaceAll('_', ' ')}</strong><br>${report.location_name || 'Field position'}<br>Confidence: ${report.confidence_score}%`);
+    });
+}
+
+function setRouteStartFromMap() {
+    const status = document.getElementById('route-status');
+    if (!leafletMap) return;
+    status.textContent = 'Click a start point on the map.';
+    leafletMap.once('click', (event) => {
+        safeRouteStart = { lat: event.latlng.lat, lng: event.latlng.lng, label: 'Selected start' };
+        status.textContent = 'Start set. Select a sector marker to plan a route.';
+        document.getElementById('route-start-btn').textContent = 'Start set ✓';
+    });
+}
+
+async function planSafeRoute(start, destination, automated = false) {
+    const status = document.getElementById('route-status');
+    const confidence = document.getElementById('route-confidence');
+    if (!status || !confidence) return;
+    safeRouteStart = start;
+    safeRouteDestination = destination;
+    status.textContent = automated ? 'Hazard map changed — recalculating…' : `Planning verified-safe route to ${destination.label || 'target'}…`;
+    confidence.textContent = 'CHECKING HAZARDS';
+    try {
+        const response = await fetch('/api/routes/safe', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ start: { lat: start.lat, lng: start.lng }, destination: { lat: destination.lat, lng: destination.lng } }),
+        });
+        const data = await response.json();
+        if (!response.ok || !data.safe) throw new Error(data.reason || data.detail || 'No verified-safe route available.');
+        if (safeRouteLayer) leafletMap.removeLayer(safeRouteLayer);
+        safeRouteLayer = L.geoJSON(data.geometry, { style: { color: '#34d399', weight: 5, opacity: .9, dashArray: data.detour_count ? '10 7' : null } }).addTo(leafletMap);
+        const mins = Math.max(1, Math.round(data.duration_s / 60));
+        confidence.textContent = `${data.route_confidence}% CONFIDENT`;
+        confidence.className = 'text-[10px] font-mono text-emerald-300';
+        status.textContent = `${(data.distance_m / 1000).toFixed(1)} km · ${mins} min · ${data.detour_count ? 'hazard detour applied' : 'hazard-clear'}`;
+    } catch (error) {
+        confidence.textContent = 'ROUTE BLOCKED';
+        confidence.className = 'text-[10px] font-mono text-rose-300';
+        status.textContent = error.message || 'Route verification unavailable.';
+        if (safeRouteLayer) { leafletMap.removeLayer(safeRouteLayer); safeRouteLayer = null; }
+    }
+}
+
+function clearSafeRoute() {
+    if (safeRouteLayer && leafletMap) leafletMap.removeLayer(safeRouteLayer);
+    safeRouteLayer = null; safeRouteStart = null; safeRouteDestination = null;
+    const status = document.getElementById('route-status');
+    const confidence = document.getElementById('route-confidence');
+    if (status) status.textContent = 'No active route.';
+    if (confidence) { confidence.textContent = 'AWAITING POINTS'; confidence.className = 'text-[10px] font-mono text-slate-500'; }
+    const button = document.getElementById('route-start-btn');
+    if (button) button.textContent = 'Set start';
+}
+
+window.openCrowdReportModal = openCrowdReportModal;
+window.closeCrowdReportModal = closeCrowdReportModal;
+window.setRouteStartFromMap = setRouteStartFromMap;
+window.clearSafeRoute = clearSafeRoute;
+
 let activeSectorName = null;
 
 function selectCityByName(cityName) {
@@ -1194,6 +1364,7 @@ function selectCityByName(cityName) {
         const input = document.getElementById('cityInput');
         if (input) input.value = city.name;
         loadCityData(city);
+        if (safeRouteStart) planSafeRoute(safeRouteStart, { lat: city.lat, lng: city.lng, label: city.name });
         if (typeof toggleTacticalPanel === 'function') toggleTacticalPanel(true);
     }
 }
