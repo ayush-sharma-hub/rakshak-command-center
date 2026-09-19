@@ -3,7 +3,7 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 from typing import Dict, Any, Optional
-from backend.services.lora_engine import get_all_nodes, get_recent_packets, transmit_lora_packet
+from backend.services.lora_engine import get_all_nodes, get_recent_packets, transmit_lora_packet, broadcast_lora_mesh
 from backend.services.hydro_wave import calculate_wave_propagation
 
 router = APIRouter(prefix="/api", tags=["LoRa Mesh & Wave Modeling"])
@@ -14,6 +14,24 @@ class LoRaTransmitRequest(BaseModel):
     packet_type: str = Field(default="SENSOR_TELEMETRY", description="SENSOR_TELEMETRY, SOS_DISTRESS, BEACON")
     payload: Dict[str, Any] = Field(default_factory=dict, description="Arbitrary JSON sensor/SOS payload")
     max_hops: Optional[int] = Field(default=5, ge=1, le=10)
+
+
+class LoRaBroadcastRequest(BaseModel):
+    message: str = Field(..., description="Emergency message to broadcast over LoRa mesh")
+    priority: Optional[str] = Field(default="HIGH", description="HIGH, CRITICAL, or EMERGENCY")
+
+
+@router.post("/lora/broadcast")
+def post_lora_broadcast(req: LoRaBroadcastRequest):
+    """
+    Broadcast an emergency civil warning across all mountain LoRa mesh repeater nodes.
+    Triggered by SEOC incident controllers or as automated fallback when WebPush fails.
+    """
+    try:
+        res = broadcast_lora_mesh(message=req.message, priority=req.priority or "HIGH")
+        return res
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc))
 
 
 @router.get("/lora/nodes")

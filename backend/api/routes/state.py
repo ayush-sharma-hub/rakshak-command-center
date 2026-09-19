@@ -142,8 +142,39 @@ def get_field_units():
 
 @router.get("/river-basins")
 def get_river_basins():
+    """Returns river basins stored and synchronized in the database."""
     conn = get_db()
     rows = conn.execute("SELECT * FROM river_basins").fetchall()
     conn.close()
     return [dict(r) for r in rows]
+
+
+@router.get("/river-basins/live")
+async def get_live_river_data():
+    """
+    Returns REAL river level data derived from upstream Open-Meteo precipitation.
+    Uses hydrological estimation (Rational Method + Manning's equation).
+    Data source: Open-Meteo API (free, no key required) + CWC official thresholds.
+    """
+    import asyncio
+    from backend.services.river_data import fetch_all_rivers
+    rivers = await asyncio.to_thread(fetch_all_rivers)
+    return {
+        "source": "Open-Meteo upstream precipitation + Hydrological estimation",
+        "note": "River levels estimated from real-time atmospheric data. CWC thresholds are official.",
+        "rivers": rivers,
+        "fetched_at": __import__('datetime').datetime.now(__import__('datetime').timezone.utc).isoformat()
+    }
+
+
+@router.get("/river-basins/live/{basin_name}")
+async def get_live_river_basin(basin_name: str):
+    """Get real-time data for a specific river basin."""
+    import asyncio
+    from backend.services.river_data import fetch_river_data
+    from fastapi import HTTPException
+    data = await asyncio.to_thread(fetch_river_data, basin_name)
+    if not data:
+        raise HTTPException(status_code=404, detail=f"Basin '{basin_name}' not found. Available: Mandakini, Alaknanda, Bhagirathi, Tons, Saryu")
+    return data
 

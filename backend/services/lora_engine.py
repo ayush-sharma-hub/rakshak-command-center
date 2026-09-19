@@ -176,3 +176,61 @@ def transmit_lora_packet(
         "timestamp": now,
     }
 
+
+def broadcast_lora_mesh(message: str, priority: str = "HIGH") -> Dict[str, Any]:
+    """
+    Broadcast an emergency civil protection alert downstream across all mountain LoRa nodes.
+    Used for mass sirens, temple PA systems, and offline citizen receiver beacons
+    when cellular towers fail or internet push is unreachable.
+    """
+    conn = get_db()
+    now = datetime.now(timezone.utc).isoformat()
+    nodes = conn.execute("SELECT id, name, sector, lat, lng FROM lora_nodes").fetchall()
+
+    packet_hash = f"PKT-BC-{uuid.uuid4().hex[:6].upper()}"
+    raw_hex = f"4C4F52414243{packet_hash.replace('-', '')}"
+
+    payload = {
+        "broadcast_type": "CIVIL_DEFENSE_ALERT",
+        "message": message,
+        "priority": priority.upper(),
+        "issued_by": "SEOC Central Tactical Hub (Rudraprayag)",
+        "timestamp": now,
+    }
+
+    # Store master broadcast packet
+    conn.execute("""
+        INSERT INTO lora_packets (
+            packet_hash, source_node, destination_node, hop_count, max_hops,
+            packet_type, payload_json, raw_hex, rssi_dbm, snr_db, created_at
+        ) VALUES (?, 'LORA-GW-08', 'MESH_ALL', 0, 8, 'EMERGENCY_BROADCAST', ?, ?, -72, 10.5, ?)
+    """, (packet_hash, json.dumps(payload), raw_hex, now))
+
+    # Update last_seen on all active nodes to reflect acknowledgment
+    conn.execute("UPDATE lora_nodes SET last_seen=?", (now,))
+
+    # Log into SEOC incidents queue
+    conn.execute("""
+        INSERT INTO incidents (type, msg, zone, priority, lat, lng, risk_score, created_at)
+        VALUES ('LORA_BROADCAST', ?, 'All Himalayan Sectors (RF Mesh)', ?, 30.2844, 78.9811, 90, ?)
+    """, (f"[LORA MESH BROADCAST] {message}", priority.upper(), now))
+
+    conn.commit()
+    conn.close()
+
+    node_ids = [n["id"] for n in nodes]
+    logger.info(f"[LoRa Mesh Broadcast] Sent alert to {len(node_ids)} nodes: {message}")
+
+    return {
+        "success": True,
+        "packet_hash": packet_hash,
+        "nodes_reached": node_ids,
+        "nodes_count": len(node_ids),
+        "message": message,
+        "priority": priority.upper(),
+        "frequency": "865–867 MHz India ISM Band",
+        "protocol": "Meshtastic / LoRaWAN Flood Overlay",
+        "timestamp": now
+    }
+
+
