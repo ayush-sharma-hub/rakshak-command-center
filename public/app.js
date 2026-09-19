@@ -313,16 +313,53 @@ window.updateNotificationStatusUI = updateNotificationStatusUI;
 let alertPollTimer = null;
 let lastKnownAlertId = parseInt(localStorage.getItem('rakshak_last_alert_id') || '0', 10);
 let alertRadarInitialized = localStorage.getItem('rakshak_radar_init') === 'true';
+let alertSocket = null;
+
+function initEmergencyWebSocket() {
+    if (alertSocket && (alertSocket.readyState === WebSocket.OPEN || alertSocket.readyState === WebSocket.CONNECTING)) {
+        return;
+    }
+    try {
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/live`;
+        alertSocket = new WebSocket(wsUrl);
+
+        alertSocket.onmessage = function(event) {
+            try {
+                const data = JSON.parse(event.data);
+                if (data.type === 'emergency_broadcast') {
+                    console.log('[Real-Time WS Emergency Broadcast Received]:', data);
+                    triggerPhonePushAlert({
+                        title: data.title || '🚨 SEOC EMERGENCY BROADCAST',
+                        body: data.body || 'Flash flood warning issued. Evacuate to higher ground immediately!',
+                        url: '/map.html',
+                        tag: 'broadcast-' + (data.incident_id || Date.now())
+                    });
+                }
+            } catch(e) {}
+        };
+
+        alertSocket.onclose = function() {
+            setTimeout(initEmergencyWebSocket, 3000);
+        };
+        alertSocket.onerror = function() {
+            try { alertSocket.close(); } catch(e){}
+        };
+    } catch(e) {
+        console.warn('WS alert connection:', e);
+    }
+}
+window.initEmergencyWebSocket = initEmergencyWebSocket;
 
 function startAlertPolling() {
+    initEmergencyWebSocket();
     if (alertPollTimer) return;
     checkNewAlerts();
-    alertPollTimer = setInterval(checkNewAlerts, 2500);
+    alertPollTimer = setInterval(checkNewAlerts, 2000);
 }
 window.startAlertPolling = startAlertPolling;
 
 async function checkNewAlerts() {
-    if (!isCitizenNotificationEnabled()) return;
     try {
         let url = '/api/alerts/latest';
         if (alertRadarInitialized && lastKnownAlertId > 0) {
@@ -347,6 +384,7 @@ async function checkNewAlerts() {
         let maxId = lastKnownAlertId;
         alerts.forEach(al => {
             if (al.id && al.id > lastKnownAlertId) {
+                console.log('[Live Alert Polling Triggered]:', al);
                 triggerPhonePushAlert({
                     title: `🚨 SEOC DISASTER ALERT [${al.priority || 'CRITICAL'}]`,
                     body: `${al.msg || 'Flash flood warning issued'} — Zone: ${al.zone || 'Catchment Basin'}. Evacuate to higher elevation!`,
@@ -364,6 +402,7 @@ async function checkNewAlerts() {
         console.warn("Alert check error:", e);
     }
 }
+
 
 function showOnScreenAlertBanner(opts) {
     let banner = document.getElementById('floating-disaster-banner');
@@ -888,11 +927,11 @@ document.addEventListener('DOMContentLoaded', () => {
     syncBackendStatus();
     setInterval(syncBackendStatus, 3000);
 
-    // 8. Persistent Citizen Notifications (Ek bar permission -> permanent background radar)
+    // 8. Live Emergency Alert Radar & Persistent Citizen Notifications
+    startAlertPolling();
     if (("Notification" in window) && (Notification.permission === 'granted' || localStorage.getItem('rakshak_notifications_enabled') === 'true')) {
         localStorage.setItem('rakshak_notifications_enabled', 'true');
         syncPushSubscriptionToServer();
-        startAlertPolling();
     }
     updateNotificationStatusUI();
 

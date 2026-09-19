@@ -274,21 +274,84 @@ class MassPushRequest(BaseModel):
 
 @router.post("/push/broadcast")
 async def mass_push_broadcast(payload: MassPushRequest):
-    """Send a push notification to ALL enrolled subscribers. Admin-only operation."""
+    """
+    Send an emergency broadcast to ALL enrolled phones and active citizen web clients.
+    Logs into the SEOC incident table, dispatches Web Push notifications,
+    broadcasts over WebSockets to open browsers, and falls back to LoRa mesh.
+    """
     if not payload.title or not payload.body:
         raise HTTPException(status_code=400, detail="title and body are required")
 
+    now = datetime.now(timezone.utc).isoformat()
+    incident_id = None
+    try:
+        conn = get_db()
+        c = conn.cursor()
+        c.execute("""
+            INSERT INTO incidents (type, msg, zone, priority, risk_score, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """, (
+            "BROADCAST_MASS",
+            f"{payload.title}: {payload.body}",
+            "Statewide Alert (All Sectors)",
+            "CRITICAL",
+            95,
+            now
+        ))
+        incident_id = c.lastrowid
+        c.execute("""
+            INSERT INTO broadcasts (target_city, risk_level, msg_english, channels, operator_id, created_at)
+            VALUES (?, 'CRITICAL', ?, ?, 'SEOC-ADMIN', ?)
+        """, (
+            "Statewide",
+            f"{payload.title} — {payload.body}",
+            json.dumps(["Cell Push Notification", "LoRa RF Mesh", "Web Live Radar"]),
+            now
+        ))
+        conn.commit()
+        conn.close()
+    except Exception as exc:
+        logger.warning(f"Error logging mass broadcast incident: {exc}")
+
+    # Broadcast to live open WebSockets
+    try:
+        from backend.tasks.background import _broadcast_ws
+        await _broadcast_ws({
+            "type": "emergency_broadcast",
+            "title": payload.title,
+            "body": payload.body,
+            "incident_id": incident_id,
+            "timestamp": now
+        })
+    except Exception as e:
+        logger.warning(f"WS broadcast warning: {e}")
+
+    # Dispatch WebPush to registered phones
     try:
         results = await asyncio.to_thread(
             send_push_to_all,
             title=payload.title,
             body=payload.body,
         )
+        sent = results.get("sent", 0)
+        failed = results.get("failed", 0)
+        total = results.get("total", 0)
+
+        # Automatic LoRa mesh fallback if any phone unreachable or offline
+        if failed > 0 or total == 0:
+            try:
+                from backend.services.lora_engine import broadcast_lora_mesh
+                broadcast_lora_mesh(f"{payload.title}: {payload.body}", priority="CRITICAL")
+            except Exception as le:
+                logger.warning(f"LoRa fallback warning: {le}")
+
         return {
             "status": "ok",
-            "sent": results.get("sent", 0),
-            "failed": results.get("failed", 0),
-            "total": results.get("total", 0)
+            "incident_id": incident_id,
+            "sent": sent,
+            "failed": failed,
+            "total": total,
+            "lora_fallback_triggered": (failed > 0 or total == 0)
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

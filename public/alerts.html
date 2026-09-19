@@ -497,18 +497,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ title, body })
                 });
-
                 const data = await res.json();
-
                 if (res.ok) {
                     statusDiv.textContent = `✅ Notification sent to ${data.sent || 0} enrolled device(s). Failed: ${data.failed || 0}.`;
                     statusDiv.className = 'text-[11px] font-mono p-2.5 rounded-xl border text-emerald-400 bg-emerald-950/50 border-emerald-600/40';
                     statusDiv.classList.remove('hidden');
-                    showAlertToast(`Mass alert sent to ${data.sent || 0} citizens' phones!`);
+                    showAlertToast(`Mass alert broadcast to all citizens' phones and live radars!`);
+                    if (typeof fetchLiveAlerts === 'function') fetchLiveAlerts();
                     // Also trigger LoRa broadcast as fallback for unreachable devices
-                    if (data.failed > 0) {
-                        triggerLoraFallback(title, body, data.failed);
+                    if (data.failed > 0 || data.total === 0) {
+                        triggerLoraFallback(title, body, data.failed || 1);
                     }
+
                 } else {
                     statusDiv.textContent = `❌ Error: ${data.detail || 'Unknown error from push service.'}`;
                     statusDiv.className = 'text-[11px] font-mono p-2.5 rounded-xl border text-rose-400 bg-rose-950/50 border-rose-600/40';
