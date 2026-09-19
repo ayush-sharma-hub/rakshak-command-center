@@ -221,6 +221,17 @@ def broadcast_lora_mesh(message: str, priority: str = "HIGH") -> Dict[str, Any]:
     node_ids = [n["id"] for n in nodes]
     logger.info(f"[LoRa Mesh Broadcast] Sent alert to {len(node_ids)} nodes: {message}")
 
+    try:
+        from backend.core.push_service import send_push_async
+        send_push_async(
+            title=f"📡 SEOC EMERGENCY BROADCAST [{priority.upper()}]",
+            body=message,
+            url="/map.html",
+            priority=priority.upper()
+        )
+    except Exception as e:
+        logger.warning(f"Could not trigger phone push from LoRa broadcast: {e}")
+
     return {
         "success": True,
         "packet_hash": packet_hash,
