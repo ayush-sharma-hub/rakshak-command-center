@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional, List, Dict, Any
 
@@ -13,6 +14,7 @@ from backend.core.push_service import get_vapid_public_key, send_push_to_all
 from backend.services.gemini_service import generate_broadcast
 from backend.services.weather_api import fetch_weather, fetch_all_weather
 
+logger = logging.getLogger("rakshak.alerts")
 router = APIRouter(prefix="/api", tags=["Alerts & Broadcasts"])
 
 
