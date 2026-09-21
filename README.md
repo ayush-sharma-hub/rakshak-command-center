@@ -1,169 +1,144 @@
-# 🏔️ Rakshak — Uttarakhand SEOC Disaster Intelligence Dashboard
+# Rakshak
 
-> **"Rakshak" (रक्षक) means "Protector" in Hindi.**
-> A real-time disaster early-warning and response coordination platform for the Uttarakhand State Emergency Operations Centre (SEOC).
+Disaster intelligence and emergency coordination platform for Uttarakhand’s SEOC operations.
 
----
+## Overview
 
-## 🚀 Live Demo
+Rakshak helps teams monitor risks, manage SOS alerts, coordinate field response, and send time-critical public warnings from a single operational dashboard.
 
-| Service | URL |
-|---|---|
-| 🖥️ **Main War Room Dashboard** | http://localhost:3000 |
-| 📊 **Analytics Dashboard** | http://localhost:8501 |
-| 📋 **Interactive API Docs** | http://localhost:3000/api/docs |
+## Workflow
 
----
-
-## ✨ Features
-
-### 🌐 Front-End (9 Pages)
-| Page | What it does |
-|---|---|
-| `index.html` | USDMA Secure Login — duty shift selector, biometric auth |
-| `dashboard.html` | **Live War Room** — SOS triage, river gauges, field units, incident wire |
-| `map.html` | **Tactical GIS Map** — 3 base layers, rescue unit pins, UAV drone HUD |
-| `simulator.html` | **Crisis Simulator** — 2013 Kedarnath, 2021 Chamoli presets, debris physics |
-| `evacuation.html` | **Convoy Manager** — 4-stage SOP, fleet tracker, shelter inventory |
-| `alerts.html` | **Broadcast Hub** — 4-language emergency alerts, speech synthesis |
-| `assistant.html` | **VHF Radio Comms** — RF waveform visualizer, Push-to-Talk |
-
-### 🐍 Back-End (Python FastAPI)
-- **8-table SQLite database** — fully persisted, never lost on restart
-- **Geo-routing engine** — Haversine distance + mountain terrain ETA, auto-assigns nearest responder to any SOS
-- **Live Open-Meteo weather** — free API, no key, real precipitation data for 25 Uttarakhand cities
-- **Gemini AI broadcasts** — free tier, multi-language alerts (English + Hindi + Garhwali + Kumaoni)
-- **Real-time WebSocket** — live river basin updates pushed to all browser tabs every 30 seconds
-- **Background sensor loop** — simulates live IoT gauge readings, auto-generates AI alerts for dangerous rivers
-
-### 📊 Analytics Dashboard (Streamlit)
-- Interactive river basin gauge charts
-- Incident priority breakdown pie chart
-- Live SOS signal tracker with one-click new SOS form
-- Real-time risk simulator with AI analysis
-- Broadcast generator with Gemini AI
-
----
-
-## 🏗️ Architecture
-
+```mermaid
+flowchart LR
+    A[Weather + River + Sensor Feed] --> B[FastAPI Backend]
+    B --> C[Risk Analysis Engine]
+    C --> D[SOS + Dispatch + Alerting]
+    D --> E[Command Dashboard]
+    D --> F[AI Broadcast Generator]
+    E --> G[Field Response]
+    F --> H[Public Warning Messages]
 ```
+
+## Key capabilities
+
+- Real-time river and weather monitoring
+- SOS intake and triage
+- Field unit dispatch coordination
+- Risk simulation and hazard scoring
+- AI-generated emergency alerts
+- Safe-route and disaster planning
+- LoRa / TTN telemetry support
+
+## Project structure
+
+```text
 rakshak-new/
-├── main.py                    ← FastAPI server (port 3000)
-├── streamlit_app.py           ← Analytics dashboard (port 8501)
-├── start.py                   ← Convenient startup script
-├── requirements.txt
-├── rakshak.db                 ← SQLite database (auto-created)
-├── .env.example               ← Copy to .env for Gemini key
-│
+├── main.py                 # FastAPI backend
+├── streamlit_app.py        # Analytics dashboard
+├── start.py                # Startup helper
+├── requirements.txt        # Python dependencies
+├── .env.example            # Environment template
+├── public/                 # Web frontend pages
 ├── backend/
-│   ├── core/database.py       ← 8-table schema + seed data
-│   ├── services/
-│   │   ├── geo_engine.py      ← Haversine, ETA, risk matrix, runoff physics
-│   │   ├── weather_api.py     ← Open-Meteo ingestion + DB cache
-│   │   └── gemini_service.py  ← Gemini AI + fallback templates
-│   ├── cache/ttl_cache.py     ← Thread-safe TTL cache
-│   ├── tasks/background.py    ← Async sensor simulation + WebSocket push
-│   └── api/routes/            ← 6 modular route files
-│       ├── state.py, sos.py, simulate.py
-│       ├── alerts.py, dispatch.py, ws.py
-│
-└── public/                    ← HTML/JS frontend (unchanged, served at /)
-    ├── index.html, dashboard.html, map.html
-    ├── simulator.html, evacuation.html
-    ├── alerts.html, assistant.html
-    └── app.js                 ← Shared tactical engine
+│   ├── api/routes/         # Route handlers
+│   ├── core/               # DB + shared logic
+│   ├── services/           # Weather, AI, routing, LoRa
+│   ├── tasks/              # Background jobs
+│   └── cache/              # Cache helpers
+├── rakshak.db              # SQLite database
+├── rakshak.log             # Runtime logs
+└── README.md
 ```
 
----
+## Tech stack
 
-## 🛠️ How to Run
+- Python + FastAPI
+- SQLite
+- Streamlit + Plotly
+- HTML + JavaScript
+- Google Gemini AI
+- Open-Meteo API
+- LoRa / TTN integrations
 
-### Step 1 — Start the Main Backend
+## Setup
+
+### 1. Create virtual environment
+
 ```powershell
-# In your rakshak-new folder:
+cd C:\Users\rikwa\rakshak-new
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install --upgrade pip
+```
+
+### 2. Install dependencies
+
+```powershell
+pip install -r requirements.txt
+```
+
+### 3. Add environment variable
+
+```powershell
+copy .env.example .env
+```
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+> Without this key, the app uses built-in fallback emergency templates.
+
+## Run
+
+### Backend
+
+```powershell
 python -m uvicorn main:app --host 0.0.0.0 --port 3000
-
-# Open browser: http://localhost:3000
 ```
 
-### Step 2 — Start the Analytics Dashboard (Optional)
+Access:
+- http://localhost:3000
+- http://localhost:3000/api/docs
+
+### Analytics dashboard
+
 ```powershell
-# In a second terminal:
 streamlit run streamlit_app.py --server.port 8501
-
-# Open browser: http://localhost:8501
 ```
 
-### Step 3 — Enable Gemini AI (Optional, Completely Free)
+Access:
+- http://localhost:8501
+
+### Startup helper
+
 ```powershell
-# 1. Get free key (no credit card): https://aistudio.google.com/app/apikey
-# 2. Set the key:
-$env:GEMINI_API_KEY="AIzaSy..."
-# 3. Then start the server as above
+python start.py
 ```
 
-> **Without Gemini key:** The system uses smart built-in fallback templates.
-> Everything still works 100% — weather, maps, SOS, simulation, dispatch.
+## Main API endpoints
 
----
+- GET /api/health
+- GET /api/state
+- GET /api/field-units
+- POST /api/sos
+- POST /api/sos/update
+- POST /api/simulate
+- POST /api/dispatch
+- GET /api/routes/safe
+- GET /api/lora/nodes
+- POST /api/integrations/ttn/uplink
+- GET /api/docs
 
-## 💸 Cost — ₹0 / \$0 / FREE
+## Use cases
 
-| Component | Cost |
-|---|---|
-| Open-Meteo Weather API | 🆓 Free, no key |
-| Gemini AI API | 🆓 Free tier (just Gmail) |
-| Leaflet Maps | 🆓 Open source |
-| OpenStreetMap tiles | 🆓 Free |
-| SQLite database | 🆓 Built into Python |
-| FastAPI / Uvicorn / Streamlit | 🆓 Open source |
-| **Total** | **₹0** |
+- District control room monitoring
+- Flood and landslide risk assessment
+- SOS handling and responder assignment
+- Emergency broadcast generation
+- Crisis simulation and training drills
 
----
+## Status
 
-## 🔌 API Endpoints
-
-| Method | Endpoint | Description |
-|---|---|---|
-| `GET` | `/api/state` | Full SEOC system snapshot |
-| `GET` | `/api/river-basins` | Live gauge readings |
-| `GET` | `/api/field-units` | All field units with status |
-| `GET` | `/api/incidents` | Alert/incident log |
-| `POST` | `/api/sos` | Submit citizen distress call |
-| `POST` | `/api/sos/update` | Triage/resolve SOS |
-| `POST` | `/api/simulate` | Run disaster risk simulation |
-| `POST` | `/api/dispatch` | Dispatch field unit |
-| `POST` | `/api/broadcast/synthesize` | Generate AI multi-language alert |
-| `GET` | `/api/weather/{city}` | Live weather for any UK city |
-| `WS` | `/ws/live` | Real-time state stream |
-| `GET` | `/api/docs` | Swagger interactive docs |
-
----
-
-## 🧑‍💻 Tech Stack
-
-| Layer | Technology |
-|---|---|
-| **Backend** | Python 3.11, FastAPI, Uvicorn |
-| **Database** | SQLite (via stdlib sqlite3) |
-| **AI** | Google Gemini 2.0 Flash Lite (free) |
-| **Weather** | Open-Meteo API (free, no key) |
-| **Maps** | Leaflet.js + OpenStreetMap |
-| **Frontend** | Vanilla HTML5, TailwindCSS CDN, Web Audio API |
-| **Analytics** | Streamlit, Plotly, Pandas |
-| **Real-time** | WebSocket (FastAPI + browser native) |
-
----
-
-## 📞 Emergency Helplines (India)
-- **NDRF Control Room:** 011-24363260
-- **Uttarakhand SDMA:** 0135-2710334
-- **National Disaster Helpline:** 1077
-- **National Emergency:** 112
-
----
-
-*Built for Hackathon 2026 — Uttarakhand Disaster Intelligence Initiative*
-*"Technology in Service of the Hills"*
+This project is designed as an operational disaster-response command platform for Uttarakhand-focused monitoring, alerting, dispatch coordination, and analytics.
 
