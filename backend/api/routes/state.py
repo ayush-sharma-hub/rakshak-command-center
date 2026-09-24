@@ -7,11 +7,20 @@ from backend.core.database import get_db
 router = APIRouter(prefix="/api", tags=["State"])
 
 
+def _safe_int(value, default: int = 0) -> int:
+    if value is None:
+        return default
+    try:
+        return int(value)
+    except (TypeError, ValueError):
+        return default
+
+
 @router.get("/state")
 def get_state():
     conn = get_db()
 
-    field_units = [dict(r) for r in conn.execute("SELECT * FROM field_units").fetchall()]
+    field_units_raw = [dict(r) for r in conn.execute("SELECT * FROM field_units").fetchall()]
     river_basins_raw = [dict(r) for r in conn.execute("SELECT * FROM river_basins").fetchall()]
     sos_signals_raw = [dict(r) for r in conn.execute(
         "SELECT * FROM sos_signals ORDER BY created_at DESC LIMIT 20"
@@ -20,22 +29,31 @@ def get_state():
         "SELECT * FROM incidents ORDER BY created_at DESC LIMIT 30"
     ).fetchall()]
 
+    field_units = []
+    for u in field_units_raw:
+        item = dict(u)
+        item["strength"] = _safe_int(item.get("strength"), 0)
+        item["status"] = item.get("status") or "STANDBY"
+        field_units.append(item)
+
     # Format river basins with dual camelCase & snake_case
     river_basins = []
     for b in river_basins_raw:
         item = dict(b)
-        item["currentLevel"] = b["current_level"]
-        item["dangerLevel"] = b["danger_level"]
-        item["warningLevel"] = b["warning_level"]
+        item["currentLevel"] = b.get("current_level")
+        item["dangerLevel"] = b.get("danger_level")
+        item["warningLevel"] = b.get("warning_level")
+        item["status"] = item.get("status") or "SAFE"
         river_basins.append(item)
 
     # Format SOS signals with dual camelCase & snake_case
     sos_signals = []
     for s in sos_signals_raw:
         item = dict(s)
-        item["callerName"] = s["caller_name"]
-        item["locationName"] = s["location_name"]
-        item["assignedUnit"] = s["assigned_unit"]
+        item["callerName"] = s.get("caller_name") or "Unknown caller"
+        item["locationName"] = s.get("location_name") or "Unspecified location"
+        item["assignedUnit"] = s.get("assigned_unit") or "Unassigned"
+        item["status"] = item.get("status") or "PENDING"
         created = s.get("created_at", "")
         item["time"] = created.split("T")[1][:5] if "T" in created else "Just now"
         sos_signals.append(item)
@@ -45,11 +63,12 @@ def get_state():
     for i in incidents_raw:
         item = dict(i)
         created = i.get("created_at", "")
+        item["priority"] = item.get("priority") or "MEDIUM"
         item["time"] = created.split("T")[1][:5] if "T" in created else "Just now"
         incidents.append(item)
 
-    pending_sos = sum(1 for s in sos_signals if s["status"] == "PENDING")
-    critical_units = sum(1 for b in river_basins if b["status"] in ("DANGER", "WARNING"))
+    pending_sos = sum(1 for s in sos_signals if (s.get("status") or "PENDING") == "PENDING")
+    critical_units = sum(1 for b in river_basins if (b.get("status") or "SAFE") in ("DANGER", "WARNING"))
 
     # Fetch latest simulation state for risk & telemetry
     latest_sim = conn.execute(
@@ -110,8 +129,8 @@ def get_state():
         "summary": {
             "pendingSOSCount": pending_sos,
             "criticalBasins": critical_units,
-            "deployedUnits": sum(1 for u in field_units if u["status"] not in ("STANDBY", "OFFLINE")),
-            "totalFieldStrength": sum(u["strength"] for u in field_units),
+            "deployedUnits": sum(1 for u in field_units if (u.get("status") or "STANDBY") not in ("STANDBY", "OFFLINE")),
+            "totalFieldStrength": sum(_safe_int(u.get("strength"), 0) for u in field_units),
         },
     }
 
