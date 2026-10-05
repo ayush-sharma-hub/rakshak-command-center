@@ -167,6 +167,10 @@ app.include_router(safe_routes_router)
 app.include_router(ttn_router)
 app.include_router(agent_router, prefix="/api/agent", tags=["Autonomous Agent"])
 
+# Direct WebSocket alias for /stream (supports ws://host/stream and ws://host/api/agent/stream)
+from backend.api.routes.agent_routes import websocket_agent_stream
+app.add_api_websocket_route("/stream", websocket_agent_stream)
+
 # ─── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/api/health")
 def health():
@@ -176,19 +180,21 @@ def health():
         "gemini_enabled": bool(os.environ.get("GEMINI_API_KEY")),
     }
 
-# ─── Serve Tactical Frontend & Public HTML (must be LAST — catches all unmatched routes) ──
+# ─── Serve Tactical Frontend at Root / (must be LAST — catches all unmatched routes) ──
 TACTICAL_DIR = os.path.join(os.path.dirname(__file__), "frontend_tactical")
 PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
 
-if os.path.isdir(TACTICAL_DIR):
-    app.mount("/tactical", StaticFiles(directory=TACTICAL_DIR, html=True), name="tactical")
-    logger.info("[OK] Tactical C4ISR Frontend mounted at /tactical from: %s", TACTICAL_DIR)
-
 if os.path.isdir(PUBLIC_DIR):
+    app.mount("/public", StaticFiles(directory=PUBLIC_DIR, html=True), name="public_legacy")
+
+if os.path.isdir(TACTICAL_DIR):
+    app.mount("/", StaticFiles(directory=TACTICAL_DIR, html=True), name="tactical_root")
+    logger.info("[OK] Tactical C4ISR Frontend mounted at root / from: %s", TACTICAL_DIR)
+elif os.path.isdir(PUBLIC_DIR):
     app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
     logger.info("[OK] Frontend served from: %s", PUBLIC_DIR)
 else:
-    logger.warning("[WARN] 'public/' directory not found — frontend not mounted.")
+    logger.warning("[WARN] No frontend directory found — frontend not mounted.")
 
 
 # ─── Direct Run ───────────────────────────────────────────────────────────────

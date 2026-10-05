@@ -10,10 +10,13 @@ Exposes:
 
 from __future__ import annotations
 
+import asyncio
+import json
 import logging
+from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect, status
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, field_validator
 from starlette.concurrency import run_in_threadpool
@@ -22,9 +25,35 @@ from backend.services.agent_service import run_disaster_analysis
 
 logger = logging.getLogger("rakshak.agent.routes")
 
+# ── WebSocket Connection Manager for Agent Telemetry ─────────────────────────
+class AgentStreamManager:
+    """Manages real-time telemetry streaming to tactical command center clients."""
+    def __init__(self):
+        self.active_connections: list[WebSocket] = []
+
+    async def connect(self, websocket: WebSocket):
+        await websocket.accept()
+        self.active_connections.append(websocket)
+        logger.info("[Agent WS] Client connected. Total active: %d", len(self.active_connections))
+
+    def disconnect(self, websocket: WebSocket):
+        if websocket in self.active_connections:
+            self.active_connections.remove(websocket)
+            logger.info("[Agent WS] Client disconnected. Total active: %d", len(self.active_connections))
+
+    async def broadcast(self, data: dict):
+        for connection in list(self.active_connections):
+            try:
+                await connection.send_json(data)
+            except Exception:
+                self.disconnect(connection)
+
+agent_stream_manager = AgentStreamManager()
+
 # ── Router Initialization ─────────────────────────────────────────────────────
-# Note: When included in main.py with prefix="/api/agent" and tags=["Autonomous Agent"],
-# this route will serve POST /api/agent/analyze.
+# When included in main.py with prefix="/api/agent", exposes:
+# POST /api/agent/analyze
+# WS   /api/agent/stream
 router = APIRouter()
 
 
@@ -129,13 +158,43 @@ async def analyze_location(request: AgentAnalysisRequest):
 
     logger.info("Received autonomous assessment request for location: '%s'", location)
 
+    loop = asyncio.get_running_loop()
+
+    def sync_thought_callback(msg: str, level: str = "info"):
+        asyncio.run_coroutine_threadsafe(
+            agent_stream_manager.broadcast({
+                "type": "thought",
+                "level": level,
+                "log": msg,
+                "timestamp": datetime.now(timezone.utc).isoformat(),
+            }),
+            loop,
+        )
+
+    # Initial broadcast of analysis initiation
+    await agent_stream_manager.broadcast({
+        "type": "thought",
+        "level": "info",
+        "log": f"[AI AGENT] Autonomous threat assessment initiated for '{location}'...",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+    })
+
     try:
         # Non-blocking async execution using FastAPI / Starlette threadpool
         assessment: Dict[str, Any] = await run_in_threadpool(
             run_disaster_analysis,
             location=location,
             verbose=False,
+            on_thought=sync_thought_callback,
         )
+
+        # Broadcast assessment result to connected tactical terminals
+        await agent_stream_manager.broadcast({
+            "type": "result",
+            "data": assessment,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+
         return assessment
 
     except Exception as exc:
@@ -155,6 +214,74 @@ async def analyze_location(request: AgentAnalysisRequest):
                 "message": "Disaster analysis engine could not complete the request. Please retry shortly.",
             },
         )
+
+
+# ── Autonomous Agent Real-Time Telemetry WebSocket ───────────────────────────
+
+@router.websocket("/stream")
+async def websocket_agent_stream(websocket: WebSocket):
+    """
+    WebSocket endpoint: /api/agent/stream
+    Streams real-time Smolagents thoughts, tool invocations, and live risk evaluations
+    line-by-line to connected C4ISR Tactical Command Center terminals.
+    """
+    await agent_stream_manager.connect(websocket)
+    try:
+        # Handshake frame
+        await websocket.send_json({
+            "type": "thought",
+            "level": "sys",
+            "log": "[C4ISR UPLINK] Real-time Autonomous Agent WebSocket telemetry connected.",
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+        })
+
+        while True:
+            raw_text = await websocket.receive_text()
+            try:
+                data = json.loads(raw_text)
+                target_loc = data.get("location") or data.get("target") or str(raw_text)
+            except Exception:
+                target_loc = raw_text.strip()
+
+            if target_loc:
+                loop = asyncio.get_running_loop()
+
+                def sync_ws_cb(msg: str, level: str = "info"):
+                    asyncio.run_coroutine_threadsafe(
+                        agent_stream_manager.broadcast({
+                            "type": "thought",
+                            "level": level,
+                            "log": msg,
+                            "timestamp": datetime.now(timezone.utc).isoformat(),
+                        }),
+                        loop,
+                    )
+
+                await agent_stream_manager.broadcast({
+                    "type": "thought",
+                    "level": "info",
+                    "log": f"[AI AGENT] Autonomous risk assessment requested for '{target_loc}'...",
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+
+                assessment = await run_in_threadpool(
+                    run_disaster_analysis,
+                    location=target_loc,
+                    verbose=False,
+                    on_thought=sync_ws_cb,
+                )
+
+                await agent_stream_manager.broadcast({
+                    "type": "result",
+                    "data": assessment,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                })
+
+    except WebSocketDisconnect:
+        agent_stream_manager.disconnect(websocket)
+    except Exception as exc:
+        logger.warning("[Agent WS] Connection closed: %s", exc)
+        agent_stream_manager.disconnect(websocket)
 
 
 # ── Autonomous Sentinel System Endpoints ─────────────────────────────────────

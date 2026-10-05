@@ -19,9 +19,10 @@ import sys
 import textwrap
 import time
 import traceback
+import contextvars
 from datetime import datetime, timezone
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Callable, Dict, List, Optional
 
 # ── Force UTF-8 on Windows Console to prevent encoding crashes ────────────────
 if sys.platform == "win32":
@@ -40,6 +41,20 @@ load_dotenv()
 
 # ── Dedicated Service Logger ──────────────────────────────────────────────────
 logger = logging.getLogger("rakshak.agent")
+
+# ── ContextVar for Streaming Thought Logs to WebSockets ──────────────────────
+_current_thought_callback: contextvars.ContextVar[Optional[Callable[[str, str], None]]] = contextvars.ContextVar(
+    "thought_callback", default=None
+)
+
+def emit_thought(log_text: str, level: str = "info") -> None:
+    """Dispatches a thought log line to the active WebSocket or callback."""
+    cb = _current_thought_callback.get()
+    if cb:
+        try:
+            cb(log_text, level)
+        except Exception as e:
+            logger.debug("Error in thought callback: %s", e)
 
 # ── LiteLLM Configuration ─────────────────────────────────────────────────────
 try:
@@ -118,6 +133,8 @@ def environmental_search_tool(location: str) -> str:
     Returns:
         Formatted intelligence brief of deduplicated live reports.
     """
+    emit_thought(f"[TOOL EXEC] environmental_search_tool scanning target sector '{location}'", "warning")
+
     queries = [
         f"{location} current weather forecast rainfall IMD alerts today",
         f"{location} flood landslide disaster emergency warning 2025",
@@ -128,9 +145,11 @@ def environmental_search_tool(location: str) -> str:
     snippets: list[str] = []
     errors: list[str] = []
 
-    for query in queries:
+    for idx, query in enumerate(queries, 1):
+        emit_thought(f"[INTEL QUERY {idx}/3] Interrogating live telemetry for: '{query}'...", "info")
         try:
             results = _resilient_search(query, MAX_SEARCH_RESULTS)
+            count = 0
             for item in results or []:
                 title = (item.get("title") or "").strip()
                 body = (item.get("body") or "").strip()
@@ -139,16 +158,21 @@ def environmental_search_tool(location: str) -> str:
                 seen_texts.add(body)
                 snippet = f"[{title}] {body}" if title else body
                 snippets.append(snippet)
+                count += 1
+            emit_thought(f"[INTEL RX {idx}/3] Harvested {count} real-time reports.", "info")
         except Exception as exc:  # noqa: BLE001
             errors.append(f"{query}: {type(exc).__name__}")
             logger.warning("Search query failed for '%s': %s", query, exc)
+            emit_thought(f"[SEARCH FALLBACK] Query {idx} notice: {type(exc).__name__}", "warning")
 
     if not snippets:
+        emit_thought(f"[INTEL GAP] No live web reports retrieved for '{location}'. Engaging precautionary elevated mode.", "warning")
         return (
             f"[WARNING] No live web results retrieved for '{location}'. "
             "Assume precautionary ELEVATED risk status until field data is verified."
         )
 
+    emit_thought(f"[INTEL COMPLETE] Synthesized {len(snippets)} verified reports across meteorology & disaster feeds.", "info")
     header = (
         f"=== LIVE INTELLIGENCE BRIEF FOR: {location} ===\n"
         f"Timestamp: {datetime.now(timezone.utc).strftime('%Y-%m-%d %H:%M UTC')}\n"
@@ -374,7 +398,11 @@ def _save_log(result: Dict[str, Any], elapsed_secs: float = 0.0) -> Path | None:
 # CORE ENTRY POINT
 # ─────────────────────────────────────────────────────────────────────────────
 
-def run_disaster_analysis(location: str, verbose: bool = False) -> Dict[str, Any]:
+def run_disaster_analysis(
+    location: str,
+    verbose: bool = False,
+    on_thought: Optional[Callable[[str, str], None]] = None
+) -> Dict[str, Any]:
     """
     Executes a disaster risk intelligence assessment cycle.
 
@@ -384,43 +412,88 @@ def run_disaster_analysis(location: str, verbose: bool = False) -> Dict[str, Any
     Args:
         location: Target geographic place name (e.g. "Roorkee, Uttarakhand").
         verbose: Set to True to stream tool execution steps to stdout.
+        on_thought: Optional callback (msg, level) to stream intermediate thoughts.
 
     Returns:
         Structured dictionary matching the required dispatch analysis schema.
     """
     t0 = time.monotonic()
-    logger.info("Autonomous disaster analysis initiated for location: '%s'", location)
-
-    model = _build_model()
-
-    agent = ToolCallingAgent(
-        tools=[environmental_search_tool],
-        model=model,
-        instructions=AGENT_INSTRUCTIONS,
-        max_steps=8,
-        verbosity_level=LogLevel.INFO if verbose else LogLevel.ERROR,
-    )
-
-    task = (
-        f"Perform an urgent environmental and disaster risk analysis for: '{location}'.\n"
-        f"1. Call `environmental_search_tool` for '{location}' to fetch live weather and alert data.\n"
-        f"2. Synthesize the findings and output the final JSON risk assessment."
-    )
-
-    raw_response: Any = None
+    token = _current_thought_callback.set(on_thought)
     try:
-        raw_response = agent.run(task)
-    except Exception as exc:  # noqa: BLE001
-        logger.error("Agent execution failed for '%s': %s\n%s", location, exc, traceback.format_exc())
-        raw_response = None
+        emit_thought(f"[SYS INIT] C4ISR Autonomous Assessment activated for target: '{location}'", "info")
+        emit_thought(f"[SYS MODEL] Deploying LiteLLM bridge with model: {GEMINI_MODEL}", "info")
+        logger.info("Autonomous disaster analysis initiated for location: '%s'", location)
 
-    elapsed = time.monotonic() - t0
-    result = _parse_agent_response(raw_response, location)
+        model = _build_model()
 
-    _save_log(result, elapsed)
-    logger.info(
-        "Analysis finished for '%s' in %.2fs (Threat: %s, Confidence: %s)",
-        location, elapsed, result.get("threat_level"), result.get("confidence")
-    )
+        def step_callback(step_log):
+            try:
+                step_num = getattr(step_log, "step_number", 1)
+                tool_calls = getattr(step_log, "tool_calls", None)
+                if tool_calls:
+                    for tc in tool_calls:
+                        name = getattr(tc, "name", str(tc))
+                        args = getattr(tc, "arguments", "")
+                        emit_thought(f"[AGENT TOOL INVOCATION · STEP {step_num}] {name}({args})", "warning")
 
-    return result
+                obs = getattr(step_log, "observations", None)
+                if obs:
+                    obs_str = str(obs).strip().replace("\n", " ")[:110]
+                    emit_thought(f"[OBSERVATION · STEP {step_num}] {obs_str}...", "info")
+
+                out = getattr(step_log, "model_output", None)
+                if out:
+                    emit_thought(f"[REASONING · STEP {step_num}] Gemini analyzing multi-spectral risk matrix...", "info")
+            except Exception as e:
+                logger.debug("Step callback error: %s", e)
+
+        agent = ToolCallingAgent(
+            tools=[environmental_search_tool],
+            model=model,
+            instructions=AGENT_INSTRUCTIONS,
+            max_steps=8,
+            verbosity_level=LogLevel.INFO if verbose else LogLevel.ERROR,
+            step_callbacks=[step_callback],
+        )
+
+        task = (
+            f"Perform an urgent environmental and disaster risk analysis for: '{location}'.\n"
+            f"1. Call `environmental_search_tool` for '{location}' to fetch live weather and alert data.\n"
+            f"2. Synthesize the findings and output the final JSON risk assessment."
+        )
+
+        emit_thought(f"[MISSION DISPATCH] Analyzing hazards for '{location}' under NDMA/SEOC criteria...", "info")
+
+        raw_response: Any = None
+        try:
+            raw_response = agent.run(task)
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Agent execution failed for '%s': %s\n%s", location, exc, traceback.format_exc())
+            emit_thought(f"[AGENT WARNING] Agent execution interrupted: {exc}. Activating safe fallback.", "warning")
+            raw_response = None
+
+        elapsed = time.monotonic() - t0
+        emit_thought("[PARSING] Ingesting and verifying schema consistency...", "info")
+        result = _parse_agent_response(raw_response, location)
+
+        _save_log(result, elapsed)
+
+        tl = result.get("threat_level", "Normal")
+        lvl = "critical" if tl == "Severe" else ("warning" if tl == "Elevated" else "info")
+        emit_thought(f"[ASSESSMENT COMPLETE] Threat Level: {tl.upper()} (Confidence: {result.get('confidence', 'Medium')})", lvl)
+        hazards = ", ".join(result.get("active_hazards", [])) or "None identified"
+        emit_thought(f"[ACTIVE HAZARDS] {hazards}", lvl)
+        emit_thought(f"[SITUATIONAL SUMMARY] {result.get('summary', '')[:130]}...", "info")
+        if result.get("action_plan"):
+            emit_thought(f"[TACTICAL DIRECTIVE 1] {result['action_plan'][0]}", "warning")
+        rn = result.get("resources_needed", {})
+        emit_thought(f"[DISPATCH ASSETS] NDRF: {rn.get('ndrf_teams', 0)} teams | Helis: {rn.get('helicopters', 0)} | Med Units: {rn.get('medical_units', 0)} | Camps: {rn.get('relief_camps', 0)}", "info")
+
+        logger.info(
+            "Analysis finished for '%s' in %.2fs (Threat: %s, Confidence: %s)",
+            location, elapsed, result.get("threat_level"), result.get("confidence")
+        )
+
+        return result
+    finally:
+        _current_thought_callback.reset(token)

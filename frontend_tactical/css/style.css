@@ -955,3 +955,177 @@ body::after {
 }
 .leaflet-popup-tip { background: var(--panel-bg) !important; }
 .leaflet-popup-close-button { color: var(--text-muted) !important; }
+
+/* ── LOCATION SEARCH & AI SECTOR BAR ─────────────────────────── */
+.location-search-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--bg-void);
+    border: 1px solid var(--border-dim);
+    padding: 2px 6px;
+    transition: all 0.2s;
+}
+.location-search-wrap:focus-within {
+    border-color: var(--alert-cyan);
+    box-shadow: 0 0 8px var(--alert-cyan-glow);
+}
+.tac-search-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    color: var(--text-main);
+    font-family: 'Courier New', monospace;
+    font-size: 10px;
+    width: 290px;
+    letter-spacing: 0.04em;
+}
+.tac-search-input::placeholder {
+    color: var(--text-dim);
+    font-style: italic;
+}
+
+/* ── AI INTEL OVERLAY HUD ─────────────────────────────────────── */
+.ai-intel-overlay {
+    position: absolute;
+    top: 38px;
+    left: 10px;
+    width: 380px;
+    max-height: calc(100% - 60px);
+    background: rgba(13, 17, 23, 0.95);
+    border: 1px solid var(--border-bright);
+    z-index: 550;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 30px rgba(0,0,0,0.8), 0 0 15px var(--alert-cyan-glow);
+    backdrop-filter: blur(6px);
+    animation: sweep-in 0.25s ease;
+}
+.ai-intel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    background: var(--panel-bg-2);
+    border-bottom: 1px solid var(--border-dim);
+}
+.ai-intel-title-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.ai-intel-location {
+    font-size: 9.5px;
+    color: var(--text-main);
+    font-weight: 700;
+}
+.ai-intel-body {
+    padding: 8px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    overflow-y: auto;
+    max-height: 480px;
+}
+.ai-intel-meta-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+    border: 1px solid var(--border-dim);
+    padding: 4px 6px;
+    background: var(--bg-void);
+}
+.ai-meta-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1px;
+}
+.ai-threat-badge {
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+.ai-hazards-section {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.ai-hazards-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+.ai-hazard-chip {
+    font-family: 'Courier New', monospace;
+    font-size: 8px;
+    padding: 2px 6px;
+    border: 1px solid var(--alert-amber);
+    color: var(--alert-amber);
+    background: rgba(245, 158, 11, 0.08);
+}
+.ai-hazard-chip.severe {
+    border-color: var(--alert-red);
+    color: var(--alert-red);
+    background: rgba(239, 68, 68, 0.12);
+}
+.ai-intel-summary-box, .ai-intel-action-box {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+}
+.ai-intel-summary-text {
+    font-size: 9px;
+    line-height: 1.5;
+    color: var(--text-main);
+    background: var(--bg-void);
+    border: 1px solid var(--border-dim);
+    padding: 6px;
+}
+.ai-action-list {
+    margin: 0;
+    padding-left: 16px;
+    font-size: 8.5px;
+    line-height: 1.6;
+    color: var(--text-muted);
+}
+.ai-action-list li {
+    margin-bottom: 2px;
+}
+.ai-action-list li span {
+    color: var(--text-main);
+}
+
+/* ── DYNAMIC THREAT LEVEL BORDER TRANSITIONS ──────────────────── */
+body.threat-severe .hud-bar,
+body.threat-severe .right-panel,
+body.threat-severe .center-map-zone,
+body.threat-severe .bottom-terminal,
+body.threat-severe .left-sidebar,
+body.threat-severe .panel-header {
+    border-color: var(--alert-red) !important;
+}
+body.threat-severe .center-map-zone {
+    box-shadow: inset 0 0 50px rgba(239, 68, 68, 0.18);
+}
+
+body.threat-elevated .hud-bar,
+body.threat-elevated .right-panel,
+body.threat-elevated .center-map-zone,
+body.threat-elevated .bottom-terminal,
+body.threat-elevated .left-sidebar,
+body.threat-elevated .panel-header {
+    border-color: var(--alert-amber) !important;
+}
+body.threat-elevated .center-map-zone {
+    box-shadow: inset 0 0 30px rgba(245, 158, 11, 0.1);
+}
+
+body.threat-normal .hud-bar,
+body.threat-normal .right-panel,
+body.threat-normal .center-map-zone,
+body.threat-normal .bottom-terminal,
+body.threat-normal .left-sidebar,
+body.threat-normal .panel-header {
+    border-color: var(--border-dim) !important;
+}

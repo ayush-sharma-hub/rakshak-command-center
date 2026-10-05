@@ -9,8 +9,16 @@
 // ═══════════════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════════════
-const API = 'http://localhost:3000';
-const WS_URL = 'ws://localhost:3000/ws/live';
+const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const API = (isLocal && window.location.port !== '3000' && window.location.protocol === 'file:')
+    ? 'http://localhost:3000'
+    : (window.location.origin || 'http://localhost:3000');
+
+const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const wsHost = window.location.host || 'localhost:3000';
+const WS_URL = `${wsProto}//${wsHost}/ws/live`;
+const AGENT_WS_URL = `${wsProto}//${wsHost}/api/agent/stream`;
+const AGENT_WS_FALLBACK = `${wsProto}//${wsHost}/stream`;
 
 const LORA_NODES_STATIC = [
     { id: 'LORA-GW-08', sector: 'SEOC Central Hub · Rudraprayag', rssi: -68, status: 'ACTIVE' },
@@ -294,21 +302,205 @@ async function fetchIncidents() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 5. FETCH — AGENT AI ANALYSIS (CONNECT LATER TO /api/agent/analyze)
+// 5. AUTONOMOUS AGENT API & WEBSOCKET TELEMETRY
 // ═══════════════════════════════════════════════════════════════════
-async function fetchAgentAnalysis(zone, rainfall, slope) {
+let agentWs = null;
+
+function connectAgentWebSocket() {
+    function tryConnect(url, isFallback = false) {
+        try {
+            const ws = new WebSocket(url);
+
+            ws.onopen = () => {
+                agentWs = ws;
+                console.log(`[Agent WS] Connected to ${url}`);
+                addTerminalEntry('AGENT WS', 'Autonomous Agent telemetry stream link established.', 'sys');
+            };
+
+            ws.onmessage = (evt) => {
+                try {
+                    const msg = JSON.parse(evt.data);
+                    if (msg.type === 'thought') {
+                        const lvl = msg.level || 'info';
+                        addTerminalEntry('AI AGENT', msg.log || '', lvl);
+                    } else if (msg.type === 'result') {
+                        if (msg.data) {
+                            applyAgentAnalysisResult(msg.data);
+                        }
+                    }
+                } catch (err) {
+                    if (evt.data) {
+                        addTerminalEntry('AI AGENT', String(evt.data), 'info');
+                    }
+                }
+            };
+
+            ws.onclose = () => {
+                agentWs = null;
+                if (!isFallback) {
+                    setTimeout(() => tryConnect(AGENT_WS_FALLBACK, true), 3000);
+                } else {
+                    setTimeout(() => tryConnect(AGENT_WS_URL, false), 5000);
+                }
+            };
+
+            ws.onerror = (e) => {
+                console.warn('[Agent WS] Connection state event:', e);
+            };
+        } catch (e) {
+            console.warn('[Agent WS] Init failed:', e);
+        }
+    }
+
+    tryConnect(AGENT_WS_URL, false);
+}
+
+async function triggerLocationAnalysis() {
+    const input = document.getElementById('target-location-input');
+    const btn = document.getElementById('btn-analyze-target');
+    const location = (input ? input.value : '').trim() || 'Rudraprayag, Uttarakhand';
+
+    if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> SCANNING…';
+    }
+
+    addTerminalEntry('MISSION', `Target Sector Assessment dispatched: '${location}'`, 'warning');
+
+    // Also send through WebSocket if open for immediate interactive streaming
+    if (agentWs && agentWs.readyState === WebSocket.OPEN) {
+        try {
+            agentWs.send(JSON.stringify({ location: location }));
+        } catch (e) { /* ignore */ }
+    }
+
     try {
         const res = await fetch(`${API}/api/agent/analyze`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ zone, rainfall_mm: rainfall, slope_deg: slope })
+            body: JSON.stringify({ location: location })
         });
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return await res.json();
-    } catch (e) {
-        console.warn('[Agent Analyze]', e.message);
-        return null;
+
+        if (!res.ok) {
+            throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+        }
+
+        const data = await res.json();
+        applyAgentAnalysisResult(data);
+
+    } catch (err) {
+        console.error('[Agent Assessment Error]', err);
+        addTerminalEntry('ERROR', `Assessment execution error: ${err.message}`, 'critical');
+    } finally {
+        if (btn) {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fa-solid fa-microchip"></i> ANALYZE SECTOR';
+        }
     }
+}
+
+function applyAgentAnalysisResult(data) {
+    if (!data) return;
+
+    const threat = String(data.threat_level || 'Normal').trim();
+    const location = data.location || 'Target Sector';
+    const hazards = data.active_hazards || [];
+    const actionPlan = data.action_plan || [];
+    const summary = data.summary || 'Situational analysis complete.';
+    const confidence = data.confidence || 'Medium';
+    const resources = data.resources_needed || {};
+
+    // 1. Dynamic UI Theme & Border Transitions
+    document.body.classList.remove('threat-severe', 'threat-elevated', 'threat-normal');
+    if (threat.toLowerCase() === 'severe' || threat.toLowerCase() === 'critical') {
+        document.body.classList.add('threat-severe');
+        setThreatLevel('SEVERE', 5);
+        showAlertBanner(`🚨 SEVERE THREAT DETECTED: ${location.toUpperCase()} | IMMEDIATE EVACUATION DIRECTIVE`);
+    } else if (threat.toLowerCase() === 'elevated' || threat.toLowerCase() === 'warning') {
+        document.body.classList.add('threat-elevated');
+        setThreatLevel('ELEVATED', 3);
+        showAlertBanner(`⚠️ ELEVATED RISK ADVISORY: ${location.toUpperCase()}`);
+    } else {
+        document.body.classList.add('threat-normal');
+        setThreatLevel('NORMAL', 1);
+    }
+
+    // 2. Populate AI Intel Brief HUD Overlay
+    const overlay = document.getElementById('ai-intel-overlay');
+    if (overlay) {
+        overlay.classList.remove('hidden');
+
+        const elLoc = document.getElementById('ai-intel-location');
+        if (elLoc) elLoc.textContent = location.toUpperCase();
+
+        const elThreat = document.getElementById('ai-intel-threat');
+        if (elThreat) {
+            elThreat.textContent = threat.toUpperCase();
+            elThreat.style.color = threat.toLowerCase() === 'severe' ? 'var(--alert-red)' :
+                                   threat.toLowerCase() === 'elevated' ? 'var(--alert-amber)' : 'var(--alert-green)';
+        }
+
+        const elConf = document.getElementById('ai-intel-confidence');
+        if (elConf) elConf.textContent = confidence.toUpperCase();
+
+        const elNdrf = document.getElementById('ai-intel-ndrf');
+        if (elNdrf) elNdrf.textContent = resources.ndrf_teams || 0;
+
+        const elHelis = document.getElementById('ai-intel-helis');
+        if (elHelis) elHelis.textContent = resources.helicopters || 0;
+
+        const elHazards = document.getElementById('ai-intel-hazards');
+        if (elHazards) {
+            elHazards.innerHTML = hazards.length > 0
+                ? hazards.map(h => `<span class="ai-hazard-chip ${threat.toLowerCase() === 'severe' ? 'severe' : ''}">${h}</span>`).join('')
+                : '<span class="ai-hazard-chip">None active</span>';
+        }
+
+        const elSumm = document.getElementById('ai-intel-summary');
+        if (elSumm) elSumm.textContent = summary;
+
+        const elActions = document.getElementById('ai-intel-actions');
+        if (elActions) {
+            elActions.innerHTML = actionPlan.map(a => `<li><span>${a}</span></li>`).join('');
+        }
+    }
+
+    // 3. Print directives into the Bottom Terminal Log
+    const lvl = threat.toLowerCase() === 'severe' ? 'critical' : (threat.toLowerCase() === 'elevated' ? 'warning' : 'info');
+    addTerminalEntry('ASSESSMENT', `Threat: ${threat.toUpperCase()} (${confidence} Conf) | Hazards: ${hazards.join(', ') || 'None'}`, lvl, location);
+
+    actionPlan.slice(0, 3).forEach((item, idx) => {
+        addTerminalEntry('DIRECTIVE', `${idx + 1}. ${item}`, 'warning', location);
+    });
+
+    // 4. Map centering if known sector coordinates exist
+    const LOC_COORDS = {
+        'rudraprayag': [30.2844, 78.9811],
+        'kedarnath': [30.7346, 79.0669],
+        'joshimath': [30.5599, 79.5644],
+        'badrinath': [30.7433, 79.4938],
+        'uttarkashi': [30.7260, 78.4370],
+        'tehri': [30.3784, 78.4808],
+        'dharchula': [29.8489, 80.5340],
+        'roorkee': [29.8543, 77.8880],
+        'dehradun': [30.3165, 78.0322],
+        'chamoli': [30.4074, 79.3248]
+    };
+    const key = Object.keys(LOC_COORDS).find(k => location.toLowerCase().includes(k));
+    if (key && leafletMap) {
+        leafletMap.setView(LOC_COORDS[key], 10);
+        addSOSMarkerToMap({
+            lat: LOC_COORDS[key][0],
+            lng: LOC_COORDS[key][1],
+            zone: location,
+            message: `THREAT: ${threat.toUpperCase()} — ${hazards.join(', ') || summary.slice(0, 50)}`
+        });
+    }
+}
+
+function dismissAiIntel() {
+    const overlay = document.getElementById('ai-intel-overlay');
+    if (overlay) overlay.classList.add('hidden');
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -689,8 +881,9 @@ async function boot() {
     await fetchSystemState();
     await fetchIncidents();
 
-    // 5. Connect WebSocket
+    // 5. Connect WebSockets
     connectWebSocket();
+    connectAgentWebSocket();
 
     // 6. Polling loops
     setInterval(fetchRiverTelemetry, 60000);    // River data every 60s

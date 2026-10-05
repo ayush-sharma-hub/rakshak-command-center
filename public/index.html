@@ -136,8 +136,17 @@
     <section class="center-map-zone">
         <div class="panel-header">
             <div class="panel-header-left">
-                <span class="panel-tag">TACTICAL GIS</span>
-                <span class="panel-title">HIMALAYAN SECTOR — UTTARAKHAND SDRF OPERATIONS ZONE</span>
+                <span class="panel-tag tag-cyan">AI AGENT</span>
+                <div class="location-search-wrap">
+                    <i class="fa-solid fa-crosshairs status-cyan-text"></i>
+                    <input type="text" id="target-location-input" class="tac-search-input" 
+                           placeholder="SEARCH TARGET SECTOR (e.g. Rudraprayag, Kedarnath, Joshimath)..." 
+                           value="Rudraprayag, Uttarakhand" 
+                           onkeydown="if(event.key==='Enter') triggerLocationAnalysis()" />
+                    <button class="tac-btn tac-btn-cyan" id="btn-analyze-target" onclick="triggerLocationAnalysis()">
+                        <i class="fa-solid fa-microchip"></i> ANALYZE SECTOR
+                    </button>
+                </div>
             </div>
             <div class="panel-header-right">
                 <span class="map-coord hud-mono" id="cursor-coord">LAT: -- · LNG: --</span>
@@ -149,6 +158,51 @@
 
         <!-- LEAFLET MAP MOUNT -->
         <div id="tactical-map"></div>
+
+        <!-- AI ASSESSMENT HUD OVERLAY (Populated dynamically on POST /api/agent/analyze) -->
+        <div class="ai-intel-overlay hidden" id="ai-intel-overlay">
+            <div class="ai-intel-header">
+                <div class="ai-intel-title-wrap">
+                    <span class="panel-tag tag-cyan" id="ai-intel-tag">AI INTEL BRIEF</span>
+                    <span class="ai-intel-location hud-mono" id="ai-intel-location">---</span>
+                </div>
+                <button class="hud-btn" onclick="dismissAiIntel()">✕ DISMISS</button>
+            </div>
+            <div class="ai-intel-body">
+                <div class="ai-intel-meta-row">
+                    <div class="ai-meta-item">
+                        <span class="hud-label">THREAT LEVEL</span>
+                        <span class="hud-mono ai-threat-badge" id="ai-intel-threat">NORMAL</span>
+                    </div>
+                    <div class="ai-meta-item">
+                        <span class="hud-label">CONFIDENCE</span>
+                        <span class="hud-mono" id="ai-intel-confidence">MEDIUM</span>
+                    </div>
+                    <div class="ai-meta-item">
+                        <span class="hud-label">NDRF ASSETS</span>
+                        <span class="hud-mono status-green-text" id="ai-intel-ndrf">0</span>
+                    </div>
+                    <div class="ai-meta-item">
+                        <span class="hud-label">HELI EVAC</span>
+                        <span class="hud-mono status-amber-text" id="ai-intel-helis">0</span>
+                    </div>
+                </div>
+                <div class="ai-hazards-section">
+                    <span class="hud-label">ACTIVE HAZARDS:</span>
+                    <div class="ai-hazards-chips" id="ai-intel-hazards">
+                        <span class="ai-hazard-chip">None</span>
+                    </div>
+                </div>
+                <div class="ai-intel-summary-box">
+                    <span class="hud-label">SITUATIONAL OVERVIEW:</span>
+                    <div class="ai-intel-summary-text hud-mono" id="ai-intel-summary">Awaiting autonomous analysis…</div>
+                </div>
+                <div class="ai-intel-action-box">
+                    <span class="hud-label">PRIORITY ACTION DIRECTIVES:</span>
+                    <ol class="ai-action-list hud-mono" id="ai-intel-actions"></ol>
+                </div>
+            </div>
+        </div>
 
         <!-- MAP HUD OVERLAYS -->
         <div class="map-overlay-tl">
@@ -251,8 +305,8 @@
 <footer class="bottom-terminal">
     <div class="terminal-header">
         <div class="terminal-header-left">
-            <span class="panel-tag tag-red">LIVE</span>
-            <span class="terminal-title">SEOC INCIDENT TERMINAL — REAL-TIME SOS DISTRESS &amp; ALERT FEED</span>
+            <span class="panel-tag tag-cyan">TELEMETRY</span>
+            <span class="terminal-title">SEOC TACTICAL C4ISR TERMINAL — REAL-TIME AUTONOMOUS AGENT STREAM &amp; INCIDENT FEED</span>
         </div>
         <div class="terminal-header-right">
             <span class="hud-label">INCIDENTS:&nbsp;</span><span class="hud-mono" id="incident-count">0</span>
