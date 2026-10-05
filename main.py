@@ -176,8 +176,14 @@ def health():
         "gemini_enabled": bool(os.environ.get("GEMINI_API_KEY")),
     }
 
-# ─── Serve the existing HTML Frontend (must be LAST — catches all unmatched routes) ──
+# ─── Serve Tactical Frontend & Public HTML (must be LAST — catches all unmatched routes) ──
+TACTICAL_DIR = os.path.join(os.path.dirname(__file__), "frontend_tactical")
 PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
+
+if os.path.isdir(TACTICAL_DIR):
+    app.mount("/tactical", StaticFiles(directory=TACTICAL_DIR, html=True), name="tactical")
+    logger.info("[OK] Tactical C4ISR Frontend mounted at /tactical from: %s", TACTICAL_DIR)
+
 if os.path.isdir(PUBLIC_DIR):
     app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
     logger.info("[OK] Frontend served from: %s", PUBLIC_DIR)
