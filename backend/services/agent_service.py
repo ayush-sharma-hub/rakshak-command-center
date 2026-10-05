@@ -75,14 +75,9 @@ except Exception as e:
 GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini/gemini-flash-latest")
 
 MAX_SEARCH_RESULTS = 6
-RISK_LEVELS = ("Normal", "Elevated", "Severe", "Critical")
+RISK_LEVELS = ("Normal", "Elevated", "Severe")
 
-THREAT_LABELS = {
-    "Normal": "[NORMAL]",
-    "Elevated": "[ELEVATED]",
-    "Severe": "[SEVERE]",
-    "Critical": "[CRITICAL]",
-}
+THREAT_LABELS = {"Normal": "[NORMAL]", "Elevated": "[ELEVATED]", "Severe": "[SEVERE]"}
 
 # ─────────────────────────────────────────────────────────────────────────────
 # RESILIENT SEARCH TOOL
@@ -202,7 +197,7 @@ AGENT_INSTRUCTIONS = textwrap.dedent("""
     OUTPUT JSON SCHEMA:
     {
         "location": "<Target location string>",
-        "threat_level": "<Normal | Elevated | Severe | Critical>",
+        "threat_level": "<Normal | Elevated | Severe>",
         "confidence": "<High | Medium | Low>",
         "active_hazards": ["<Hazard 1>", "<Hazard 2>"],
         "summary": "<2-4 sentence concise situational analysis>",
@@ -224,7 +219,6 @@ AGENT_INSTRUCTIONS = textwrap.dedent("""
     - Normal  : Fair weather, routine seasonal patterns, standard preparedness.
     - Elevated: Heavy rainfall warning (Yellow/Orange alert), high river levels, localized waterlogging, alert standby.
     - Severe  : Active flood inundation, major landslides, cyclone warning (Red alert), structural damage, immediate dispatch.
-    - Critical: Catastrophic cloudburst, dam breach, glacial lake outburst, massive casualties/threat to life, immediate evacuation.
 """).strip()
 
 

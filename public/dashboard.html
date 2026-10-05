@@ -3,337 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEOC Rakshak | Command Operations War Room</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-    <script src="/app.js" defer></script>
-    <style>
-        :root { color-scheme: dark; --canvas:#060a12; --surface:rgba(13, 20, 34, .78); --surface-strong:#111a2a; --line:rgba(148,163,184,.14); --ink:#edf5ff; --muted:#8da1bd; --cyan:#4ee9ff; --violet:#8b7cff; --danger:#ff5470; }
-        * { scrollbar-width: thin; scrollbar-color: #34445d transparent; }
-        body { font-family: 'Inter', sans-serif; background:var(--canvas)!important; background-image:radial-gradient(circle at 82% -15%,rgba(75,64,162,.25),transparent 36%),radial-gradient(circle at 16% 70%,rgba(7,109,137,.13),transparent 30%)!important; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        body > aside { background:linear-gradient(180deg,rgba(12,19,32,.96),rgba(6,10,18,.98))!important; border-color:var(--line)!important; box-shadow:18px 0 55px rgba(0,0,0,.18); }
-        header { background:rgba(10,16,28,.78)!important; border-color:var(--line)!important; backdrop-filter:blur(20px); }
-        main { background:linear-gradient(180deg,rgba(8,13,23,.1),rgba(5,9,16,.66))!important; }
-        main > div, main .bg-slate-900 { border-color:var(--line)!important; box-shadow:0 14px 34px rgba(0,0,0,.16); }
-        main .bg-slate-900 { background:linear-gradient(145deg,rgba(18,28,46,.86),rgba(10,16,28,.84))!important; backdrop-filter:blur(16px); }
-        main .bg-slate-950 { background:rgba(4,9,18,.72)!important; border-color:rgba(148,163,184,.1)!important; }
-        main > div:first-child { background:linear-gradient(112deg,rgba(18,29,48,.93),rgba(23,24,65,.78),rgba(8,39,55,.67))!important; border-color:rgba(112,133,255,.25)!important; position:relative; overflow:hidden; }
-        main > div:first-child::after { content:''; position:absolute; inset:auto -6% -100px auto; width:330px; height:240px; background:radial-gradient(ellipse,rgba(78,233,255,.16),transparent 67%); pointer-events:none; }
-        nav a { border-color:transparent!important; transition:transform .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease!important; }
-        nav a:hover { transform:translateX(3px); background:rgba(83,102,140,.13)!important; }
-        nav a.bg-indigo-600\/20 { background:linear-gradient(90deg,rgba(104,92,255,.24),rgba(48,74,178,.08))!important; border-color:rgba(139,124,255,.35)!important; box-shadow:inset 3px 0 var(--cyan),0 8px 20px rgba(28,40,101,.16); }
-        button, a { -webkit-tap-highlight-color:transparent; }
-        button { transition:transform .16s ease,filter .16s ease,box-shadow .16s ease!important; }
-        button:hover { filter:brightness(1.08); } button:active { transform:scale(.97); }
-        .bg-rose-600 { box-shadow:0 0 0 1px rgba(255,84,112,.24),0 10px 26px rgba(225,29,72,.26)!important; }
-        #live-ticker-text { letter-spacing:.01em; } #live-ticker-text::before { content:'LIVE'; color:var(--cyan); font-family:'JetBrains Mono',monospace; font-size:9px; font-weight:800; margin-right:.65rem; }
-        #sos-incident-list > div { border-left:2px solid rgba(255,84,112,.8)!important; box-shadow:0 8px 22px rgba(0,0,0,.12); }
-        #river-basins-grid > div, #river-telemetry-container > div { transition:transform .2s ease,border-color .2s ease,box-shadow .2s ease; }
-        #river-basins-grid > div:hover, #river-telemetry-container > div:hover { transform:translateY(-2px); border-color:rgba(78,233,255,.38)!important; box-shadow:0 12px 25px rgba(0,0,0,.2); }
-        #systemLog { background:linear-gradient(145deg,#030712,#0b1220)!important; border-color:rgba(78,233,255,.14)!important; }
-        @media (max-width: 767px) { body { background-image:radial-gradient(circle at 70% 0,rgba(75,64,162,.22),transparent 35%)!important; } main { padding-bottom:5.2rem!important; } }
-    </style>
-</head>
-<body class="bg-slate-950 text-slate-100 min-h-screen md:h-screen flex flex-col md:flex-row md:overflow-hidden overflow-y-auto">
+    <title>RAKSHAK C4ISR // SEOC Command Operations War Room</title>
     
-    <!-- SIDE NAVIGATION (Desktop Only) -->
-    <aside class="hidden md:flex md:w-64 bg-slate-900 border-r border-slate-800 flex-col shrink-0 z-30">
+    <!-- Tailwind CSS with Palantir Gotham Theme Extension -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#08090A',
+                        carbon: '#0F1115',
+                        surface: '#14171D',
+                        'surface-subtle': '#0D0F13',
+                        border: '#222731',
+                        'border-light': '#2D3340',
+                        'tactical-cyan': '#38BDF8',
+                        'tactical-green': '#4ADE80',
+                        'tactical-amber': '#F59E0B',
+                        'tactical-crimson': '#EF4444',
+                        'tactical-muted': '#64748B',
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'Roboto Mono', 'ui-monospace', 'monospace'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        };
+    </script>
+
+    <!-- Font Awesome & Tactical Fonts -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Central C4ISR Tactical Stylesheet -->
+    <link rel="stylesheet" href="/tactical.css">
+    <script src="/app.js" defer></script>
+</head>
+<body class="bg-[#08090A] text-[#F1F5F9] min-h-screen md:h-screen flex flex-col md:flex-row md:overflow-hidden overflow-y-auto">
+    
+    <!-- =========================================================================
+         SIDE NAVIGATION (Palantir Gotham C4ISR Left Rail)
+         ========================================================================= -->
+    <aside class="hidden md:flex md:w-60 bg-[#0B0D11] border-r border-[#222731] flex-col shrink-0 z-30">
         <!-- BRANDING -->
-        <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center text-white font-extrabold shadow-[0_0_15px_rgba(99,102,241,0.4)]">
-                    <i class="fa-solid fa-shield-halved text-lg"></i>
+        <div class="p-3.5 border-b border-[#222731] flex items-center justify-between bg-[#08090A]">
+            <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-sm bg-[#14171D] border border-[#222731] flex items-center justify-center text-[#38BDF8]">
+                    <i class="fa-solid fa-crosshairs text-sm"></i>
                 </div>
                 <div>
-                    <span class="font-black tracking-widest text-base text-white block leading-none">RAKSHAK</span>
-                    <span class="text-[9px] text-indigo-400 font-mono tracking-wider font-semibold">UK-SEOC COMMAND</span>
+                    <span class="font-mono font-extrabold tracking-widest text-sm text-white block leading-none">RAKSHAK</span>
+                    <span class="text-[9px] text-[#64748B] font-mono tracking-wider font-semibold">C4ISR // SEOC-DEHRADUN</span>
                 </div>
             </div>
-            <button class="audio-toggle-btn text-slate-400 hover:text-white transition p-1.5 bg-slate-800 rounded-lg border border-slate-700 text-xs" title="Toggle Tactical Audio">
+            <button class="audio-toggle-btn text-[#64748B] hover:text-white transition p-1.5 bg-[#14171D] border border-[#222731] text-[11px]" title="Toggle Audio Beacon">
                 <i class="fa-solid fa-volume-high"></i>
             </button>
         </div>
 
         <!-- NAV LINKS -->
-        <nav class="flex-1 p-3 flex flex-col gap-1 overflow-y-auto">
-            <a href="dashboard.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-indigo-600/20 text-indigo-300 border border-indigo-500/30 font-bold text-xs tracking-wide">
-                <i class="fa-solid fa-chart-line w-4 text-indigo-400"></i> Command War Room
+        <nav class="flex-1 p-2 flex flex-col gap-0.5 overflow-y-auto">
+            <a href="dashboard.html" class="flex items-center gap-2.5 px-3 py-2 bg-[#171B24] text-white border-l-2 border-l-[#38BDF8] font-mono text-xs font-bold tracking-wide">
+                <i class="fa-solid fa-chart-line w-4 text-[#38BDF8]"></i> Command War Room
             </a>
-            <a href="map.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
-                <i class="fa-solid fa-map-location-dot w-4 text-slate-400"></i> Tactical GIS Map
+            <a href="map.html" class="flex items-center gap-2.5 px-3 py-2 text-[#94A3B8] hover:bg-[#14171D] hover:text-white transition font-mono text-xs">
+                <i class="fa-solid fa-map-location-dot w-4 text-[#64748B]"></i> Tactical GIS Map
             </a>
-            <a href="simulator.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
-                <i class="fa-solid fa-flask-vial w-4 text-slate-400"></i> Crisis Sandbox
+            <a href="simulator.html" class="flex items-center gap-2.5 px-3 py-2 text-[#94A3B8] hover:bg-[#14171D] hover:text-white transition font-mono text-xs">
+                <i class="fa-solid fa-flask-vial w-4 text-[#64748B]"></i> Crisis Sandbox
             </a>
-            <a href="evacuation.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
-                <i class="fa-solid fa-route w-4 text-slate-400"></i> Evacuation Hub
+            <a href="evacuation.html" class="flex items-center gap-2.5 px-3 py-2 text-[#94A3B8] hover:bg-[#14171D] hover:text-white transition font-mono text-xs">
+                <i class="fa-solid fa-route w-4 text-[#64748B]"></i> Evacuation Hub
             </a>
-            <a href="alerts.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
-                <i class="fa-solid fa-tower-broadcast w-4 text-slate-400"></i> Broadcast Center
+            <a href="alerts.html" class="flex items-center gap-2.5 px-3 py-2 text-[#94A3B8] hover:bg-[#14171D] hover:text-white transition font-mono text-xs">
+                <i class="fa-solid fa-tower-broadcast w-4 text-[#64748B]"></i> Broadcast Center
             </a>
-            <a href="assistant.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
-                <i class="fa-solid fa-microphone-lines w-4 text-slate-400"></i> Radio & Voice Comms
+            <a href="assistant.html" class="flex items-center gap-2.5 px-3 py-2 text-[#94A3B8] hover:bg-[#14171D] hover:text-white transition font-mono text-xs">
+                <i class="fa-solid fa-microphone-lines w-4 text-[#64748B]"></i> Radio & Comms
             </a>
-            <a href="lora.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-slate-400 hover:bg-slate-800 hover:text-white transition text-xs font-semibold">
-                <i class="fa-solid fa-circle-nodes w-4 text-cyan-400"></i> LoRa Mesh Relay (SIH)
+            <a href="lora.html" class="flex items-center gap-2.5 px-3 py-2 text-[#94A3B8] hover:bg-[#14171D] hover:text-white transition font-mono text-xs">
+                <i class="fa-solid fa-circle-nodes w-4 text-[#38BDF8]"></i> LoRa Mesh (865MHz)
             </a>
-            <a href="citizen.html" class="flex items-center gap-3 px-3.5 py-2.5 rounded-xl bg-rose-950/40 text-rose-300 border border-rose-500/30 hover:bg-rose-900/50 hover:text-white transition text-xs font-bold">
-                <i class="fa-solid fa-mobile-screen-button w-4 text-rose-400"></i> Citizen Mobile SOS (PWA)
+            <a href="citizen.html" class="flex items-center gap-2.5 px-3 py-2 text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 hover:bg-[#EF4444]/20 transition font-mono text-xs font-bold mt-2">
+                <i class="fa-solid fa-mobile-screen-button w-4 text-[#EF4444]"></i> Citizen SOS Mode
             </a>
         </nav>
 
-        <!-- ACTIVE WATCH OFFICER PROFILE -->
-        <div class="p-3.5 border-t border-slate-800 bg-slate-900/60">
-            <div class="flex items-center justify-between text-xs mb-1.5">
+        <!-- WATCH OFFICER TELEMETRY PROFILE -->
+        <div class="p-3 border-t border-[#222731] bg-[#0A0C0F]">
+            <div class="flex items-center justify-between text-xs mb-1">
                 <div class="flex items-center gap-2">
-                    <div class="w-7 h-7 rounded-lg bg-indigo-950 border border-indigo-500/40 flex items-center justify-center text-indigo-300 font-bold text-xs">
-                        RN
+                    <div class="w-6 h-6 bg-[#14171D] border border-[#222731] flex items-center justify-center text-[#38BDF8] font-mono font-bold text-[10px]">
+                        04
                     </div>
                     <div>
-                        <div class="font-bold text-white text-[11px] leading-tight">Capt. R. S. Negi</div>
-                        <div class="text-[9px] text-emerald-400 font-mono">Duty Officer 04</div>
+                        <div class="font-mono font-bold text-white text-[11px] leading-tight">Capt. R. S. Negi</div>
+                        <div class="text-[9px] text-[#4ADE80] font-mono">DUTY OFFICER // SEC-04</div>
                     </div>
                 </div>
-                <a href="index.html" class="p-1.5 text-slate-400 hover:text-rose-400 transition" title="Logoff Duty"><i class="fa-solid fa-power-off text-xs"></i></a>
+                <a href="index.html" class="p-1 text-[#64748B] hover:text-[#EF4444] transition" title="Logoff Duty"><i class="fa-solid fa-power-off text-xs"></i></a>
             </div>
-            <div class="text-[10px] text-slate-500 flex justify-between font-mono pt-1 border-t border-slate-800">
-                <span>Relay: INSAT-3DR</span>
-                <span class="text-emerald-400">42ms Latency</span>
+            <div class="text-[9px] text-[#64748B] flex justify-between font-mono pt-1.5 border-t border-[#1C2028]">
+                <span>RELAY: INSAT-3DR</span>
+                <span class="text-[#38BDF8]">38ms LATENCY</span>
             </div>
         </div>
     </aside>
 
-    <!-- MAIN DASHBOARD CONTENT -->
-    <div class="flex-1 flex flex-col h-full md:overflow-hidden overflow-y-auto bg-slate-950 pb-16 md:pb-0">
+    <!-- =========================================================================
+         MAIN DASHBOARD WORKSPACE (C4ISR High-Density Matrix)
+         ========================================================================= -->
+    <div class="flex-1 flex flex-col h-full md:overflow-hidden overflow-y-auto bg-[#08090A] pb-16 md:pb-0">
         
-        <!-- GLOBAL TOPBAR -->
-        <header class="bg-slate-900 border-b border-slate-800 px-4 md:px-6 py-2.5 flex items-center justify-between shrink-0 z-20">
-            <div class="flex items-center gap-3">
-                <div id="global-status" class="text-emerald-400 font-bold text-xs flex items-center">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2 inline-block"></span> SEOC NOMINAL &bull; STATE MONITORING
+        <!-- GLOBAL TACTICAL TOPBAR -->
+        <header class="bg-[#0D0F13] border-b border-[#222731] px-4 md:px-5 py-2 flex items-center justify-between shrink-0 z-20">
+            <!-- Left: Status Beacon & Coordinates -->
+            <div class="flex items-center gap-4">
+                <div id="global-status" class="text-[#4ADE80] font-mono font-bold text-xs flex items-center gap-2">
+                    <span class="tactical-beacon-green"></span>
+                    <span class="tracking-wider">SEOC-DEFCON: NOMINAL // ALL SECTORS ARMED</span>
+                </div>
+                <div class="hidden lg:flex items-center gap-2 text-[10px] font-mono text-[#64748B] border-l border-[#222731] pl-4">
+                    <span>COORDS:</span>
+                    <span class="text-[#94A3B8] font-bold">30°19'05"N, 78°01'44"E</span>
+                    <span>|</span>
+                    <span>ALT:</span>
+                    <span class="text-[#94A3B8] font-bold">2,140m MSL</span>
                 </div>
             </div>
-            <div class="flex items-center gap-3">
-                <button onclick="sendSOS()" class="bg-rose-600 hover:bg-rose-500 text-white font-extrabold text-[11px] py-2 px-3.5 rounded-xl shadow-lg shadow-rose-600/30 transition flex items-center gap-2 tracking-wider">
-                    <i class="fa-solid fa-satellite-dish animate-pulse"></i>
-                    <span>BROADCAST SOS</span>
-                </button>
-                <div id="clock" class="font-mono text-xs text-slate-400 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-xl hidden sm:block">
-                    00:00:00
+
+            <!-- Right: Micro-Beacons, Clocks & Quick SOS -->
+            <div class="flex items-center gap-3.5">
+                <!-- Heartbeat Beacons -->
+                <div class="hidden xl:flex items-center gap-3 text-[10px] font-mono text-[#64748B] border-r border-[#222731] pr-3.5">
+                    <span class="flex items-center gap-1.5"><span class="tactical-beacon-cyan"></span> SAT-UPLINK</span>
+                    <span class="flex items-center gap-1.5"><span class="tactical-beacon-green"></span> LORA-MESH 8/8</span>
+                    <span class="flex items-center gap-1.5"><span class="tactical-beacon-cyan"></span> SENTINEL-DAEMON</span>
                 </div>
+
+                <!-- Dual UTC/IST Digital Clock -->
+                <div id="clock" class="font-mono text-xs text-[#94A3B8] bg-[#08090A] border border-[#222731] px-2.5 py-1 hidden sm:block">
+                    <span class="text-[#64748B]">UTC</span> --:--:-- | <span class="text-[#38BDF8]">IST</span> --:--:--
+                </div>
+
+                <!-- Emergency SOS Trigger Button -->
+                <button onclick="sendSOS()" class="bg-[#14171D] hover:bg-[#EF4444] text-[#EF4444] hover:text-white border border-[#EF4444] font-mono font-extrabold text-[11px] py-1 px-3 transition flex items-center gap-2 tracking-wider">
+                    <i class="fa-solid fa-satellite-dish animate-pulse"></i>
+                    <span>[BROADCAST SOS]</span>
+                </button>
             </div>
         </header>
 
-        <!-- SITUATIONAL BREAKING NEWS TICKER -->
-        <div class="bg-indigo-950/40 border-b border-indigo-900/50 px-4 md:px-6 py-1.5 flex items-center text-xs gap-3 shrink-0">
-            <span class="bg-indigo-600 text-white text-[9px] font-black uppercase px-2 py-0.5 rounded tracking-wider shrink-0 flex items-center gap-1">
-                <i class="fa-solid fa-bolt"></i> SEOC WIRE
+        <!-- SITUATIONAL BREAKING WIRE (Dense Monospace Ticker) -->
+        <div class="bg-[#0A0C0F] border-b border-[#222731] px-4 md:px-5 py-1 flex items-center text-xs gap-3 shrink-0">
+            <span class="bg-[#14171D] text-[#38BDF8] border border-[#222731] text-[9px] font-mono font-black uppercase px-2 py-0.5 tracking-wider shrink-0 flex items-center gap-1.5">
+                <i class="fa-solid fa-radar text-[10px]"></i> C4ISR WIRE
             </span>
-            <div id="live-ticker-text" class="text-indigo-200 font-medium text-[11px] truncate transition-opacity duration-300">
-                Connecting to State Emergency Operations Centre feed...
+            <div id="live-ticker-text" class="text-[#94A3B8] font-mono text-[11px] truncate">
+                Establishing telemetric link to State Emergency Operations Centre feed...
             </div>
         </div>
 
-        <!-- DASHBOARD BODY -->
-        <main class="flex-1 p-4 md:p-6 overflow-y-auto space-y-6">
+        <!-- DASHBOARD BODY: HIGH-DENSITY GRID ARCHITECTURE -->
+        <main class="flex-1 p-3.5 md:p-4 overflow-y-auto space-y-4">
             
-            <!-- COMMAND HERO BANNER -->
-            <div class="bg-gradient-to-r from-slate-900 via-slate-900 to-indigo-950/60 border border-slate-800 p-5 md:p-6 rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4 shadow-xl">
+            <!-- TACTICAL COMMAND SUMMARY STRIP -->
+            <div class="bg-[#101318] border border-[#222731] p-3.5 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
                 <div>
                     <div class="flex items-center gap-2 mb-1">
-                        <span class="text-[10px] font-mono font-bold bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded">UTTARAKHAND SDMA PROTOCOL</span>
-                        <span class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded">MONSOON PHASE ACTIVE</span>
+                        <span class="text-[9px] font-mono font-bold bg-[#181D26] text-[#38BDF8] border border-[#222731] px-1.5 py-0.5">USDMA // C4ISR PROTOCOL ACTIVE</span>
+                        <span class="text-[9px] font-mono text-[#4ADE80] bg-[#181D26] border border-[#222731] px-1.5 py-0.5">MONSOON PHASE 2026</span>
                     </div>
-                    <h1 class="text-xl md:text-2xl font-black text-white">State Emergency Operations War Room</h1>
-                    <p class="text-xs text-slate-400 mt-1 max-w-2xl">
-                        Real-time hydrological radar, field response force tracking, and automated civilian distress dispatch across 13 hill districts.
+                    <h1 class="text-base md:text-lg font-mono font-black text-white uppercase tracking-wider">State Emergency Operations War Room</h1>
+                    <p class="text-[11px] text-[#64748B] font-mono mt-0.5">
+                        Real-time hydrological radar, field response force tracking, and autonomous civilian distress dispatch matrix.
                     </p>
                 </div>
-                <div class="flex gap-2">
-                    <a href="map.html" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs py-2.5 px-4 rounded-xl shadow-lg shadow-indigo-600/20 transition flex items-center gap-2">
+                <div class="flex gap-2 shrink-0">
+                    <a href="map.html" class="bg-[#14171D] hover:bg-[#1E232B] text-[#38BDF8] border border-[#222731] hover:border-[#38BDF8]/60 font-mono font-bold text-[11px] py-1.5 px-3 transition flex items-center gap-2">
                         <i class="fa-solid fa-crosshairs"></i>
-                        <span>Tactical GIS Radar</span>
+                        <span>[TACTICAL GIS]</span>
                     </a>
-                    <a href="simulator.html" class="bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs py-2.5 px-4 rounded-xl border border-slate-700 transition flex items-center gap-2">
+                    <a href="simulator.html" class="bg-[#14171D] hover:bg-[#1E232B] text-[#F1F5F9] border border-[#222731] font-mono font-bold text-[11px] py-1.5 px-3 transition flex items-center gap-2">
                         <i class="fa-solid fa-sliders"></i>
-                        <span>Inject Scenario</span>
+                        <span>[INJECT SIMULATION]</span>
                     </a>
                 </div>
             </div>
 
-            <!-- KEY TELEMETRY CARDS -->
-            <div class="grid grid-cols-2 lg:grid-cols-4 gap-3.5">
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Monitored Sectors</span>
-                    <div class="text-2xl md:text-3xl font-black text-white mt-1">25 High Peaks</div>
-                    <span class="text-[10px] text-slate-400 mt-1 block">Char Dham & Border Passes</span>
+            <!-- KEY TELEMETRY CARDS (Dense Tabular Grid) -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5">
+                <!-- Card 1: Monitored Sectors -->
+                <div class="bg-[#14171D] border border-[#222731] p-3 flex flex-col justify-between">
+                    <span class="tactical-meta-label">Monitored Sectors</span>
+                    <div class="text-2xl font-black text-white font-mono tabular-nums mt-1">25 <span class="text-xs text-[#64748B] font-normal">HIGH PEAKS</span></div>
+                    <span class="text-[10px] text-[#64748B] font-mono mt-1">Char Dham & Border Passes</span>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl border-l-4 border-l-rose-500">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">High Hazard Basins</span>
-                    <div class="text-2xl md:text-3xl font-black text-rose-400 mt-1">6 Sectors</div>
-                    <span class="text-[10px] text-slate-400 mt-1 block">Kedarnath, Gaurikund, Joshimath</span>
+                <!-- Card 2: High Hazard Basins -->
+                <div class="bg-[#14171D] border border-[#222731] border-l-2 border-l-[#EF4444] p-3 flex flex-col justify-between">
+                    <span class="tactical-meta-label">High Hazard Basins</span>
+                    <div class="text-2xl font-black text-[#EF4444] font-mono tabular-nums mt-1">6 <span class="text-xs text-[#EF4444]/70 font-normal">SECTORS WATCH</span></div>
+                    <span class="text-[10px] text-[#64748B] font-mono mt-1">Mandakini, Alaknanda, Bhagirathi</span>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl border-l-4 border-l-amber-500">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Active Field Units</span>
-                    <div class="text-2xl md:text-3xl font-black text-amber-400 mt-1">4 Battalions</div>
-                    <span class="text-[10px] text-slate-400 mt-1 block">NDRF, SDRF, IAF Helo, BRO</span>
+                <!-- Card 3: Active Field Units -->
+                <div class="bg-[#14171D] border border-[#222731] border-l-2 border-l-[#F59E0B] p-3 flex flex-col justify-between">
+                    <span class="tactical-meta-label">Active Field Units</span>
+                    <div class="text-2xl font-black text-[#F59E0B] font-mono tabular-nums mt-1">4 <span class="text-xs text-[#F59E0B]/70 font-normal">BATTALIONS</span></div>
+                    <span class="text-[10px] text-[#64748B] font-mono mt-1">NDRF, SDRF, IAF Helo, BRO</span>
                 </div>
-                <div class="bg-slate-900 border border-slate-800 p-4 rounded-2xl border-l-4 border-l-emerald-500">
-                    <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Relief Shelters Online</span>
-                    <div class="text-2xl md:text-3xl font-black text-emerald-400 mt-1">28 / 28 Ready</div>
-                    <span class="text-[10px] text-slate-400 mt-1 block">State Logistics Capacity Normal</span>
+                <!-- Card 4: Relief Shelters -->
+                <div class="bg-[#14171D] border border-[#222731] border-l-2 border-l-[#4ADE80] p-3 flex flex-col justify-between">
+                    <span class="tactical-meta-label">Relief Shelters Status</span>
+                    <div class="text-2xl font-black text-[#4ADE80] font-mono tabular-nums mt-1">28 / 28 <span class="text-xs text-[#4ADE80]/70 font-normal">ONLINE</span></div>
+                    <span class="text-[10px] text-[#64748B] font-mono mt-1">State Logistics Capacity Normal</span>
                 </div>
             </div>
 
-            <!-- MAIN OPERATIONAL GRID -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- MAIN OPERATIONAL MATRIX (2:1 Grid) -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-3.5">
                 
-                <!-- LEFT COLUMN: LIVE CITIZEN SOS QUEUE & RIVER BASIN TELEMETRY -->
-                <div class="lg:col-span-2 space-y-6">
+                <!-- LEFT COLUMN: LIVE TRIAGE & RIVER TELEMETRY -->
+                <div class="lg:col-span-2 space-y-3.5">
                     
-                    <!-- CITIZEN DISTRESS SOS TRIAGE DESK -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
-                            <div class="flex items-center gap-2.5">
-                                <span class="w-3 h-3 rounded-full bg-rose-500 animate-ping"></span>
-                                <h2 class="text-sm font-bold text-white uppercase tracking-wider">
+                    <!-- CIVILIAN DISTRESS SOS TRIAGE DESK -->
+                    <div class="bg-[#101318] border border-[#222731] p-3.5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#222731] pb-2">
+                            <div class="flex items-center gap-2">
+                                <span class="tactical-beacon-crimson"></span>
+                                <h2 class="text-xs font-mono font-bold text-white uppercase tracking-wider">
                                     Civilian Distress SOS Triage Desk
                                 </h2>
                             </div>
-                            <span class="text-[10px] bg-rose-500/10 text-rose-400 border border-rose-500/30 px-2.5 py-1 rounded-full font-bold">
-                                Live GPS Feed
+                            <span class="text-[10px] font-mono text-[#EF4444] bg-[#EF4444]/10 border border-[#EF4444]/30 px-2 py-0.5 font-bold flex items-center gap-1.5">
+                                <span class="w-1.5 h-1.5 rounded-full bg-[#EF4444] animate-ping"></span> LIVE GPS STREAM
                             </span>
                         </div>
-                        <div id="sos-incident-list" class="space-y-3 max-h-[380px] overflow-y-auto pr-1">
-                            <!-- Populated dynamically by app.js -->
-                            <div class="text-center py-6 text-slate-500 text-xs">
-                                <i class="fa-solid fa-rotate animate-spin mr-2"></i> Connecting to distress relay...
+                        <div id="sos-incident-list" class="space-y-2 max-h-[360px] overflow-y-auto pr-1">
+                            <!-- Populated dynamically by app.js renderLiveSOSList() -->
+                            <div class="text-center py-6 text-[#64748B] font-mono text-xs">
+                                <i class="fa-solid fa-rotate animate-spin mr-2"></i> Connecting to distress telemetry relay...
                             </div>
                         </div>
                     </div>
 
-                    <!-- VERIFIED CROWD INTELLIGENCE: only reports >= 76 confidence are rendered by app.js -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                        <div class="flex items-center justify-between mb-3 border-b border-slate-800 pb-3">
+                    <!-- REAL HYDROLOGICAL BASIN TELEMETRY -->
+                    <div class="bg-[#101318] border border-[#222731] p-3.5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#222731] pb-2">
                             <div>
-                                <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2"><i class="fa-solid fa-shield-halved text-cyan-400"></i> Verified Ground Intelligence</h2>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Crowd reports are hidden until AI + corroboration confidence reaches 76%.</p>
-                            </div>
-                            <a href="map.html" class="text-[10px] text-cyan-300 hover:text-cyan-200 font-bold">Report hazard <i class="fa-solid fa-arrow-right ml-1"></i></a>
-                        </div>
-                        <div id="crowd-report-list" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                            <p class="text-xs text-slate-500">Checking verified field reports…</p>
-                        </div>
-                    </div>
-
-                    <!-- HIMALAYAN RIVER & RESERVOIR BASIN WATCH -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
-                            <div>
-                                <h2 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
-                                    <i class="fa-solid fa-water text-cyan-400"></i> Real Hydrological Basin Telemetry
+                                <h2 class="text-xs font-mono font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-water text-[#38BDF8]"></i> Hydrological Catchment Telemetry
                                 </h2>
-                                <p class="text-[11px] text-slate-400 mt-0.5">Live Open-Meteo catchment precipitation + CWC datum gauge heights &amp; discharge estimation.</p>
+                                <p class="text-[10px] text-[#64748B] font-mono mt-0.5">Live Open-Meteo precipitation + Central Water Commission datum gauge heights & discharge estimation.</p>
                             </div>
-                            <span class="text-[10px] bg-cyan-950/80 text-cyan-400 border border-cyan-800 px-2 py-0.5 rounded font-mono font-bold flex items-center gap-1.5">
-                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span> Live Physics Engine
+                            <span class="text-[10px] bg-[#14171D] text-[#38BDF8] border border-[#222731] px-2 py-0.5 font-mono font-bold flex items-center gap-1.5">
+                                <span class="tactical-beacon-cyan"></span> RATIONAL DISCHARGE
                             </span>
                         </div>
                         
-                        <!-- LIVE TELEMETRY CARDS (Open-Meteo + Rational Method + CWC) -->
-                        <div id="river-telemetry-container" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+                        <!-- LIVE TELEMETRY CARDS -->
+                        <div id="river-telemetry-container" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
                             <!-- Populated dynamically by loadLiveRiverTelemetry() -->
                         </div>
 
-                        <div class="pt-3 border-t border-slate-800/80">
+                        <!-- STAGE SENSORS (SQLite Sync) -->
+                        <div class="pt-2.5 border-t border-[#1E232B]">
                             <div class="flex items-center justify-between mb-2">
-                                <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">SEOC Database Basin Sync (Ultrasonic Stage Sensors)</span>
-                                <span class="text-[10px] text-slate-500 font-mono">SQLite Stream</span>
+                                <span class="text-[10px] font-mono font-bold text-[#64748B] uppercase tracking-wider">ULTRASONIC RIVER STAGE SENSORS (DATABASE SYNC)</span>
+                                <span class="text-[9px] text-[#64748B] font-mono">SQLITE STREAM</span>
                             </div>
-                            <div id="river-basins-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <!-- Populated dynamically by app.js syncBackendStatus -->
+                            <div id="river-basins-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <!-- Populated dynamically by app.js renderRiverBasins() -->
                             </div>
+                        </div>
+                    </div>
+
+                    <!-- VERIFIED CROWD HAZARD INTELLIGENCE -->
+                    <div class="bg-[#101318] border border-[#222731] p-3.5">
+                        <div class="flex items-center justify-between mb-2.5 border-b border-[#222731] pb-2">
+                            <div>
+                                <h2 class="text-xs font-mono font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                                    <i class="fa-solid fa-shield-halved text-[#38BDF8]"></i> Verified Ground Intelligence (≥76% Confidence)
+                                </h2>
+                                <p class="text-[10px] text-[#64748B] font-mono mt-0.5">Civilian crowd reports vetted via cross-sensor corroboration.</p>
+                            </div>
+                            <a href="map.html" class="text-[10px] font-mono text-[#38BDF8] hover:underline font-bold">[SUBMIT REPORT]</a>
+                        </div>
+                        <div id="crowd-report-list" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                            <p class="text-xs font-mono text-[#64748B]">Querying verified ground observations...</p>
                         </div>
                     </div>
 
                 </div>
 
-                <!-- RIGHT COLUMN: GROUND RESPONSE FORCES & TACTICAL CONSOLE -->
-                <div class="space-y-6">
+                <!-- RIGHT COLUMN: GROUND FORCES & ACTION SWITCHBOARD -->
+                <div class="space-y-3.5">
                     
-                    <!-- ACTIVE GROUND UNITS ROSTER -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                        <div class="flex items-center justify-between mb-4 border-b border-slate-800 pb-3">
-                            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 flex items-center gap-2">
-                                <i class="fa-solid fa-person-military-pointing text-indigo-400"></i> Deployed Force Units
+                    <!-- ACTIVE GROUND UNITS DISPOSITION -->
+                    <div class="bg-[#101318] border border-[#222731] p-3.5">
+                        <div class="flex items-center justify-between mb-3 border-b border-[#222731] pb-2">
+                            <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-white flex items-center gap-2">
+                                <i class="fa-solid fa-person-military-pointing text-[#38BDF8]"></i> Force Units Disposition
                             </h3>
-                            <span class="text-[10px] text-emerald-400 font-mono">4 ACTIVE</span>
+                            <span class="badge-tactical badge-operational">4 DEPLOYED</span>
                         </div>
                         
-                        <div class="space-y-3">
-                            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                        <div class="space-y-2 font-mono">
+                            <div class="p-2.5 bg-[#0F1115] border border-[#222731]">
                                 <div class="flex justify-between items-center text-xs mb-1">
-                                    <b class="text-white">NDRF 8th Battalion</b>
-                                    <span class="text-[9px] bg-emerald-500/20 text-emerald-400 font-bold px-2 py-0.5 rounded">PRE-POSITIONED</span>
+                                    <b class="text-white text-[11px]">NDRF 8th Battalion</b>
+                                    <span class="badge-tactical badge-operational">PRE-POSITIONED</span>
                                 </div>
-                                <div class="text-[11px] text-slate-400">Callsign: <b class="text-indigo-300 font-mono">Vajra-1</b> (Gauchar Base)</div>
-                                <div class="text-[10px] text-slate-500 mt-1">36 Rescuers &bull; 4 River Inflatables &bull; Sat Phone</div>
+                                <div class="text-[10px] text-[#94A3B8]">CALLSIGN: <b class="text-[#38BDF8]">VAJRA-1</b> (Gauchar Base)</div>
+                                <div class="text-[9px] text-[#64748B] mt-1">36 Rescuers &bull; 4 River Inflatables &bull; Sat Comms</div>
                             </div>
 
-                            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                            <div class="p-2.5 bg-[#0F1115] border border-[#222731]">
                                 <div class="flex justify-between items-center text-xs mb-1">
-                                    <b class="text-white">SDRF Mountain Rescue</b>
-                                    <span class="text-[9px] bg-cyan-500/20 text-cyan-400 font-bold px-2 py-0.5 rounded">PATROL EN ROUTE</span>
+                                    <b class="text-white text-[11px]">SDRF Mountain Rescue</b>
+                                    <span class="badge-tactical badge-nominal">PATROL ACTIVE</span>
                                 </div>
-                                <div class="text-[11px] text-slate-400">Callsign: <b class="text-indigo-300 font-mono">Cheetah-Alpha</b> (Guptkashi)</div>
-                                <div class="text-[10px] text-slate-500 mt-1">18 High Altitude Rescuers &bull; Drone Search Unit</div>
+                                <div class="text-[10px] text-[#94A3B8]">CALLSIGN: <b class="text-[#38BDF8]">CHEETAH-ALPHA</b> (Guptkashi)</div>
+                                <div class="text-[9px] text-[#64748B] mt-1">18 High Altitude Rescuers &bull; UAV Recon Unit</div>
                             </div>
 
-                            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                            <div class="p-2.5 bg-[#0F1115] border border-[#222731]">
                                 <div class="flex justify-between items-center text-xs mb-1">
-                                    <b class="text-white">IAF Chetak Air-Ambulance</b>
-                                    <span class="text-[9px] bg-indigo-500/20 text-indigo-400 font-bold px-2 py-0.5 rounded">STANDBY</span>
+                                    <b class="text-white text-[11px]">IAF Chetak Air-Ambulance</b>
+                                    <span class="badge-tactical badge-nominal">STANDBY</span>
                                 </div>
-                                <div class="text-[11px] text-slate-400">Callsign: <b class="text-indigo-300 font-mono">Garuda-3</b> (Sahastradhara LZ)</div>
-                                <div class="text-[10px] text-slate-500 mt-1">Emergency Medevac Sortie Ready &bull; 15 min Notice</div>
+                                <div class="text-[10px] text-[#94A3B8]">CALLSIGN: <b class="text-[#38BDF8]">GARUDA-3</b> (Sahastradhara LZ)</div>
+                                <div class="text-[9px] text-[#64748B] mt-1">Medevac Sortie Ready &bull; 15 min Notice</div>
                             </div>
 
-                            <div class="p-3 bg-slate-950 border border-slate-800 rounded-xl">
+                            <div class="p-2.5 bg-[#0F1115] border border-[#222731]">
                                 <div class="flex justify-between items-center text-xs mb-1">
-                                    <b class="text-white">BRO Task Force Shivalik</b>
-                                    <span class="text-[9px] bg-amber-500/20 text-amber-400 font-bold px-2 py-0.5 rounded">CLEARING DEBRIS</span>
+                                    <b class="text-white text-[11px]">BRO Task Force Shivalik</b>
+                                    <span class="badge-tactical badge-hazard">CLEARING DEBRIS</span>
                                 </div>
-                                <div class="text-[11px] text-slate-400">Callsign: <b class="text-indigo-300 font-mono">Mountain-Clear</b> (Joshimath Axis)</div>
-                                <div class="text-[10px] text-slate-500 mt-1">Heavy Dozers & Rock Breakers &bull; KM-48 Cleared</div>
+                                <div class="text-[10px] text-[#94A3B8]">CALLSIGN: <b class="text-[#38BDF8]">MOUNTAIN-CLEAR</b> (Joshimath Axis)</div>
+                                <div class="text-[9px] text-[#64748B] mt-1">Heavy Dozers & Rock Breakers &bull; KM-48 Cleared</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- CIVIL DEFENSE RAPID ACTION CONSOLE -->
-                    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
-                        <h3 class="text-xs font-bold uppercase tracking-wider text-slate-300 mb-3 flex items-center gap-2">
-                            <i class="fa-solid fa-bullhorn text-amber-400"></i> Rapid Action Triggers
+                    <!-- RAPID ACTION TACTICAL SWITCHBOARD -->
+                    <div class="bg-[#101318] border border-[#222731] p-3.5">
+                        <h3 class="text-xs font-mono font-bold uppercase tracking-wider text-white mb-2.5 flex items-center gap-2">
+                            <i class="fa-solid fa-bullhorn text-[#F59E0B]"></i> Tactical Action Triggers
                         </h3>
                         <div class="space-y-2">
-                            <button onclick="RakshakAudio.playSiren(4); alert('CIVIL DEFENSE SIREN TRIGGERED: Audio test pulse active across SEOC network.');"
-                                    class="w-full p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-rose-500/40 rounded-xl text-xs font-bold text-rose-400 flex items-center justify-between transition">
-                                <span class="flex items-center gap-2"><i class="fa-solid fa-bell"></i> Test Civil Defense Siren</span>
-                                <i class="fa-solid fa-play text-[10px]"></i>
+                            <button onclick="RakshakAudio.playSiren(4); alert('CIVIL DEFENSE SIREN TRIGGERED: Audio pulse emitted across SEOC station.');"
+                                    class="w-full p-2.5 bg-[#0F1115] hover:bg-[#1E232B] border border-[#EF4444]/50 hover:border-[#EF4444] text-[11px] font-mono font-bold text-[#EF4444] flex items-center justify-between transition">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-bell"></i> [TEST DEFENSE SIREN]</span>
+                                <i class="fa-solid fa-play text-[9px]"></i>
                             </button>
-                            <a href="alerts.html" class="w-full p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-indigo-500/40 rounded-xl text-xs font-bold text-slate-200 flex items-center justify-between transition">
-                                <span class="flex items-center gap-2"><i class="fa-solid fa-tower-broadcast text-indigo-400"></i> Dispatch Multilingual SMS Broadcast</span>
-                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            <a href="alerts.html" class="w-full p-2.5 bg-[#0F1115] hover:bg-[#1E232B] border border-[#222731] hover:border-[#38BDF8] text-[11px] font-mono font-bold text-[#F1F5F9] flex items-center justify-between transition">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-tower-broadcast text-[#38BDF8]"></i> [DISPATCH SMS BROADCAST]</span>
+                                <i class="fa-solid fa-chevron-right text-[9px]"></i>
                             </a>
-                            <a href="evacuation.html" class="w-full p-3 bg-slate-950 hover:bg-slate-800 border border-slate-800 hover:border-emerald-500/40 rounded-xl text-xs font-bold text-slate-200 flex items-center justify-between transition">
-                                <span class="flex items-center gap-2"><i class="fa-solid fa-route text-emerald-400"></i> Review Evacuation Corridors</span>
-                                <i class="fa-solid fa-chevron-right text-[10px]"></i>
+                            <a href="evacuation.html" class="w-full p-2.5 bg-[#0F1115] hover:bg-[#1E232B] border border-[#222731] hover:border-[#4ADE80] text-[11px] font-mono font-bold text-[#F1F5F9] flex items-center justify-between transition">
+                                <span class="flex items-center gap-2"><i class="fa-solid fa-route text-[#4ADE80]"></i> [REVIEW EVACUATION CORRIDORS]</span>
+                                <i class="fa-solid fa-chevron-right text-[9px]"></i>
                             </a>
                         </div>
-                        <div class="mt-4 pt-3 border-t border-slate-800 text-[10px] text-slate-500 flex justify-between font-mono">
-                            <span>USDMA Hotline: 1070</span>
-                            <span>Police: 112</span>
+                        <div class="mt-3 pt-2.5 border-t border-[#1E232B] text-[9px] text-[#64748B] flex justify-between font-mono">
+                            <span>USDMA HOTLINE: 1070</span>
+                            <span>POLICE COMLINK: 112</span>
                         </div>
                     </div>
 
@@ -344,120 +382,63 @@
         </main>
     </div>
 
-<!-- ═══ LIVE WEBSOCKET ENGINE ═══ -->
-<script>
-(function initLiveWS() {
-    const WS_URL = `ws://${location.host}/ws/live`;
-    let ws, reconnectTimer;
+    <!-- LIVE WEBSOCKET STATUS & SYNC ENGINE -->
+    <script>
+    (function initLiveWS() {
+        const WS_URL = `ws://${location.host}/ws/live`;
+        let ws, reconnectTimer;
 
-    // ── Status dot in the header (create if not present)
-    const statusDot = document.querySelector('.ws-status-dot') || (() => {
-        const d = document.createElement('span');
-        d.className = 'ws-status-dot';
-        d.style.cssText = 'width:8px;height:8px;border-radius:50%;display:inline-block;background:#ef4444;margin-left:6px;box-shadow:0 0 6px #ef4444;transition:background 0.3s';
-        const header = document.querySelector('header') || document.body;
-        header.prepend(d);
-        return d;
-    })();
+        function connect() {
+            ws = new WebSocket(WS_URL);
 
-    function connect() {
-        ws = new WebSocket(WS_URL);
+            ws.onopen = () => {
+                console.log('[WS] Connected to Rakshak C4ISR live stream');
+            };
 
-        ws.onopen = () => {
-            statusDot.style.background = '#22c55e';
-            statusDot.style.boxShadow = '0 0 8px #22c55e';
-            statusDot.title = 'Live stream connected';
-            console.log('[WS] Connected to Rakshak live stream');
-        };
-
-        ws.onmessage = (evt) => {
-            try {
-                const data = JSON.parse(evt.data);
-                if (data.type === 'live_state' || data.type === 'initial_state') {
-                    updateRiverBasins(data.river_basins || []);
-                    updateSOSBadge(data.pending_sos ?? data.active_sos?.filter(s => s.status === 'PENDING').length ?? 0);
-                }
-            } catch (e) { /* ignore */ }
-        };
-
-        ws.onclose = () => {
-            statusDot.style.background = '#f59e0b';
-            statusDot.style.boxShadow = '0 0 6px #f59e0b';
-            statusDot.title = 'Reconnecting...';
-            reconnectTimer = setTimeout(connect, 5000);
-        };
-
-        ws.onerror = () => ws.close();
-    }
-
-    function updateRiverBasins(basins) {
-        basins.forEach(b => {
-            // Find gauge bar by river name fragment
-            const key = (b.river || '').split(' ')[0].toLowerCase();
-            document.querySelectorAll('[data-river]').forEach(el => {
-                if (el.dataset.river.toLowerCase().includes(key)) {
-                    // Update level text
-                    const lvlEl = el.querySelector('.gauge-level');
-                    if (lvlEl) lvlEl.textContent = parseFloat(b.current_level).toFixed(1) + 'm';
-                    // Update status colour
-                    const statusEl = el.querySelector('.gauge-status');
-                    if (statusEl) {
-                        statusEl.textContent = b.status;
-                        statusEl.className = 'gauge-status text-xs font-bold ' +
-                            ({ DANGER:'text-red-400', WARNING:'text-yellow-400',
-                               NOMINAL:'text-cyan-400', SAFE:'text-green-400' }[b.status] || 'text-slate-400');
+            ws.onmessage = (evt) => {
+                try {
+                    const data = JSON.parse(evt.data);
+                    if (data.type === 'live_state' || data.type === 'initial_state') {
+                        if (typeof updateRiverBasins === 'function') updateRiverBasins(data.river_basins || []);
+                        if (typeof renderRiverBasins === 'function') renderRiverBasins(data.river_basins || []);
                     }
-                    // Update trend
-                    const trendEl = el.querySelector('.gauge-trend');
-                    if (trendEl) trendEl.textContent = b.trend || '';
-                }
-            });
+                } catch (e) { /* ignore */ }
+            };
 
-            // Also update any progress-bar style gauge
-            const bar = document.querySelector(`[data-river-bar="${key}"]`);
-            if (bar) {
-                const pct = Math.min(100, (b.current_level / (b.danger_level || b.current_level * 1.05)) * 100);
-                bar.style.width = pct + '%';
-            }
-        });
-    }
+            ws.onclose = () => {
+                reconnectTimer = setTimeout(connect, 5000);
+            };
 
-    function updateSOSBadge(count) {
-        document.querySelectorAll('[data-sos-count]').forEach(el => {
-            el.textContent = count;
-            el.style.background = count > 0 ? '#ef4444' : '#22c55e';
-        });
-    }
+            ws.onerror = () => ws.close();
+        }
 
-    // Ping every 25s to keep alive
-    setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 25000);
+        setInterval(() => { if (ws && ws.readyState === 1) ws.send('ping'); }, 25000);
+        connect();
+    })();
+    </script>
 
-    connect();
-})();
-</script>
-
-<!-- MOBILE BOTTOM NAVIGATION (Fixed, Native App Bar) -->
-<nav class="md:hidden fixed bottom-0 inset-x-0 bg-slate-900/95 border-t border-slate-800 backdrop-blur-xl flex items-center justify-around py-2 z-50 shadow-2xl">
-    <a href="citizen.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-400 transition">
-        <i class="fa-solid fa-shield-halved text-base text-rose-500"></i>
-        <span class="text-[10px] font-bold">SOS</span>
-    </a>
-    <a href="map.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-indigo-400 transition">
-        <i class="fa-solid fa-map-location-dot text-base"></i>
-        <span class="text-[10px] font-bold">Map</span>
-    </a>
-    <a href="dashboard.html" class="flex flex-col items-center gap-1 text-indigo-400">
-        <i class="fa-solid fa-chart-line text-base text-indigo-400"></i>
-        <span class="text-[10px] font-black">War Room</span>
-    </a>
-    <a href="alerts.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-        <i class="fa-solid fa-tower-broadcast text-base"></i>
-        <span class="text-[10px] font-bold">Alerts</span>
-    </a>
-    <a href="evacuation.html" class="flex flex-col items-center gap-1 text-slate-400 hover:text-white transition">
-        <i class="fa-solid fa-route text-base"></i>
-        <span class="text-[10px] font-bold">Routes</span>
-    </a>
-</nav>
+    <!-- MOBILE BOTTOM NAVIGATION (Strict Monochrome Rail) -->
+    <nav class="md:hidden fixed bottom-0 inset-x-0 bg-[#0A0C0F] border-t border-[#222731] flex items-center justify-around py-2 z-50">
+        <a href="citizen.html" class="flex flex-col items-center gap-1 text-[#EF4444]">
+            <i class="fa-solid fa-shield-halved text-sm"></i>
+            <span class="text-[9px] font-mono font-bold">SOS</span>
+        </a>
+        <a href="map.html" class="flex flex-col items-center gap-1 text-[#94A3B8] hover:text-[#38BDF8]">
+            <i class="fa-solid fa-map-location-dot text-sm"></i>
+            <span class="text-[9px] font-mono font-bold">MAP</span>
+        </a>
+        <a href="dashboard.html" class="flex flex-col items-center gap-1 text-[#38BDF8]">
+            <i class="fa-solid fa-chart-line text-sm"></i>
+            <span class="text-[9px] font-mono font-black">WAR ROOM</span>
+        </a>
+        <a href="alerts.html" class="flex flex-col items-center gap-1 text-[#94A3B8] hover:text-white">
+            <i class="fa-solid fa-tower-broadcast text-sm"></i>
+            <span class="text-[9px] font-mono font-bold">ALERTS</span>
+        </a>
+        <a href="evacuation.html" class="flex flex-col items-center gap-1 text-[#94A3B8] hover:text-white">
+            <i class="fa-solid fa-route text-sm"></i>
+            <span class="text-[9px] font-mono font-bold">ROUTES</span>
+        </a>
+    </nav>
 </body>
 </html>

@@ -7,23 +7,36 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        canvas: '#08090A',
+                        carbon: '#0F1115',
+                        surface: '#14171D',
+                        'surface-subtle': '#0D0F13',
+                        border: '#222731',
+                        'border-light': '#2D3340',
+                        'tactical-cyan': '#38BDF8',
+                        'tactical-green': '#4ADE80',
+                        'tactical-amber': '#F59E0B',
+                        'tactical-crimson': '#EF4444',
+                        'tactical-muted': '#64748B',
+                    },
+                    fontFamily: {
+                        mono: ['JetBrains Mono', 'Roboto Mono', 'ui-monospace', 'monospace'],
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        };
+    </script>
+    <link rel="stylesheet" href="/tactical.css">
     <script src="/app.js" defer></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .radar-grid {
-            background-size: 40px 40px;
-            background-image: 
-                linear-gradient(to right, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-        }
-    </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col justify-between relative overflow-x-hidden radar-grid">
-
-    <!-- ATMOSPHERIC GLOWS -->
-    <div class="absolute top-[-15%] left-[-10%] w-[500px] h-[500px] bg-indigo-600/10 rounded-full blur-[140px] pointer-events-none"></div>
-    <div class="absolute bottom-[-15%] right-[-10%] w-[500px] h-[500px] bg-emerald-600/10 rounded-full blur-[140px] pointer-events-none"></div>
+<body class="bg-[#08090A] text-[#F1F5F9] min-h-screen flex flex-col justify-between relative overflow-x-hidden">
 
     <!-- TOP SITUATIONAL BANNER -->
     <header class="w-full bg-slate-900/90 border-b border-slate-800 backdrop-blur-md px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between text-xs z-20">
