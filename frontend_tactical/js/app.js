@@ -84,15 +84,16 @@ function startClock() {
 // ═══════════════════════════════════════════════════════════════════
 function initMap() {
     leafletMap = L.map('tactical-map', {
-        center: [30.4, 79.0],
-        zoom: 9,
+        center: [30.0668, 79.0193],
+        zoom: 7,
         zoomControl: false,
         attributionControl: false
     });
 
-    // Dark OSM tile layer
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 17,
+    // CartoDB Dark Matter — zero API key, military-grade dark base
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        maxZoom: 19,
+        subdomains: 'abcd',
         className: 'map-tiles'
     }).addTo(leafletMap);
 
@@ -181,7 +182,7 @@ function initMap() {
 }
 
 function mapZoomHome() {
-    if (leafletMap) leafletMap.setView([30.4, 79.0], 9);
+    if (leafletMap) leafletMap.setView([30.0668, 79.0193], 7);
 }
 
 function toggleMapLayer(type) {
@@ -676,10 +677,12 @@ function addTerminalEntry(type, msg, level = 'info', zone = '', timestamp = null
 
     body.appendChild(entry);
 
-    // Typewriter effect for message
-    typewriterEffect(`te-msg-${incidentCount}`, msg, 18);
+    // Typewriter effect for message — scroll again when done
+    typewriterEffect(`te-msg-${incidentCount}`, msg, 18, () => {
+        body.scrollTop = body.scrollHeight;
+    });
 
-    // Auto-scroll to bottom
+    // Immediate auto-scroll to bottom
     body.scrollTop = body.scrollHeight;
 
     // Limit terminal to last 200 entries
@@ -689,7 +692,7 @@ function addTerminalEntry(type, msg, level = 'info', zone = '', timestamp = null
     }
 }
 
-function typewriterEffect(elementId, text, speed = 20) {
+function typewriterEffect(elementId, text, speed = 20, onDone = null) {
     const el = document.getElementById(elementId);
     if (!el) return;
     let i = 0;
@@ -698,6 +701,7 @@ function typewriterEffect(elementId, text, speed = 20) {
             el.textContent += text[i++];
         } else {
             clearInterval(interval);
+            if (onDone) onDone();
         }
     }, speed);
 }

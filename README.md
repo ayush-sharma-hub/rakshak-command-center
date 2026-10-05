@@ -1,144 +1,240 @@
-# Rakshak
+# PROJECT RAKSHAK — SEOC TACTICAL C4ISR COMMAND CENTER
 
-Disaster intelligence and emergency coordination platform for Uttarakhand’s SEOC operations.
-
-## Overview
-
-Rakshak helps teams monitor risks, manage SOS alerts, coordinate field response, and send time-critical public warnings from a single operational dashboard.
-
-## Workflow
-
-```mermaid
-flowchart LR
-    A[Weather + River + Sensor Feed] --> B[FastAPI Backend]
-    B --> C[Risk Analysis Engine]
-    C --> D[SOS + Dispatch + Alerting]
-    D --> E[Command Dashboard]
-    D --> F[AI Broadcast Generator]
-    E --> G[Field Response]
-    F --> H[Public Warning Messages]
+```
+╔══════════════════════════════════════════════════════════════════╗
+║  PROJECT RAKSHAK  ·  UTTARAKHAND STATE EMERGENCY OPERATIONS     ║
+║  C4ISR — Command · Control · Communications · Computers ·       ║
+║          Intelligence · Surveillance · Reconnaissance           ║
+╚══════════════════════════════════════════════════════════════════╝
 ```
 
-## Key capabilities
+> **Autonomous AI-powered disaster intelligence platform** for real-time flood, landslide, and GLOF (Glacial Lake Outburst Flood) response in Uttarakhand, India. Built as a Palantir Gotham–inspired Tactical HUD — serving NDRF/SDRF commanders with live agent telemetry, river sensor feeds, and multi-hazard threat assessment.
 
-- Real-time river and weather monitoring
-- SOS intake and triage
-- Field unit dispatch coordination
-- Risk simulation and hazard scoring
-- AI-generated emergency alerts
-- Safe-route and disaster planning
-- LoRa / TTN telemetry support
+---
 
-## Project structure
+## ⚡ Key Features
 
-```text
+| Capability | Description |
+|---|---|
+| **Dual-Provider AI Agent** | Gemini (cloud) + Ollama (on-prem) via LiteLLM — zero vendor lock-in |
+| **Live WebSocket Telemetry** | Real-time agent thought-logs streamed to the C4ISR terminal as the AI reasons |
+| **Palantir-Inspired Tactical HUD** | Pure HTML5/CSS3/Vanilla JS — no frameworks, no build steps — brutalist edge-to-edge C4ISR layout |
+| **Autonomous Disaster Intelligence** | Smolagents runs DuckDuckGo web searches to fetch live disaster data, rainfall, and NDRF deployment status |
+| **CartoDB Dark Matter GIS Map** | Leaflet.js map defaulting to Uttarakhand (30.0668°N, 79.0193°E) with river sensor overlays |
+| **Dynamic Threat Level Engine** | UI border/glow transitions from Normal → Elevated → Severe in real time |
+| **LoRa Mesh Network Monitor** | 865 MHz 8-node Himalayan mesh status dashboard |
+| **Emergency Broadcast Panel** | Push alerts to LoRa mesh and satellite uplink from the HUD |
+
+---
+
+## 🛠 Tech Stack
+
+### Backend
+| Layer | Technology |
+|---|---|
+| Runtime | **Python 3.11+** |
+| Web Framework | **FastAPI** + Uvicorn ASGI server |
+| AI Agent Engine | **Smolagents** (HuggingFace) with `DuckDuckGoSearchTool` |
+| LLM Routing | **LiteLLM** — routes to Gemini 2.0 Flash or local Ollama |
+| WebSocket Streaming | FastAPI native WebSocket — agent thought-logs streamed without blocking |
+| Static Serving | `fastapi.staticfiles.StaticFiles` mounts `frontend_tactical/` at `/` |
+
+### Frontend
+| Layer | Technology |
+|---|---|
+| Markup | **Pure HTML5** — semantic, grid-based, zero framework |
+| Styles | **Custom CSS3** — CSS Grid, CSS Variables, `@keyframes`, no Tailwind |
+| Scripting | **Vanilla JS ES6+** — no React, no bundler, no build step |
+| GIS Map | **Leaflet.js 1.9.4** — CartoDB Dark Matter tile layer |
+| Icons | Font Awesome 6.5 |
+| Typography | Inter (UI labels) + JetBrains Mono / Courier New (all telemetry & terminal data) |
+
+### Infrastructure
+| Concern | Solution |
+|---|---|
+| Production Host | **Render.com** — `Procfile` binds `$PORT` via Uvicorn |
+| Env Secrets | `GEMINI_API_KEY`, `OLLAMA_BASE_URL` via env vars / `.env` |
+
+---
+
+## 📁 Project Structure
+
+```
 rakshak-new/
-├── main.py                 # FastAPI backend
-├── streamlit_app.py        # Analytics dashboard
-├── start.py                # Startup helper
-├── requirements.txt        # Python dependencies
-├── .env.example            # Environment template
-├── public/                 # Web frontend pages
+├── main.py                          # FastAPI app — mounts frontend, registers routers
+├── Procfile                         # Render deploy: uvicorn main:app --host 0.0.0.0 --port $PORT
+├── requirements.txt                 # Python dependencies
+├── .env                             # API keys (gitignored)
+│
 ├── backend/
-│   ├── api/routes/         # Route handlers
-│   ├── core/               # DB + shared logic
-│   ├── services/           # Weather, AI, routing, LoRa
-│   ├── tasks/              # Background jobs
-│   └── cache/              # Cache helpers
-├── rakshak.db              # SQLite database
-├── rakshak.log             # Runtime logs
-└── README.md
+│   ├── api/routes/
+│   │   ├── agent_routes.py          # POST /api/agent/analyze  +  WS /api/agent/stream
+│   │   ├── river_routes.py          # GET  /api/river-basins/live
+│   │   ├── alert_routes.py          # GET  /api/alerts/latest
+│   │   └── state_routes.py          # GET  /api/state
+│   └── services/
+│       └── agent_service.py         # Smolagents runner + contextvars WS streaming
+│
+└── frontend_tactical/               # Served at / by FastAPI StaticFiles
+    ├── index.html                   # C4ISR HUD skeleton — CSS Grid layout
+    ├── css/
+    │   └── style.css                # Gotham × SpaceX aesthetic — 1100+ lines
+    └── js/
+        └── app.js                   # Vanilla JS brain — clocks, map, WS, agent API
 ```
 
-## Tech stack
+---
 
-- Python + FastAPI
-- SQLite
-- Streamlit + Plotly
-- HTML + JavaScript
-- Google Gemini AI
-- Open-Meteo API
-- LoRa / TTN integrations
+## 🚀 Local Setup
 
-## Setup
+### Prerequisites
+- Python 3.11+
+- (Optional) Ollama running locally for offline LLM
 
-### 1. Create virtual environment
+### 1. Clone & install
 
-```powershell
-cd C:\Users\rikwa\rakshak-new
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-python -m pip install --upgrade pip
-```
-
-### 2. Install dependencies
-
-```powershell
+```bash
+git clone https://github.com/your-org/rakshak-new.git
+cd rakshak-new
 pip install -r requirements.txt
 ```
 
-### 3. Add environment variable
+### 2. Configure environment
 
-```powershell
-copy .env.example .env
+```bash
+cp .env.example .env
+# Edit .env and set:
+# GEMINI_API_KEY=your_gemini_api_key_here
+# OLLAMA_BASE_URL=http://localhost:11434   (optional)
 ```
 
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
+### 3. Run the server
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 3000
 ```
 
-> Without this key, the app uses built-in fallback emergency templates.
+Open **http://localhost:3000** — the C4ISR HUD loads directly.
 
-## Run
+### 4. Test the AI agent
 
-### Backend
+- In the HUD search bar, type `Kedarnath, Uttarakhand` and click **ANALYZE SECTOR**
+- Watch the **bottom terminal** stream real-time AI thought-logs via WebSocket
+- The threat level indicator and map borders update dynamically based on the assessment
 
-```powershell
-python -m uvicorn main:app --host 0.0.0.0 --port 3000
+---
+
+## 🌐 Production Deployment (Render)
+
+The `Procfile` at project root handles Render auto-detection:
+
+```
+web: uvicorn main:app --host 0.0.0.0 --port $PORT
 ```
 
-Access:
-- http://localhost:3000
-- http://localhost:3000/api/docs
+Set the following environment variables in your Render dashboard:
+- `GEMINI_API_KEY`
+- `OLLAMA_BASE_URL` (optional — omit for cloud-only mode)
 
-### Analytics dashboard
+---
 
-```powershell
-streamlit run streamlit_app.py --server.port 8501
+## 🔌 API Reference
+
+### `POST /api/agent/analyze`
+Triggers autonomous disaster analysis for a given location.
+
+**Request:**
+```json
+{ "location": "Rudraprayag, Uttarakhand" }
 ```
 
-Access:
-- http://localhost:8501
-
-### Startup helper
-
-```powershell
-python start.py
+**Response:**
+```json
+{
+  "location": "Rudraprayag, Uttarakhand",
+  "threat_level": "Elevated",
+  "active_hazards": ["Flash Flood", "Landslide"],
+  "action_plan": ["Deploy NDRF-11/C", "Issue evacuation advisory"],
+  "summary": "Heavy monsoon activity detected upstream...",
+  "confidence": "High",
+  "resources_needed": { "ndrf_teams": 2, "helicopters": 1 }
+}
 ```
 
-## Main API endpoints
+### `WS /api/agent/stream`
+WebSocket endpoint. Streams agent thought-logs in real time.
 
-- GET /api/health
-- GET /api/state
-- GET /api/field-units
-- POST /api/sos
-- POST /api/sos/update
-- POST /api/simulate
-- POST /api/dispatch
-- GET /api/routes/safe
-- GET /api/lora/nodes
-- POST /api/integrations/ttn/uplink
-- GET /api/docs
+**Message format (server → client):**
+```json
+{ "type": "thought", "log": "Searching DuckDuckGo for Kedarnath flood alerts...", "level": "info" }
+{ "type": "result", "data": { ...same as analyze response... } }
+```
 
-## Use cases
+### `GET /api/river-basins/live`
+Returns live hydrological sensor readings for Uttarakhand river basins.
 
-- District control room monitoring
-- Flood and landslide risk assessment
-- SOS handling and responder assignment
-- Emergency broadcast generation
-- Crisis simulation and training drills
+### `GET /api/alerts/latest`
+Returns recent SOS/incident alerts. Supports `?after_id=` for incremental polling.
 
-## Status
+---
 
-This project is designed as an operational disaster-response command platform for Uttarakhand-focused monitoring, alerting, dispatch coordination, and analytics.
+## 🖥 UI Layout
 
+```
+┌─────────────────────────────────────────────────────────┐
+│  TOP HUD — IST/UTC Clocks · SAT Uplink · THREAT LEVEL  │  42px
+├───┬─────────────────────────────────────────┬───────────┤
+│   │                                         │  HYDRO    │
+│NAV│      TACTICAL GIS MAP                   │  FORCES   │
+│   │  (CartoDB Dark Matter + Leaflet)        │  BROADCAST│
+│   │  AI Intel Brief overlay on analyze      │  LORA     │
+│   │  Radar scanline animation               │           │
+├───┴─────────────────────────────────────────┴───────────┤
+│  BOTTOM TERMINAL — Live Agent Stream (lime-green mono)  │  130px
+└─────────────────────────────────────────────────────────┘
+```
+
+---
+
+## 🎨 Design System
+
+| Token | Value | Usage |
+|---|---|---|
+| `--bg-void` | `#02040A` | Root background |
+| `--panel-bg` | `#0D1117` | Panel fills |
+| `--border-dim` | `#1E293B` | Default borders (1px solid, 0 radius) |
+| `--alert-amber` | `#F59E0B` | Elevated threat |
+| `--alert-red` | `#EF4444` | Severe/Critical threat |
+| `--alert-cyan` | `#06B6D4` | Active / nominal status |
+| Terminal fg | `#39FF14` | Lime-green phosphor glow |
+| Terminal bg | `#000000` | Pitch black |
+
+**Design rules:** No `border-radius` > 2px. No soft shadows. No rounded buttons. Sharp brutalist edges only.
+
+---
+
+## 📡 WebSocket Architecture
+
+```
+Browser                        FastAPI Server
+   │                                │
+   │── WS CONNECT /api/agent/stream ──►│
+   │                                │ AgentStreamManager registers client
+   │── POST /api/agent/analyze ──────►│
+   │                                │ ContextVar sets callback
+   │                                │ Smolagents thread starts
+   │◄── { type:"thought", log:"..." } │ step_callback fires → asyncio bridge
+   │◄── { type:"thought", log:"..." } │ DuckDuckGo tool fires → emit_thought
+   │◄── { type:"result",  data:{...}} │ Analysis complete
+   │                                │
+```
+
+---
+
+## 🔒 License
+
+Project Rakshak is developed for emergency response research and SEOC operational support. All rights reserved.
+
+---
+
+*Built for Uttarakhand SEOC — "जन सेवा ही ईश्वर सेवा" (Service to People is Service to God)*
