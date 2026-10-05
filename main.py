@@ -125,6 +125,7 @@ from backend.api.routes.auth import router as auth_router
 from backend.api.routes.reports import router as reports_router
 from backend.api.routes.routes import router as safe_routes_router
 from backend.api.routes.ttn import router as ttn_router
+from backend.api.routes.agent_routes import router as agent_router
 
 app.include_router(state_router)
 app.include_router(sos_router)
@@ -137,6 +138,7 @@ app.include_router(auth_router, prefix="/api/auth")
 app.include_router(reports_router)
 app.include_router(safe_routes_router)
 app.include_router(ttn_router)
+app.include_router(agent_router, prefix="/api/agent", tags=["Autonomous Agent"])
 
 # ─── Health Check ─────────────────────────────────────────────────────────────
 @app.get("/api/health")
