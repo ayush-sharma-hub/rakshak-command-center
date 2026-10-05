@@ -83,9 +83,6 @@ function startClock() {
 // 2. TACTICAL LEAFLET MAP
 // ═══════════════════════════════════════════════════════════════════
 function initMap() {
-    const mapEl = document.getElementById('tactical-map');
-    if (!mapEl || typeof L === 'undefined') return;
-
     leafletMap = L.map('tactical-map', {
         center: [30.0668, 79.0193],
         zoom: 7,
