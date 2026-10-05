@@ -1,0 +1,819 @@
+/* ═══════════════════════════════════════════════════════════════════
+   PROJECT RAKSHAK — MOTION & 3D DEPTH SYSTEM v2.0
+   Anti-Template · Hardware-Accelerated · Cockpit-Grade
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── LAYER 1: 3D COCKPIT PERSPECTIVE STAGE ────────────────────── */
+
+/* Root perspective container on the main grid */
+.main-grid {
+    perspective: 1200px;
+    perspective-origin: 50% 40%;
+}
+
+/* Left sidebar — subtle inward tilt, hardware glass feel */
+.left-sidebar {
+    transform: rotateY(2deg);
+    transform-origin: left center;
+    transform-style: preserve-3d;
+    /* Illuminated glass panel: inset highlight top, deep shadow bottom */
+    box-shadow:
+        inset 0 1px 0 rgba(6,182,212,0.18),
+        inset -1px 0 0 rgba(6,182,212,0.06),
+        4px 0 24px rgba(0,0,0,0.6);
+    border-top: 1px solid rgba(6,182,212,0.22);
+    will-change: transform;
+}
+
+/* Right panel — mirror tilt, amber-toned glass */
+.right-panel {
+    transform: rotateY(-2deg);
+    transform-origin: right center;
+    transform-style: preserve-3d;
+    box-shadow:
+        inset 0 1px 0 rgba(245,158,11,0.12),
+        inset 1px 0 0 rgba(245,158,11,0.05),
+        -4px 0 24px rgba(0,0,0,0.6);
+    border-top: 1px solid rgba(245,158,11,0.15);
+    will-change: transform;
+}
+
+/* HUD bar — physical top rail with prismatic edge */
+.hud-bar {
+    box-shadow:
+        0 1px 0 rgba(6,182,212,0.1),
+        0 2px 20px rgba(0,0,0,0.8),
+        inset 0 1px 0 rgba(255,255,255,0.04);
+    border-bottom: 1px solid rgba(6,182,212,0.2);
+}
+
+/* Bottom terminal — raised hardware shelf */
+.bottom-terminal {
+    box-shadow:
+        0 -1px 0 rgba(57,255,20,0.12),
+        0 -4px 30px rgba(0,0,0,0.7),
+        inset 0 1px 0 rgba(57,255,20,0.06);
+    border-top: 1px solid rgba(57,255,20,0.18);
+}
+
+/* Panel blocks — inset glass cell with top-highlight */
+.rpanel-block,
+.sensor-row,
+.force-row,
+.lora-row {
+    position: relative;
+}
+.rpanel-block::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    pointer-events: none;
+}
+
+/* ── LAYER 2: LIVING HARDWARE ANIMATIONS ──────────────────────── */
+
+/* ── 2a: Animated diagonal grid background on body ── */
+body {
+    background-image:
+        linear-gradient(rgba(6,182,212,0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(6,182,212,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    animation: grid-pan 28s linear infinite;
+}
+
+@keyframes grid-pan {
+    0%   { background-position: 0 0, 0 0; }
+    100% { background-position: 32px 32px, 32px 32px; }
+}
+
+/* ── 2b: True CRT Scanline overlay with drift ── */
+body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    pointer-events: none;
+    background: repeating-linear-gradient(
+        0deg,
+        transparent,
+        transparent 2px,
+        rgba(0,0,0,0.065) 2px,
+        rgba(0,0,0,0.065) 4px
+    );
+    background-size: 100% 4px;
+    animation: crt-scan 6s linear infinite;
+}
+
+@keyframes crt-scan {
+    0%   { background-position: 0 0; }
+    100% { background-position: 0 120px; }
+}
+
+/* ── 2c: Ambient CRT vignette flicker ── */
+body::after {
+    content: '';
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 50% 50%, transparent 55%, rgba(0,0,0,0.55) 100%);
+    animation: crt-flicker 7s steps(1) infinite;
+}
+
+@keyframes crt-flicker {
+    0%, 90%, 92%, 94%, 96%, 100% { opacity: 1; }
+    91%  { opacity: 0.96; }
+    93%  { opacity: 0.98; }
+    95%  { opacity: 0.95; }
+}
+
+/* ── 2d: Hardware LED Blinker elements ── */
+.led-blinker {
+    display: inline-block;
+    width: 5px;
+    height: 5px;
+    border-radius: 0;
+    flex-shrink: 0;
+    position: relative;
+}
+.led-blinker::after {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 0;
+    animation: led-on 1s ease infinite;
+}
+/* Cyan LED — for nominal/operational headers */
+.led-cyan {
+    background: var(--alert-cyan);
+    box-shadow: 0 0 5px var(--alert-cyan), 0 0 10px var(--alert-cyan-glow);
+    animation: led-blink-cyan 2.3s ease-in-out infinite;
+}
+/* Red LED — for critical / alert headers */
+.led-red {
+    background: var(--alert-red);
+    box-shadow: 0 0 5px var(--alert-red), 0 0 10px var(--alert-red-glow);
+    animation: led-blink-red 1.1s ease-in-out infinite;
+}
+/* Amber LED — for warning headers */
+.led-amber {
+    background: var(--alert-amber);
+    box-shadow: 0 0 5px var(--alert-amber), 0 0 10px var(--alert-amber-glow);
+    animation: led-blink-amber 1.8s ease-in-out infinite;
+}
+/* Green LED — for active/deployed status */
+.led-green {
+    background: var(--alert-green);
+    box-shadow: 0 0 5px var(--alert-green), 0 0 10px var(--alert-green-glow);
+    animation: led-blink-green 3.1s ease-in-out infinite;
+}
+
+@keyframes led-blink-cyan {
+    0%,100% { opacity: 1;   box-shadow: 0 0 5px var(--alert-cyan), 0 0 10px var(--alert-cyan-glow); }
+    48%     { opacity: 0.2; box-shadow: none; }
+    52%     { opacity: 1;   box-shadow: 0 0 8px var(--alert-cyan), 0 0 16px var(--alert-cyan-glow); }
+}
+@keyframes led-blink-red {
+    0%,100% { opacity: 1;   box-shadow: 0 0 6px var(--alert-red), 0 0 12px var(--alert-red-glow); }
+    45%     { opacity: 0.15; box-shadow: none; }
+    50%     { opacity: 1;   box-shadow: 0 0 10px var(--alert-red), 0 0 20px var(--alert-red-glow); }
+}
+@keyframes led-blink-amber {
+    0%,100% { opacity: 1;   box-shadow: 0 0 5px var(--alert-amber), 0 0 10px var(--alert-amber-glow); }
+    55%     { opacity: 0.2; box-shadow: none; }
+    60%     { opacity: 0.9; }
+}
+@keyframes led-blink-green {
+    0%,100% { opacity: 1;   box-shadow: 0 0 4px var(--alert-green), 0 0 8px var(--alert-green-glow); }
+    70%     { opacity: 0.25; box-shadow: none; }
+}
+
+/* ── 2e: CSS-only Radar Sweep on the map zone ── */
+.radar-sweep-overlay {
+    position: absolute;
+    top: 38px; /* below panel-header */
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 498;
+    pointer-events: none;
+    overflow: hidden;
+}
+/* The actual rotating sweep arm */
+.radar-sweep-overlay::before {
+    content: '';
+    position: absolute;
+    /* Center on map area */
+    top: 50%;
+    left: 50%;
+    width: 120%;
+    height: 120%;
+    transform: translate(-50%, -50%);
+    background: conic-gradient(
+        from 0deg,
+        transparent 0deg,
+        rgba(6,182,212,0.0) 80deg,
+        rgba(6,182,212,0.06) 100deg,
+        rgba(6,182,212,0.14) 110deg,
+        rgba(6,182,212,0.08) 120deg,
+        transparent 140deg,
+        transparent 360deg
+    );
+    animation: radar-rotate 5s linear infinite;
+    will-change: transform;
+}
+/* Faint concentric rings */
+.radar-sweep-overlay::after {
+    content: '';
+    position: absolute;
+    top: 50%; left: 50%;
+    width: 600px; height: 600px;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    box-shadow:
+        0 0 0 80px  rgba(6,182,212,0.025),
+        0 0 0 180px rgba(6,182,212,0.018),
+        0 0 0 300px rgba(6,182,212,0.012);
+    pointer-events: none;
+}
+
+@keyframes radar-rotate {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to   { transform: translate(-50%, -50%) rotate(360deg); }
+}
+
+/* ── 2f: Scrolling Hex Column ── */
+#hex-stream-col {
+    position: fixed;
+    right: 0;
+    top: var(--hud-height);
+    bottom: var(--terminal-height);
+    width: 52px;  /* sits under the right panel's edge */
+    z-index: 850;
+    pointer-events: none;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    opacity: 0.18;
+}
+.hex-cell {
+    font-family: 'Courier New', monospace;
+    font-size: 8px;
+    color: var(--alert-cyan);
+    line-height: 1.6;
+    text-align: center;
+    white-space: nowrap;
+    animation: hex-scroll-up var(--hex-dur, 6s) linear infinite;
+    animation-delay: var(--hex-delay, 0s);
+}
+
+@keyframes hex-scroll-up {
+    0%   { transform: translateY(120%); opacity: 0; }
+    5%   { opacity: 1; }
+    90%  { opacity: 1; }
+    100% { transform: translateY(-120%); opacity: 0; }
+}
+
+/* ── LAYER 3: ANTI-TEMPLATE MICRO-INTERACTIONS ────────────────── */
+
+/* ── 3a: Border-trace hover for all .tac-btn ── */
+.tac-btn {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+}
+.tac-btn::before, .tac-btn::after {
+    content: '';
+    position: absolute;
+    background: currentColor;
+    transition: transform 0.22s ease;
+}
+/* Top + Bottom bars */
+.tac-btn::before {
+    top: 0; left: 0;
+    width: 100%; height: 1px;
+    transform: scaleX(0);
+    transform-origin: left;
+}
+.tac-btn::after {
+    bottom: 0; right: 0;
+    width: 100%; height: 1px;
+    transform: scaleX(0);
+    transform-origin: right;
+}
+.tac-btn:hover::before { transform: scaleX(1); }
+.tac-btn:hover::after  { transform: scaleX(1); }
+
+/* Left + Right side bars via child pseudo approach using box-shadow instead */
+.tac-btn:hover {
+    box-shadow:
+        inset 2px 0 0 currentColor,
+        inset -2px 0 0 currentColor;
+}
+
+/* ── 3b: Bracket-expand hover on nav buttons ── */
+.nav-btn {
+    position: relative;
+}
+.nav-btn::before,
+.nav-btn::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    width: 4px;
+    height: 16px;
+    transform: translateY(-50%);
+    border: 1px solid var(--alert-cyan);
+    opacity: 0;
+    transition: opacity 0.15s, width 0.18s ease;
+}
+.nav-btn::before {
+    left: 2px;
+    border-right: none;
+    transform-origin: right center;
+}
+.nav-btn::after {
+    right: 2px;
+    border-left: none;
+    transform-origin: left center;
+}
+.nav-btn:hover::before,
+.nav-btn:hover::after,
+.nav-btn.active::before,
+.nav-btn.active::after {
+    opacity: 1;
+    width: 6px;
+}
+.nav-btn.active {
+    border-left: 2px solid var(--alert-cyan) !important;
+}
+
+/* ── 3c: Text glitch on hud-btn hover ── */
+.hud-btn {
+    position: relative;
+}
+.hud-btn:hover {
+    animation: glitch-text 0.3s steps(2) 1;
+}
+
+@keyframes glitch-text {
+    0%  { transform: translate(0); clip-path: inset(0 0 0 0); }
+    20% { transform: translate(-1px, 1px); clip-path: inset(20% 0 60% 0); color: var(--alert-red); }
+    40% { transform: translate(1px, -1px); clip-path: inset(60% 0 10% 0); color: var(--alert-cyan); }
+    60% { transform: translate(0); clip-path: inset(0 0 0 0); }
+    80% { transform: translate(-1px, 0); }
+    100%{ transform: translate(0); color: var(--alert-cyan); }
+}
+
+/* ── 3d: Sensor row hover — glowing left accent ── */
+.sensor-row:hover,
+.force-row:hover,
+.lora-row:hover {
+    background: linear-gradient(90deg, rgba(6,182,212,0.06), var(--panel-bg-2));
+    border-color: var(--alert-cyan) !important;
+    box-shadow: inset 2px 0 0 var(--alert-cyan);
+}
+
+/* ── LAYER 4: STAGGERED BOOT-UP SEQUENCE ─────────────────────── */
+
+/* All primary panels start invisible */
+.hud-bar,
+.left-sidebar,
+.center-map-zone,
+.right-panel,
+.bottom-terminal {
+    animation-fill-mode: both;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-duration: 0.55s;
+    animation-name: boot-slide-in;
+}
+
+@keyframes boot-slide-in {
+    0%   { opacity: 0; transform: translateY(-6px) rotateX(2deg); filter: brightness(0.3) blur(1px); }
+    60%  { filter: brightness(1.1) blur(0); }
+    100% { opacity: 1; transform: translateY(0) rotateX(0); filter: brightness(1) blur(0); }
+}
+
+/* Stagger per panel */
+.hud-bar        { animation-delay: 0.05s; }
+.left-sidebar   { animation-delay: 0.15s; }
+.center-map-zone{ animation-delay: 0.25s; }
+.right-panel    { animation-delay: 0.35s; }
+.bottom-terminal{ animation-delay: 0.50s; }
+
+/* rpanel blocks cascade */
+.rpanel-block:nth-child(1) { animation: boot-slide-in 0.45s 0.55s both; }
+.rpanel-block:nth-child(2) { animation: boot-slide-in 0.45s 0.65s both; }
+.rpanel-block:nth-child(3) { animation: boot-slide-in 0.45s 0.75s both; }
+.rpanel-block:nth-child(4) { animation: boot-slide-in 0.45s 0.85s both; }
+
+/* ── LIVE DATA FLICKER — numbers that look alive ─────────────── */
+.live-data-flicker {
+    transition: color 0.12s ease;
+    display: inline-block;
+}
+.live-data-flicker.data-update {
+    color: var(--alert-cyan) !important;
+    text-shadow: 0 0 8px var(--alert-cyan);
+    animation: data-flash 0.18s ease;
+}
+.live-data-flicker.data-crit-update {
+    color: var(--alert-red) !important;
+    text-shadow: 0 0 10px var(--alert-red);
+    animation: data-flash 0.18s ease;
+}
+
+@keyframes data-flash {
+    0%   { filter: brightness(2.2); }
+    60%  { filter: brightness(1.4); }
+    100% { filter: brightness(1); }
+}
+
+/* ── GLASSMORPHISM PANEL UPGRADE ──────────────────────────────── */
+.overlay-chip,
+.ai-intel-overlay,
+.modal-box {
+    background: rgba(10, 14, 20, 0.92) !important;
+    backdrop-filter: blur(12px) saturate(1.3) !important;
+    -webkit-backdrop-filter: blur(12px) saturate(1.3) !important;
+    border: 1px solid rgba(46, 63, 85, 0.8) !important;
+}
+
+/* Glowing top-accent on glassmorphism overlays */
+.ai-intel-overlay::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--alert-cyan), transparent);
+    pointer-events: none;
+}
+
+/* ── MAP MARKERS: Glowing Pulsing Circles (replace flat squares) */
+@keyframes map-pulse-red {
+    0%   { box-shadow: 0 0 0 0 rgba(239,68,68,0.7), 0 0 8px rgba(239,68,68,0.4); }
+    70%  { box-shadow: 0 0 0 12px rgba(239,68,68,0), 0 0 14px rgba(239,68,68,0.6); }
+    100% { box-shadow: 0 0 0 0 rgba(239,68,68,0),  0 0 8px rgba(239,68,68,0.4); }
+}
+@keyframes map-pulse-amber {
+    0%   { box-shadow: 0 0 0 0 rgba(245,158,11,0.6), 0 0 6px rgba(245,158,11,0.3); }
+    70%  { box-shadow: 0 0 0 10px rgba(245,158,11,0), 0 0 12px rgba(245,158,11,0.5); }
+    100% { box-shadow: 0 0 0 0 rgba(245,158,11,0),  0 0 6px rgba(245,158,11,0.3); }
+}
+@keyframes map-pulse-cyan {
+    0%   { box-shadow: 0 0 0 0 rgba(6,182,212,0.5), 0 0 4px rgba(6,182,212,0.3); }
+    70%  { box-shadow: 0 0 0 8px rgba(6,182,212,0), 0 0 10px rgba(6,182,212,0.4); }
+    100% { box-shadow: 0 0 0 0 rgba(6,182,212,0),  0 0 4px rgba(6,182,212,0.3); }
+}
+
+/* Glowing map pin circles — injected via JS .div-icon-pulse class */
+.map-pin-circle {
+    border-radius: 50% !important;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+.map-pin-circle:hover { transform: scale(1.4); }
+.map-pin-circle.pin-red   { animation: map-pulse-red   1.4s ease-out infinite; }
+.map-pin-circle.pin-amber { animation: map-pulse-amber 1.8s ease-out infinite; }
+.map-pin-circle.pin-cyan  { animation: map-pulse-cyan  2.2s ease-out infinite; }
+
+/* ── SOS MARKER ── */
+.sos-marker-inner {
+    font-size: 8px;
+    font-weight: 900;
+    font-family: 'Courier New', monospace;
+    color: #fff;
+    background: var(--alert-red);
+    padding: 2px 5px;
+    border: 1px solid rgba(255,255,255,0.6);
+    animation: sos-pulse 0.8s ease-in-out infinite;
+    cursor: pointer;
+}
+@keyframes sos-pulse {
+    0%,100% { box-shadow: 0 0 6px rgba(239,68,68,0.4); }
+    50%     { box-shadow: 0 0 18px rgba(239,68,68,0.9), 0 0 6px rgba(239,68,68,0.6) inset; transform: scale(1.05); }
+}
+
+/* ── UTILITY: Compact Telemetry Numbers ─────────────────────── */
+.telem-val {
+    font-family: 'Courier New', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-main);
+    letter-spacing: 0.04em;
+}
+.telem-unit {
+    font-size: 7px;
+    color: var(--text-muted);
+    margin-left: 2px;
+}
+.telem-label {
+    font-size: 7.5px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+/* ── INLINE STATUS BADGE (used in RPanels & Forces) ─────────── */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 1px 5px;
+    font-size: 7px;
+    font-weight: 800;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    font-family: 'Courier New', monospace;
+    border: 1px solid currentColor;
+}
+.status-badge.nominal  { color: var(--alert-green); }
+.status-badge.warning  { color: var(--alert-amber); }
+.status-badge.critical { color: var(--alert-red); animation: led-blink-red 1.1s infinite; }
+.status-badge.standby  { color: var(--text-muted); }
+
+/* ── PANEL GLITCH-IN on switchPanel() calls ─────────────────── */
+@keyframes panel-switch-in {
+    0%   { opacity: 0; transform: rotateX(4deg) translateY(-4px); filter: blur(2px); }
+    100% { opacity: 1; transform: rotateX(0) translateY(0);       filter: blur(0); }
+}
+.panel-switching {
+    animation: panel-switch-in 0.22s cubic-bezier(0.16,1,0.3,1) both;
+}
+
+/* ── LEAFLET TILE ADJUSTMENT (keep tactical but lift brightness slightly) */
+.leaflet-tile {
+    filter: brightness(0.78) saturate(0.5) hue-rotate(185deg) contrast(1.05) !important;
+}
+
+/* ── SCROLLBAR UPGRADE ────────────────────────────────────────── */
+.terminal-body::-webkit-scrollbar { width: 3px; }
+.terminal-body::-webkit-scrollbar-thumb {
+    background: linear-gradient(180deg, #39FF14, rgba(57,255,20,0.2));
+}
+.right-panel::-webkit-scrollbar { width: 2px; }
+.right-panel::-webkit-scrollbar-thumb { background: rgba(6,182,212,0.3); }
+
+/* ═══════════════════════════════════════════════════════════════════
+   SPA MULTI-VIEW ARCHITECTURE & FULL COCKPITS
+   ═══════════════════════════════════════════════════════════════════ */
+.main-grid {
+    display: flex !important;
+    overflow: hidden;
+}
+.left-sidebar {
+    width: var(--sidebar-width) !important;
+    flex-shrink: 0;
+}
+.spa-viewport {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    overflow: hidden;
+}
+.spa-view {
+    position: absolute;
+    inset: 0;
+    display: none;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    background: var(--bg-void);
+}
+.spa-view.active-view {
+    display: flex;
+    animation: panel-switch-in 0.25s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* View GIS internal split */
+#view-gis.active-view {
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    width: 100%;
+}
+#view-gis .center-map-zone {
+    flex: 1;
+    height: 100%;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+#view-gis .right-panel {
+    width: var(--right-width);
+    flex-shrink: 0;
+    height: 100%;
+}
+
+/* Common SPA View Layout for full-screen dashboards */
+.spa-full-view {
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-void);
+    overflow: hidden;
+}
+.view-header {
+    height: 34px;
+    padding: 0 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel-bg-2);
+    border-bottom: 1px solid var(--border-dim);
+    flex-shrink: 0;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+}
+.view-header-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-main);
+}
+.view-header-meta {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 9.5px;
+    color: var(--text-muted);
+}
+.view-content-grid {
+    flex: 1;
+    display: grid;
+    gap: 1px;
+    background: var(--border-dim);
+    overflow-y: auto;
+    padding: 1px;
+}
+
+/* Card & Column Styling */
+.tac-col {
+    background: var(--panel-bg);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+}
+.tac-col-header {
+    padding: 8px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--panel-bg-2);
+    border-bottom: 1px solid var(--border-dim);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-main);
+}
+.tac-col-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+/* Evacuation Cards */
+.evac-corridor-card {
+    background: var(--panel-bg-2);
+    border: 1px solid var(--border-dim);
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    position: relative;
+    transition: all 0.2s ease;
+}
+.evac-corridor-card:hover {
+    border-color: var(--alert-cyan);
+    box-shadow: 0 0 12px rgba(6,182,212,0.12);
+}
+.evac-corridor-card.danger {
+    border-left: 3px solid var(--alert-red);
+}
+.evac-corridor-card.warning {
+    border-left: 3px solid var(--alert-amber);
+}
+.evac-corridor-card.nominal {
+    border-left: 3px solid var(--alert-green);
+}
+.corridor-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.corridor-name {
+    font-weight: 800;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    color: var(--text-main);
+}
+.corridor-stat-row {
+    display: flex;
+    justify-content: space-between;
+    font-family: 'JetBrains Mono', 'Courier New', monospace;
+    font-size: 9px;
+    color: var(--text-muted);
+}
+.progress-bar-bg {
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 0;
+    overflow: hidden;
+    position: relative;
+}
+.progress-bar-fill {
+    height: 100%;
+    transition: width 0.4s ease;
+}
+
+/* LoRa Mesh Topology Graph Visualizer */
+.lora-mesh-canvas-container {
+    background: radial-gradient(circle at center, #07111a 0%, #02040a 100%);
+    border: 1px solid var(--border-dim);
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    position: relative;
+}
+.mesh-hop-pipeline {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 6px;
+    position: relative;
+    overflow-x: auto;
+}
+.mesh-hop-pipeline::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 40px;
+    right: 40px;
+    height: 2px;
+    background: repeating-linear-gradient(90deg, var(--alert-cyan) 0, var(--alert-cyan) 8px, transparent 8px, transparent 16px);
+    animation: pipeline-dash 1s linear infinite;
+    z-index: 1;
+}
+@keyframes pipeline-dash {
+    from { background-position: 0 0; }
+    to { background-position: 32px 0; }
+}
+.mesh-node-pill {
+    position: relative;
+    z-index: 2;
+    background: var(--panel-bg);
+    border: 1px solid var(--alert-cyan);
+    padding: 8px 12px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    box-shadow: 0 0 14px rgba(6,182,212,0.25);
+    min-width: 110px;
+}
+.mesh-node-pill.hub {
+    border-color: var(--alert-green);
+    box-shadow: 0 0 16px rgba(34,197,94,0.3);
+}
+
+/* Broadcast Console Controls */
+.bcast-channel-switch {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 6px;
+    margin-bottom: 10px;
+}
+.bcast-switch-btn {
+    padding: 8px 6px;
+    background: var(--panel-bg-2);
+    border: 1px solid var(--border-dim);
+    color: var(--text-muted);
+    font-size: 8.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    font-family: 'JetBrains Mono', monospace;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+}
+.bcast-switch-btn.active, .bcast-switch-btn:hover {
+    border-color: var(--alert-red);
+    color: #fff;
+    background: rgba(239,68,68,0.15);
+    box-shadow: 0 0 8px rgba(239,68,68,0.25);
+}
+

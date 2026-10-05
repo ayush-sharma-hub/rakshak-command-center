@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>PROJECT RAKSHAK — SEOC TACTICAL C4ISR COMMAND CENTER</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/motion.css" />
 </head>
 <body>
 
@@ -26,19 +27,19 @@
         </div>
         <div class="hud-divider"></div>
         <div class="hud-uplink">
-            <span class="status-dot status-green"></span>
+            <span class="led-blinker led-cyan"></span>
             <span class="hud-label">SAT-UPLINK</span>
-            <span class="hud-mono" id="uplink-status">INSAT-3DR · NOMINAL</span>
+            <span class="hud-mono live-data-flicker" id="uplink-status" data-flicker="signal">INSAT-3DR · NOMINAL</span>
         </div>
         <div class="hud-uplink">
-            <span class="status-dot status-green"></span>
+            <span class="led-blinker led-green"></span>
             <span class="hud-label">SEOC-NET</span>
-            <span class="hud-mono">CONN · <span id="ws-status">ACTIVE</span></span>
+            <span class="hud-mono">CONN · <span id="ws-status" class="live-data-flicker" data-flicker="status">ACTIVE</span></span>
         </div>
         <div class="hud-uplink">
-            <span class="status-dot status-amber" id="lora-dot"></span>
+            <span class="led-blinker led-amber" id="lora-dot"></span>
             <span class="hud-label">LORA-MESH</span>
-            <span class="hud-mono">865MHz · 8 NODES</span>
+            <span class="hud-mono live-data-flicker" data-flicker="nodes">865MHz · 8 NODES</span>
         </div>
     </div>
 
@@ -78,245 +79,950 @@
 </header>
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- MAIN GRID LAYOUT                                               -->
+<!-- MAIN COCKPIT GRID & SPA VIEWPORT                                -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <div class="main-grid">
 
     <!-- ─────────────────────────────────────────────────────────── -->
-    <!-- LEFT SIDEBAR — ICON-BASED NAVIGATION                        -->
+    <!-- LEFT SIDEBAR — ICON-BASED MULTI-VIEW ROUTER                 -->
     <!-- ─────────────────────────────────────────────────────────── -->
     <nav class="left-sidebar">
         <div class="nav-section">
-            <button class="nav-btn active" data-panel="map" title="Tactical GIS Map" onclick="switchPanel('map')">
+            <button class="nav-btn active" data-view="view-gis" title="Tactical GIS Radar Map" onclick="switchView('view-gis')">
                 <i class="fa-solid fa-map"></i>
                 <span class="nav-label">GIS</span>
             </button>
-            <button class="nav-btn" data-panel="rivers" title="River Telemetry" onclick="switchPanel('rivers')">
+            <button class="nav-btn" data-view="view-hydro" title="Hydro Telemetry & Basins" onclick="switchView('view-hydro')">
                 <i class="fa-solid fa-water"></i>
                 <span class="nav-label">HYDRO</span>
             </button>
-            <button class="nav-btn" data-panel="sos" title="SOS Distress Feed" onclick="switchPanel('sos')">
-                <i class="fa-solid fa-triangle-exclamation"></i>
-                <span class="nav-label">SOS</span>
+            <button class="nav-btn" data-view="view-evacuation" title="Statewide Evacuation Logistics" onclick="switchView('view-evacuation')">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span class="nav-label">EVAC</span>
             </button>
-            <button class="nav-btn" data-panel="lora" title="LoRa Mesh Network" onclick="switchPanel('lora')">
+            <button class="nav-btn" data-view="view-lora" title="Offline LoRa Mesh Relay" onclick="switchView('view-lora')">
                 <i class="fa-solid fa-tower-cell"></i>
                 <span class="nav-label">LORA</span>
             </button>
-            <button class="nav-btn" data-panel="broadcast" title="Broadcast Center" onclick="switchPanel('broadcast')">
+            <button class="nav-btn" data-view="view-broadcast" title="Civil Defense Broadcast Hub" onclick="switchView('view-broadcast')">
                 <i class="fa-solid fa-satellite-dish"></i>
                 <span class="nav-label">BCAST</span>
             </button>
-            <button class="nav-btn" data-panel="forces" title="NDRF/SDRF Forces" onclick="switchPanel('forces')">
+            <button class="nav-btn" data-view="view-forces" title="Tactical Quick Response Forces" onclick="switchView('view-forces')">
                 <i class="fa-solid fa-shield-halved"></i>
                 <span class="nav-label">FORCES</span>
             </button>
         </div>
         <div class="nav-section nav-bottom">
-            <button class="nav-btn" title="System Status" onclick="switchPanel('syslog')">
+            <button class="nav-btn" data-view="view-syslog" title="System Diagnostic Stream" onclick="switchView('view-syslog')">
                 <i class="fa-solid fa-terminal"></i>
                 <span class="nav-label">SYS</span>
             </button>
             <div class="nav-system-info">
                 <div class="sys-metric">
                     <span class="hud-label">CPU</span>
-                    <span class="hud-mono sys-val" id="cpu-val">--</span>
+                    <span class="hud-mono sys-val live-data-flicker" id="cpu-val" data-flicker="cpu">18%</span>
                 </div>
                 <div class="sys-metric">
                     <span class="hud-label">MEM</span>
-                    <span class="hud-mono sys-val" id="mem-val">--</span>
+                    <span class="hud-mono sys-val live-data-flicker" id="mem-val" data-flicker="mem">42%</span>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- ─────────────────────────────────────────────────────────── -->
-    <!-- CENTER — TACTICAL GIS MAP                                   -->
+    <!-- CENTRAL SPA VIEWPORT                                        -->
     <!-- ─────────────────────────────────────────────────────────── -->
-    <section class="center-map-zone">
-        <div class="panel-header">
-            <div class="panel-header-left">
-                <span class="panel-tag tag-cyan">AI AGENT</span>
-                <div class="location-search-wrap">
-                    <i class="fa-solid fa-crosshairs status-cyan-text"></i>
-                    <input type="text" id="target-location-input" class="tac-search-input" 
-                           placeholder="SEARCH TARGET SECTOR (e.g. Rudraprayag, Kedarnath, Joshimath)..." 
-                           value="Rudraprayag, Uttarakhand" 
-                           onkeydown="if(event.key==='Enter') triggerLocationAnalysis()" />
-                    <button class="tac-btn tac-btn-cyan" id="btn-analyze-target" onclick="triggerLocationAnalysis()">
-                        <i class="fa-solid fa-microchip"></i> ANALYZE SECTOR
-                    </button>
-                </div>
-            </div>
-            <div class="panel-header-right">
-                <span class="map-coord hud-mono" id="cursor-coord">LAT: -- · LNG: --</span>
-                <button class="hud-btn" onclick="mapZoomHome()">⌂ HOME</button>
-                <button class="hud-btn" onclick="toggleMapLayer('satellite')">◩ SAT</button>
-                <button class="hud-btn" onclick="toggleMapLayer('flood')">◈ FLOOD</button>
-            </div>
-        </div>
+    <main class="spa-viewport">
 
-        <!-- LEAFLET MAP MOUNT -->
-        <div id="tactical-map"></div>
-
-        <!-- AI ASSESSMENT HUD OVERLAY (Populated dynamically on POST /api/agent/analyze) -->
-        <div class="ai-intel-overlay hidden" id="ai-intel-overlay">
-            <div class="ai-intel-header">
-                <div class="ai-intel-title-wrap">
-                    <span class="panel-tag tag-cyan" id="ai-intel-tag">AI INTEL BRIEF</span>
-                    <span class="ai-intel-location hud-mono" id="ai-intel-location">---</span>
-                </div>
-                <button class="hud-btn" onclick="dismissAiIntel()">✕ DISMISS</button>
-            </div>
-            <div class="ai-intel-body">
-                <div class="ai-intel-meta-row">
-                    <div class="ai-meta-item">
-                        <span class="hud-label">THREAT LEVEL</span>
-                        <span class="hud-mono ai-threat-badge" id="ai-intel-threat">NORMAL</span>
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- VIEW 1: TACTICAL GIS RADAR & AI COMMAND ZONE                -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="view-gis" class="spa-view active-view">
+            
+            <section class="center-map-zone">
+                <div class="panel-header">
+                    <div class="panel-header-left">
+                        <span class="led-blinker led-cyan"></span>
+                        <span class="panel-tag tag-cyan">AI AGENT</span>
+                        <div class="location-search-wrap">
+                            <i class="fa-solid fa-crosshairs status-cyan-text"></i>
+                            <input type="text" id="target-location-input" class="tac-search-input" 
+                                   placeholder="SEARCH TARGET SECTOR (e.g. Rudraprayag, Kedarnath, Joshimath)..." 
+                                   value="Rudraprayag, Uttarakhand" 
+                                   onkeydown="if(event.key==='Enter') triggerLocationAnalysis()" />
+                            <button class="tac-btn tac-btn-cyan" id="btn-analyze-target" onclick="triggerLocationAnalysis()">
+                                <i class="fa-solid fa-microchip"></i> ANALYZE SECTOR
+                            </button>
+                        </div>
                     </div>
-                    <div class="ai-meta-item">
-                        <span class="hud-label">CONFIDENCE</span>
-                        <span class="hud-mono" id="ai-intel-confidence">MEDIUM</span>
-                    </div>
-                    <div class="ai-meta-item">
-                        <span class="hud-label">NDRF ASSETS</span>
-                        <span class="hud-mono status-green-text" id="ai-intel-ndrf">0</span>
-                    </div>
-                    <div class="ai-meta-item">
-                        <span class="hud-label">HELI EVAC</span>
-                        <span class="hud-mono status-amber-text" id="ai-intel-helis">0</span>
+                    <div class="panel-header-right">
+                        <span class="map-coord hud-mono live-data-flicker" id="cursor-coord" data-flicker="coord">LAT: 30.2844 · LNG: 78.9811</span>
+                        <button class="hud-btn" onclick="mapZoomHome()">⌂ HOME</button>
+                        <button class="hud-btn" onclick="toggleMapLayer('satellite')">◩ SAT</button>
+                        <button class="hud-btn" onclick="toggleMapLayer('flood')">◈ FLOOD</button>
                     </div>
                 </div>
-                <div class="ai-hazards-section">
-                    <span class="hud-label">ACTIVE HAZARDS:</span>
-                    <div class="ai-hazards-chips" id="ai-intel-hazards">
-                        <span class="ai-hazard-chip">None</span>
+
+                <!-- LEAFLET MAP MOUNT -->
+                <div id="tactical-map"></div>
+
+                <!-- CSS CONIC RADAR SWEEP OVERLAY -->
+                <div class="radar-sweep-overlay"></div>
+
+                <!-- AI ASSESSMENT HUD OVERLAY -->
+                <div class="ai-intel-overlay hidden" id="ai-intel-overlay">
+                    <div class="ai-intel-header">
+                        <div class="ai-intel-title-wrap">
+                            <span class="led-blinker led-cyan"></span>
+                            <span class="panel-tag tag-cyan" id="ai-intel-tag">AI INTEL BRIEF</span>
+                            <span class="ai-intel-location hud-mono" id="ai-intel-location">---</span>
+                        </div>
+                        <button class="hud-btn" onclick="dismissAiIntel()">✕ DISMISS</button>
+                    </div>
+                    <div class="ai-intel-body">
+                        <div class="ai-intel-meta-row">
+                            <div class="ai-meta-item">
+                                <span class="hud-label">THREAT LEVEL</span>
+                                <span class="hud-mono ai-threat-badge" id="ai-intel-threat">NORMAL</span>
+                            </div>
+                            <div class="ai-meta-item">
+                                <span class="hud-label">CONFIDENCE</span>
+                                <span class="hud-mono" id="ai-intel-confidence">MEDIUM</span>
+                            </div>
+                            <div class="ai-meta-item">
+                                <span class="hud-label">NDRF ASSETS</span>
+                                <span class="hud-mono status-green-text" id="ai-intel-ndrf">0</span>
+                            </div>
+                            <div class="ai-meta-item">
+                                <span class="hud-label">HELI EVAC</span>
+                                <span class="hud-mono status-amber-text" id="ai-intel-helis">0</span>
+                            </div>
+                        </div>
+                        <div class="ai-hazards-section">
+                            <span class="hud-label">ACTIVE HAZARDS:</span>
+                            <div class="ai-hazards-chips" id="ai-intel-hazards">
+                                <span class="ai-hazard-chip">None</span>
+                            </div>
+                        </div>
+                        <div class="ai-intel-summary-box">
+                            <span class="hud-label">SITUATIONAL OVERVIEW:</span>
+                            <div class="ai-intel-summary-text hud-mono" id="ai-intel-summary">Awaiting autonomous analysis…</div>
+                        </div>
+                        <div class="ai-intel-action-box">
+                            <span class="hud-label">PRIORITY ACTION DIRECTIVES:</span>
+                            <ol class="ai-action-list hud-mono" id="ai-intel-actions"></ol>
+                        </div>
                     </div>
                 </div>
-                <div class="ai-intel-summary-box">
-                    <span class="hud-label">SITUATIONAL OVERVIEW:</span>
-                    <div class="ai-intel-summary-text hud-mono" id="ai-intel-summary">Awaiting autonomous analysis…</div>
+
+                <!-- MAP HUD OVERLAYS -->
+                <div class="map-overlay-tl">
+                    <div class="overlay-chip"><span class="hud-label">ZOOM</span> <span class="hud-mono" id="map-zoom">8</span></div>
+                    <div class="overlay-chip"><span class="hud-label">SECTORS</span> <span class="hud-mono live-data-flicker" data-flicker="sectors">115</span></div>
+                    <div class="overlay-chip status-amber-text"><i class="fa-solid fa-circle-dot fa-beat"></i> <span class="hud-mono">LIVE RADAR</span></div>
                 </div>
-                <div class="ai-intel-action-box">
-                    <span class="hud-label">PRIORITY ACTION DIRECTIVES:</span>
-                    <ol class="ai-action-list hud-mono" id="ai-intel-actions"></ol>
+
+                <div class="map-overlay-br">
+                    <div class="map-scale-bar">
+                        <div class="map-scale-inner"></div>
+                        <span class="hud-mono map-scale-label">0 ────── 50 km</span>
+                    </div>
+                </div>
+
+                <!-- ALERT FLASH BANNER -->
+                <div class="alert-flash-banner hidden" id="alert-banner">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span id="alert-banner-text">CRITICAL ALERT</span>
+                    <button onclick="dismissBanner()">✕</button>
+                </div>
+            </section>
+
+            <!-- RIGHT PANEL — TELEMETRY & DEPLOYMENT -->
+            <aside class="right-panel">
+                <div class="rpanel-block">
+                    <div class="rpanel-header">
+                        <span class="led-blinker led-cyan"></span>
+                        <span class="panel-tag tag-cyan">HYDRO</span>
+                        <span class="rpanel-title">LIVE RIVER TELEMETRY</span>
+                        <span class="hud-mono rpanel-ts live-data-flicker" id="river-ts">--:--</span>
+                    </div>
+                    <div id="river-sensor-grid" class="sensor-grid">
+                        <div class="sensor-row sensor-loading">
+                            <i class="fa-solid fa-rotate fa-spin"></i> FETCHING CWC DATUM…
+                        </div>
+                    </div>
+                </div>
+
+                <div class="rpanel-divider"></div>
+
+                <div class="rpanel-block">
+                    <div class="rpanel-header">
+                        <span class="led-blinker led-green"></span>
+                        <span class="panel-tag tag-green">FORCES</span>
+                        <span class="rpanel-title">GROUND UNIT STATUS</span>
+                    </div>
+                    <div id="force-grid" class="force-grid"></div>
+                </div>
+
+                <div class="rpanel-divider"></div>
+
+                <div class="rpanel-block">
+                    <div class="rpanel-header">
+                        <span class="led-blinker led-red"></span>
+                        <span class="panel-tag tag-red">BROADCAST</span>
+                        <span class="rpanel-title">EMERGENCY BROADCAST</span>
+                    </div>
+                    <div class="broadcast-form">
+                        <input type="text" id="bc-title" class="tac-input" placeholder="ALERT TITLE / EVENT TYPE" maxlength="80" />
+                        <textarea id="bc-body" class="tac-textarea" rows="2" placeholder="Full message body for emergency broadcast…"></textarea>
+                        <div class="bc-btn-row">
+                            <button class="tac-btn tac-btn-red" onclick="triggerBroadcast('PUSH')">
+                                <i class="fa-solid fa-satellite-dish"></i> PUSH ALL
+                            </button>
+                            <button class="tac-btn tac-btn-cyan" onclick="triggerBroadcast('LORA')">
+                                <i class="fa-solid fa-tower-cell"></i> LORA MESH
+                            </button>
+                        </div>
+                        <div id="bc-status" class="bc-status"></div>
+                    </div>
+                </div>
+
+                <div class="rpanel-divider"></div>
+
+                <div class="rpanel-block rpanel-flex-grow">
+                    <div class="rpanel-header">
+                        <span class="led-blinker led-amber"></span>
+                        <span class="panel-tag tag-amber">LORA</span>
+                        <span class="rpanel-title">MESH NODE MATRIX</span>
+                    </div>
+                    <div id="lora-grid" class="lora-grid"></div>
+                </div>
+            </aside>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- VIEW 2: HYDROLOGICAL & DAM BASIN COMMAND                    -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="view-hydro" class="spa-view spa-full-view">
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-cyan"></span>
+                    <span>HIMALAYAN HYDROLOGICAL TELEMETRY &amp; DAM BASIN MATRIX</span>
+                </div>
+                <div class="view-header-meta">
+                    <span>CWC TELEMETRY LINK: <b class="status-green-text">SYNCED</b></span>
+                    <span>OPEN-METEO RADAR: <b class="status-cyan-text live-data-flicker">0.8mm/h AVG</b></span>
+                    <button class="hud-btn" onclick="fetchRiverTelemetry()"><i class="fa-solid fa-rotate"></i> REFRESH</button>
+                </div>
+            </div>
+            <div class="view-content-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-water text-cyan-400"></i> GARHWAL BASINS (MANDAKINI &amp; ALAKNANDA)</span>
+                        <span class="hud-mono text-xs">CWC GAUGE 01-04</span>
+                    </div>
+                    <div class="tac-col-body" id="hydro-garhwal-cards">
+                        <div class="evac-corridor-card warning">
+                            <div class="corridor-head">
+                                <span class="corridor-name">MANDAKINI RIVER · RUDRAPRAYAG GAUGE</span>
+                                <span class="status-badge warning">WARNING 623.96m</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Danger Mark: <b>626.00m MSL</b></span>
+                                <span>Discharge: <b class="live-data-flicker">16.4 m³/s</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 78%; background: var(--alert-amber);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Rainfall Upstream: <b>4.2 mm/h</b></span>
+                                <span>Trend: <b class="text-amber-400">▲ RISING (+0.3m/h)</b></span>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">ALAKNANDA RIVER · JOSHIMATH HEADWATERS</span>
+                                <span class="status-badge nominal">NOMINAL 1147.19m</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Danger Mark: <b>1152.00m MSL</b></span>
+                                <span>Discharge: <b class="live-data-flicker">46.4 m³/s</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 52%; background: var(--alert-green);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Rainfall Upstream: <b>0.8 mm/h</b></span>
+                                <span>Trend: <b class="text-emerald-400">► STABLE</b></span>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">BHAGIRATHI RIVER · UTTARKASHI SECTOR</span>
+                                <span class="status-badge nominal">NOMINAL 1119.21m</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Danger Mark: <b>1124.50m MSL</b></span>
+                                <span>Discharge: <b class="live-data-flicker">56.3 m³/s</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 48%; background: var(--alert-green);"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-dam text-amber-400"></i> RESERVOIR CAPACITY &amp; DAM SPILLWAY GATES</span>
+                        <span class="hud-mono text-xs">THDC / UJVNL</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">TEHRI DAM MEGA-RESERVOIR (THDC)</span>
+                                <span class="status-badge nominal">816.59m / 830m</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Current Storage: <b class="live-data-flicker">2,648 MCM (76.8%)</b></span>
+                                <span>Spillway Outflow: <b>60 m³/s</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 76%; background: var(--alert-cyan);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Gate 1-4: <b>CLOSED</b></span>
+                                <span>Surge Buffer: <b class="text-emerald-400">13.41 METERS REMAINING</b></span>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">KOTESHWAR DAM SPILLWAY BASIN</span>
+                                <span class="status-badge nominal">612.40m / 618m</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Outflow to Devprayag: <b>110 m³/s</b></span>
+                                <span>Turbines Active: <b>4 / 4 (400MW)</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 65%; background: var(--alert-cyan);"></div></div>
+                        </div>
+
+                        <div class="evac-corridor-card warning">
+                            <div class="corridor-head">
+                                <span class="corridor-name">SRINAGAR HYDRO-ELECTRIC DAM</span>
+                                <span class="status-badge warning">GATE 2 OPEN (15%)</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Downstream Alert: <b>Rishikesh Warned</b></span>
+                                <span>Discharge: <b class="live-data-flicker">380 m³/s</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 82%; background: var(--alert-amber);"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-cloud-showers-heavy text-cyan-400"></i> KUMAON BASIN &amp; DOPPLER PRECIPITATION</span>
+                        <span class="hud-mono text-xs">IMD RADAR UK</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">KALI RIVER · DHARCHULA BORDER GAUGE</span>
+                                <span class="status-badge nominal">NOMINAL 939.55m</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Danger Mark: <b>944.00m MSL</b></span>
+                                <span>Discharge: <b class="live-data-flicker">36.7 m³/s</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 58%; background: var(--alert-green);"></div></div>
+                        </div>
+
+                        <div class="evac-corridor-card">
+                            <div class="corridor-head">
+                                <span class="corridor-name">FLASH FLOOD EARLY WARNING SENSORS (Acoustic)</span>
+                                <span class="status-badge nominal">12 / 12 LIVE</span>
+                            </div>
+                            <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; line-height:1.7; color:var(--text-muted);">
+                                <div>• Kedarnath Base Ultrasonic: <b class="text-emerald-400">NOMINAL (0.42m)</b></div>
+                                <div>• Rambara Debris Flow Acoustic: <b class="text-emerald-400">QUIET (18dB)</b></div>
+                                <div>• Sonprayag River Stage Gauge: <b class="text-amber-400 live-data-flicker">FLOW HIGH (+0.8m)</b></div>
+                                <div>• Mana Pass Glacial Lake Radar: <b class="text-emerald-400">NO GLOF SURGE DETECTED</b></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- MAP HUD OVERLAYS -->
-        <div class="map-overlay-tl">
-            <div class="overlay-chip"><span class="hud-label">ZOOM</span> <span class="hud-mono" id="map-zoom">10</span></div>
-            <div class="overlay-chip"><span class="hud-label">SECTORS</span> <span class="hud-mono">115</span></div>
-            <div class="overlay-chip status-amber-text"><i class="fa-solid fa-circle-dot fa-beat"></i> <span class="hud-mono">LIVE</span></div>
-        </div>
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- VIEW 3: STATEWIDE EVACUATION LOGISTICS COMMAND (SELC)       -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="view-evacuation" class="spa-view spa-full-view">
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-amber"></span>
+                    <span>STATEWIDE EVACUATION LOGISTICS &amp; TRANSIT CORRIDOR DISPATCH</span>
+                </div>
+                <div class="view-header-meta">
+                    <span>STATEWIDE CAPACITY: <b class="status-cyan-text">16,700 SHELTER BEDS</b></span>
+                    <span>FLEET READY: <b class="status-green-text live-data-flicker">92 BUSES / 24 AMB</b></span>
+                    <span>HELI ASSETS: <b class="status-amber-text">4 MI-17 ARMED</b></span>
+                </div>
+            </div>
+            <div class="view-content-grid" style="grid-template-columns: 1.2fr 1fr 1fr;">
+                
+                <!-- Evacuation Corridors -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-route text-amber-400"></i> HIGH-RISK EVACUATION CORRIDORS</span>
+                        <span class="hud-mono text-xs">UK-SEOC TRANSIT</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="evac-corridor-card danger">
+                            <div class="corridor-head">
+                                <span class="corridor-name">KEDARNATH ➔ SONPRAYAG CORRIDOR (NH-107)</span>
+                                <span class="status-badge critical">HIGH RISK</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Pilgrims in Sector: <b class="text-red-400 live-data-flicker">1,420 PAX</b></span>
+                                <span>Evacuated Today: <b>3,840 PAX (73%)</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 73%; background: var(--alert-red);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Choke Points: <b class="text-amber-400">Rambara Gorge Debris Area</b></span>
+                                <span>Escort: <b>SDRF-UKH-7 / 24 Guides</b></span>
+                            </div>
+                            <div style="display:flex; gap:6px; margin-top:4px;">
+                                <button class="tac-btn tac-btn-red" style="flex:1" onclick="addTerminalEntry('DISPATCH', 'Emergency Convoy dispatched to Sonprayag. 12 Buses rolling.', 'critical')">
+                                    <i class="fa-solid fa-bus"></i> DISPATCH BUS CONVOY
+                                </button>
+                                <button class="tac-btn tac-btn-amber" style="flex:1" onclick="addTerminalEntry('HELI EVAC', 'IAF Mi-17 sortie requested for Kedarnath Helipad triage.', 'warning')">
+                                    <i class="fa-solid fa-helicopter"></i> REQUEST AIRLIFT
+                                </button>
+                            </div>
+                        </div>
 
-        <div class="map-overlay-br">
-            <div class="map-scale-bar">
-                <div class="map-scale-inner"></div>
-                <span class="hud-mono map-scale-label">0 ────── 50 km</span>
+                        <div class="evac-corridor-card warning">
+                            <div class="corridor-head">
+                                <span class="corridor-name">JOSHIMATH ➔ PIPALKOTI HIGHWAY (NH-07)</span>
+                                <span class="status-badge warning">MODERATE</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Queue at Helang: <b>42 Buses En Route</b></span>
+                                <span>Subsidence Sensors: <b class="text-amber-400">ACTIVE MONITORING</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 61%; background: var(--alert-amber);"></div></div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">UTTARKASHI ➔ DHARASU BEND AXIS</span>
+                                <span class="status-badge nominal">CLEAR</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Traffic Flow: <b class="text-emerald-400">UNRESTRICTED (45 km/h)</b></span>
+                                <span>BRO Earthmovers: <b>4 Standing By at Nalupani</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 95%; background: var(--alert-green);"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Emergency Shelters & Relief Camps -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-campground text-cyan-400"></i> RELIEF CAMPS &amp; SHELTER MATRIX</span>
+                        <span class="hud-mono text-xs">STATE DISASTER MGMT</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">GUPTKASHI MEGA RELIEF SHELTER</span>
+                                <span class="status-badge nominal">OCCUPIED: 62%</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Capacity: <b>5,000 BEDS</b></span>
+                                <span>Current Inmates: <b class="live-data-flicker">3,120 PAX</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 62%; background: var(--alert-cyan);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Rations Reserve: <b>8 Days</b></span>
+                                <span>Medical Team: <b>14 Doctors / AIIMS Camp</b></span>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">RISHIKESH IDPL TRANSIT HUB</span>
+                                <span class="status-badge nominal">OCCUPIED: 23%</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Capacity: <b>8,000 BEDS</b></span>
+                                <span>Current Inmates: <b class="live-data-flicker">1,840 PAX</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 23%; background: var(--alert-green);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Rations Reserve: <b>15 Days</b></span>
+                                <span>Helipad: <b class="text-emerald-400">OPERATIONAL</b></span>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card warning">
+                            <div class="corridor-head">
+                                <span class="corridor-name">CHAMOLI SPORTS STADIUM CAMP</span>
+                                <span class="status-badge warning">CAPACITY STRAIN: 84%</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Capacity: <b>2,500 BEDS</b></span>
+                                <span>Current Inmates: <b class="text-amber-400 live-data-flicker">2,100 PAX</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 84%; background: var(--alert-amber);"></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Convoy Tracking & Fleet Allocation -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-truck text-emerald-400"></i> VEHICLE FLEET &amp; DRIVER TELEMETRY</span>
+                        <span class="hud-mono text-xs">GPS AIS-140</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; line-height:1.7;">
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding-bottom:4px;">
+                                <span>UKSRTC EVAC BUSES:</span>
+                                <b class="text-emerald-400 live-data-flicker">68 Active / 12 Standby</b>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding:4px 0;">
+                                <span>4x4 MOUNTAIN AMBULANCES:</span>
+                                <b class="text-cyan-400 live-data-flicker">24 Deployed / 6 In Depot</b>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding:4px 0;">
+                                <span>IAF HELICOPTER SORTIES:</span>
+                                <b class="text-amber-400">4 Airframes Ready (Gauchar)</b>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding:4px 0;">
+                                <span>NDRF INFLATABLE RAFTS:</span>
+                                <b class="text-emerald-400">16 Waterborne Units</b>
+                            </div>
+                        </div>
+
+                        <div class="broadcast-form" style="margin-top:10px;">
+                            <span class="hud-label">DISPATCH CONVOY TO SECTOR:</span>
+                            <input type="text" class="tac-input" id="evac-target-sec" placeholder="Destination sector (e.g. Sonprayag)" value="Sonprayag, Uttarakhand" />
+                            <div class="bc-btn-row">
+                                <button class="tac-btn tac-btn-cyan" onclick="addTerminalEntry('FLEET', 'Dispatched 8 UKSRTC Emergency Buses to: ' + document.getElementById('evac-target-sec').value, 'warning')">
+                                    <i class="fa-solid fa-paper-plane"></i> DISPATCH 8 BUSES
+                                </button>
+                                <button class="tac-btn tac-btn-red" onclick="addTerminalEntry('AMBULANCE', 'Dispatched 4 ALS Mountain Ambulances with EMTs.', 'critical')">
+                                    <i class="fa-solid fa-truck-medical"></i> DISPATCH 4 ALS
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
 
-        <!-- ALERT FLASH BANNER (shows on CRITICAL) -->
-        <div class="alert-flash-banner hidden" id="alert-banner">
-            <i class="fa-solid fa-triangle-exclamation"></i>
-            <span id="alert-banner-text">CRITICAL ALERT</span>
-            <button onclick="dismissBanner()">✕</button>
-        </div>
-    </section>
-
-    <!-- ─────────────────────────────────────────────────────────── -->
-    <!-- RIGHT PANEL — TELEMETRY & DEPLOYMENT                        -->
-    <!-- ─────────────────────────────────────────────────────────── -->
-    <aside class="right-panel">
-
-        <!-- ── RIVER SENSOR TELEMETRY ─────────────────────────── -->
-        <div class="rpanel-block">
-            <div class="rpanel-header">
-                <span class="panel-tag tag-cyan">HYDRO</span>
-                <span class="rpanel-title">LIVE RIVER TELEMETRY</span>
-                <span class="hud-mono rpanel-ts" id="river-ts">--:--</span>
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- VIEW 4: OFFLINE LORA MESH RELAY TOPOLOGY                    -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="view-lora" class="spa-view spa-full-view">
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-cyan"></span>
+                    <span>OFFLINE LORA MESH HIMALAYAN RELAY INFRASTRUCTURE (865-867 MHz ISM)</span>
+                </div>
+                <div class="view-header-meta">
+                    <span>TOPOLOGY: <b class="status-cyan-text">MULTI-HOP MESH</b></span>
+                    <span>SNR: <b class="status-green-text live-data-flicker">+9.4 dB</b></span>
+                    <span>PACKET LOSS: <b class="status-green-text live-data-flicker">&lt; 0.8%</b></span>
+                    <span>HOP LATENCY: <b class="status-cyan-text live-data-flicker">280ms</b></span>
+                </div>
             </div>
-            <div id="river-sensor-grid" class="sensor-grid">
-                <!-- populated by JS -->
-                <div class="sensor-row sensor-loading">
-                    <i class="fa-solid fa-rotate fa-spin"></i> FETCHING CWC DATUM…
+            <div class="view-content-grid" style="grid-template-columns: 1.4fr 1fr;">
+                
+                <!-- Left: Visual Hop Pipeline & Topology -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-network-wired text-cyan-400"></i> HIMALAYAN RIDGE LINE-OF-SIGHT PACKET PIPELINE</span>
+                        <span class="hud-mono text-xs">FREQUENCY: 865.2 MHz CH-01</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="lora-mesh-canvas-container">
+                            <div style="font-size:9.5px; font-weight:700; color:var(--text-muted); text-transform:uppercase;">
+                                ACTIVE DATA PACKET HOP ROUTE (KEDARNATH ➔ SEOC COMMAND HUB):
+                            </div>
+                            
+                            <div class="mesh-hop-pipeline">
+                                <div class="mesh-node-pill">
+                                    <span class="led-blinker led-cyan"></span>
+                                    <b style="color:var(--alert-cyan); font-size:10px;">LORA-GW-05</b>
+                                    <span class="text-xs" style="color:var(--text-main);">Kedarnath Base</span>
+                                    <span class="hud-mono text-xs live-data-flicker" style="color:var(--text-muted);">-78 dBm</span>
+                                </div>
+
+                                <div class="mesh-node-pill">
+                                    <span class="led-blinker led-amber"></span>
+                                    <b style="color:var(--alert-amber); font-size:10px;">LORA-ND-02</b>
+                                    <span class="text-xs" style="color:var(--text-main);">Rambara Gorge</span>
+                                    <span class="hud-mono text-xs live-data-flicker" style="color:var(--text-muted);">-93 dBm</span>
+                                </div>
+
+                                <div class="mesh-node-pill">
+                                    <span class="led-blinker led-cyan"></span>
+                                    <b style="color:var(--alert-cyan); font-size:10px;">LORA-ND-04</b>
+                                    <span class="text-xs" style="color:var(--text-main);">Sonprayag Relay</span>
+                                    <span class="hud-mono text-xs live-data-flicker" style="color:var(--text-muted);">-84 dBm</span>
+                                </div>
+
+                                <div class="mesh-node-pill hub">
+                                    <span class="led-blinker led-green"></span>
+                                    <b style="color:var(--alert-green); font-size:10px;">LORA-GW-08</b>
+                                    <span class="text-xs" style="color:var(--text-main);">SEOC Central Hub</span>
+                                    <span class="hud-mono text-xs" style="color:var(--alert-green);">SAT GATEWAY</span>
+                                </div>
+                            </div>
+
+                            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; margin-top:8px;">
+                                <div class="overlay-chip"><span class="hud-label">SPREAD FACTOR</span> <span class="hud-mono">SF10 / 125kHz</span></div>
+                                <div class="overlay-chip"><span class="hud-label">TX POWER</span> <span class="hud-mono">20 dBm (100mW)</span></div>
+                                <div class="overlay-chip"><span class="hud-label">BATTERY</span> <span class="hud-mono live-data-flicker">4.12V (Solar)</span></div>
+                                <div class="overlay-chip"><span class="hud-label">HOPS</span> <span class="hud-mono">3 MAX (TTL: 7)</span></div>
+                            </div>
+                        </div>
+
+                        <!-- All 8 Nodes Detailed List -->
+                        <div class="rpanel-header" style="margin-top:12px;">
+                            <span class="panel-tag tag-cyan">NODES</span>
+                            <span class="rpanel-title">8 HIMALAYAN MOUNTAIN RELAY STATIONS</span>
+                        </div>
+                        <div id="lora-full-node-list" class="lora-grid">
+                            <!-- populated by app.js -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right: Raw Packet Sniffer & Frame Injector -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-code text-green-400"></i> RAW LORA PACKET SNIFFER &amp; FRAME LOG</span>
+                        <button class="hud-btn" onclick="addTerminalEntry('LORA PING', 'Broadcast ping sent to 865MHz mesh. 8/8 ACKs received.', 'info')">PING MESH</button>
+                    </div>
+                    <div class="tac-col-body" style="background:#020508;">
+                        <div id="lora-raw-terminal" style="font-family:'JetBrains Mono',monospace; font-size:9.5px; color:#39FF14; line-height:1.7; overflow-y:auto; flex:1;">
+                            <div>[RX 865.200] 0x4C 0x52 0x01 0xA4 -> RSSI: -78 SNR: +9.2 CRC: OK</div>
+                            <div>[DECODE] SRC: LORA-GW-05 PAYLOAD: STATUS=NOMINAL BATT=98%</div>
+                            <div>[RX 865.200] 0x4C 0x52 0x02 0xBF -> RSSI: -93 SNR: +6.4 CRC: OK</div>
+                            <div>[DECODE] SRC: LORA-ND-02 PAYLOAD: AMBIENT_TEMP=11.2C HUM=88%</div>
+                            <div>[ROUTING] Hop TTL decremented: 7 -> 6, NextHop: Sonprayag</div>
+                            <div>[MESH ACK] Packet ID #8841 acknowledged across 3 hops in 312ms</div>
+                        </div>
+
+                        <div class="broadcast-form" style="margin-top:10px; border-top:1px solid var(--border-dim); padding-top:8px;">
+                            <span class="hud-label">INJECT EMERGENCY FIELD TELEMETRY FRAME:</span>
+                            <input type="text" id="lora-inject-input" class="tac-input" placeholder="Payload string (e.g. SOS_LOC_30.28_78.98)" value="SOS_KEDARNATH_RIDGE_CLEAR" />
+                            <button class="tac-btn tac-btn-cyan" onclick="injectLoraPacket()">
+                                <i class="fa-solid fa-tower-cell"></i> BROADCAST RAW LORA FRAME
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- VIEW 5: CIVIL DEFENSE BROADCAST HUB (CAP-UK)                -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="view-broadcast" class="spa-view spa-full-view">
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-red"></span>
+                    <span>INTEGRATED CIVIL DEFENSE PUBLIC WARNING SYSTEM (CAP-UK-SEOC)</span>
+                </div>
+                <div class="view-header-meta">
+                    <span>CELL BROADCAST: <b class="status-green-text">BSNL / JIO / AIRTEL READY</b></span>
+                    <span>AIR RADIO OVERRIDE: <b class="status-cyan-text">FM 100.5 MHz ARMED</b></span>
+                    <span>ACOUSTIC SIRENS: <b class="status-amber-text">14 / 14 TOWERS ONLINE</b></span>
+                </div>
+            </div>
+            <div class="view-content-grid" style="grid-template-columns: 1.2fr 1fr;">
+                
+                <!-- Broadcast Form & CAP Controls -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-bullhorn text-red-400"></i> CELLULAR CELL-BROADCAST (CBS) &amp; PUSH CONSOLE</span>
+                        <span class="hud-mono text-xs">NDMA CAP PROTOCOL v1.2</span>
+                    </div>
+                    <div class="tac-col-body">
+                        
+                        <div class="bcast-channel-switch">
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-mobile-screen"></i> CELL BROADCAST (CBS)
+                            </div>
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-tower-broadcast"></i> FM RADIO OVERRIDE
+                            </div>
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-bullhorn"></i> SIREN ARRAYS
+                            </div>
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-tower-cell"></i> LORA FIELD MESH
+                            </div>
+                        </div>
+
+                        <div class="broadcast-form" style="gap:10px;">
+                            <div>
+                                <span class="hud-label">TARGET JURISDICTION SECTOR:</span>
+                                <input type="text" id="bcast-hub-sector" class="tac-input" value="Kedarnath, Mandakini Valley, Sonprayag" />
+                            </div>
+
+                            <div>
+                                <span class="hud-label">ALERT SEVERITY LEVEL:</span>
+                                <select class="tac-input" id="bcast-hub-severity" style="width:100%; background:var(--bg-void);">
+                                    <option value="CRITICAL">RED SIGNAL — FLASH FLOOD / CLOUDBURST (IMMEDIATE LIFE THREAT)</option>
+                                    <option value="WARNING">AMBER ADVISORY — HEAVY PRECIPITATION / DEBRIS FLOW</option>
+                                    <option value="INFO">YELLOW WATCH — RIVER LEVEL ELEVATED ADVISORY</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <span class="hud-label">BROADCAST HEADLINE (ENGLISH &amp; HINDI):</span>
+                                <input type="text" id="bcast-hub-title" class="tac-input" value="🚨 URGENT: FLASH FLOOD ADVISORY — EVACUATE TO HIGHER GROUND" />
+                            </div>
+
+                            <div>
+                                <span class="hud-label">FULL ALERT PAYLOAD:</span>
+                                <textarea id="bcast-hub-body" class="tac-textarea" rows="4">SEOC UTTARAKHAND WARNING: Severe river level rise detected in Mandakini River. All citizens and pilgrims between Kedarnath and Rudraprayag must immediately move at least 50 meters away from riverbanks. Listen to sirens and follow SDRF guidance.</textarea>
+                            </div>
+
+                            <div style="display:flex; gap:8px;">
+                                <button class="tac-btn tac-btn-red" style="flex:2; padding:10px;" onclick="triggerFullCapBroadcast()">
+                                    <i class="fa-solid fa-tower-broadcast"></i> TRANSMIT STATEWIDE CAP ALERT
+                                </button>
+                                <button class="tac-btn tac-btn-cyan" style="flex:1" onclick="previewTtsAudio()">
+                                    <i class="fa-solid fa-volume-high"></i> TEST TTS HINDI
+                                </button>
+                            </div>
+
+                            <div id="bcast-hub-status" class="bc-status" style="font-size:10px;"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Acoustic Siren Array Control -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-volume-xmark text-amber-400"></i> HIGH-DECIBEL ACOUSTIC SIREN ARRAYS (130 dB)</span>
+                        <button class="hud-btn" onclick="addTerminalEntry('SIREN TEST', 'Diagnostic silent pulse sent to 14 Siren Towers. All online.', 'info')">TEST ALL</button>
+                    </div>
+                    <div class="tac-col-body">
+                        <div style="font-size:9.5px; color:var(--text-muted); margin-bottom:6px;">
+                            Solar-powered siren towers placed every 3-5 km along Himalayan gorge bottlenecks:
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #01 · KEDARNATH TEMPLE COMPLEX</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN KEDARNATH', 'Kedarnath Temple Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>98% (Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #02 · RAMBARA GORGE RELAY</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN RAMBARA', 'Rambara Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>92% (Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #03 · SONPRAYAG PARKING COMPLEX</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN SONPRAYAG', 'Sonprayag Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>95% (Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #04 · RUDRAPRAYAG SANGAM</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN RUDRAPRAYAG', 'Rudraprayag Sangam Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>99% (Mains+Solar)</b></span></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- VIEW 6: TACTICAL FORCES & NDRF / SDRF ASSET READINESS       -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="view-forces" class="spa-view spa-full-view">
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-green"></span>
+                    <span>NDRF · SDRF · ARMY AVIATION · ITBP QUICK RESPONSE READINESS</span>
+                </div>
+                <div class="view-header-meta">
+                    <span>FORCES DEPLOYED: <b class="status-green-text live-data-flicker">4 BATTALIONS</b></span>
+                    <span>MOUNTAIN RESCUE: <b class="status-cyan-text">18 TEAMS ACTIVE</b></span>
+                    <span>COMM PROTOCOL: <b class="status-amber-text">POLNET / SAT-BGAN</b></span>
+                </div>
+            </div>
+            <div class="view-content-grid" style="grid-template-columns: 1fr 1fr 1fr;">
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-shield-halved text-green-400"></i> NDRF 11TH BATTALION ASSETS</span>
+                        <span class="hud-mono text-xs">HQ: VARANASI / UK REGIONAL</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">NDRF-11/C · RUDRAPRAYAG FORWARD POST</span>
+                                <span class="status-badge nominal">DEPLOYED (45 PAX)</span>
+                            </div>
+                            <div style="font-size:9px; line-height:1.6; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">
+                                <div>Commander: <b>Inspector R. K. Singh</b></div>
+                                <div>Gear: 4 B-Type Zodiac Rafts, Deep Dive Kits, Search Cams</div>
+                                <div>Comms: BGAN Explorer 710 Satellite Terminal ACTIVE</div>
+                            </div>
+                            <button class="tac-btn tac-btn-cyan" style="margin-top:6px;" onclick="addTerminalEntry('ORDER', 'NDRF-11/C tasked with Mandakini riverbank patrol.', 'info')">
+                                <i class="fa-solid fa-radio"></i> DISPATCH MISSION ORDER
+                            </button>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">NDRF-11/D · TEHRI DAM QUICK RESPONSE</span>
+                                <span class="status-badge nominal">DEPLOYED (38 PAX)</span>
+                            </div>
+                            <div style="font-size:9px; line-height:1.6; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">
+                                <div>Commander: <b>Sub-Insp. M. Rawat</b></div>
+                                <div>Gear: Water Rescue Speedboats, Hydraulic Spreaders</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-mountain text-amber-400"></i> SDRF UTTARAKHAND (DISASTER FORCE)</span>
+                        <span class="hud-mono text-xs">HQ: JOLLY GRANT</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">SDRF-UKH-3 · UTTARKASHI HIGH ALTITUDE</span>
+                                <span class="status-badge nominal">DEPLOYED (28 PAX)</span>
+                            </div>
+                            <div style="font-size:9px; line-height:1.6; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">
+                                <div>High-Angle Mountain Rescue Specialists</div>
+                                <div>Drone Recon Unit: 2 DJI Matrice 300 Thermal Drones</div>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card warning">
+                            <div class="corridor-head">
+                                <span class="corridor-name">SDRF-UKH-7 · CHAMOLI RAPID RESPONSE</span>
+                                <span class="status-badge warning">STANDBY (30 PAX)</span>
+                            </div>
+                            <div style="font-size:9px; line-height:1.6; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">
+                                <div>Stationed at Pipalkoti Barracks</div>
+                                <div>Readiness: Immediate Wheels-Up in 8 Minutes</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-helicopter text-cyan-400"></i> ARMY AVIATION &amp; AIR FORCE SAR</span>
+                        <span class="hud-mono text-xs">GAUCHAR &amp; JOLLY GRANT</span>
+                    </div>
+                    <div class="tac-col-body">
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">IAF MI-17 V5 HELI MEDEVAC SORTIE 01</span>
+                                <span class="status-badge nominal">ARMED AT GAUCHAR</span>
+                            </div>
+                            <div style="font-size:9px; line-height:1.6; color:var(--text-muted); font-family:'JetBrains Mono',monospace;">
+                                <div>Payload: Winch Rescue Rig, 18 Stretcher Config</div>
+                                <div>Fuel: 4.5 Hours Loiter Time</div>
+                            </div>
+                            <button class="tac-btn tac-btn-amber" style="margin-top:6px;" onclick="addTerminalEntry('HELI SCRAMBLE', 'IAF Mi-17 V5 scrambled from Gauchar Airstrip for mountain recon.', 'warning')">
+                                <i class="fa-solid fa-plane-departure"></i> SCRAMBLE AIRLIFT
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="rpanel-divider"></div>
-
-        <!-- ── NDRF / SDRF FORCE DEPLOYMENT ──────────────────── -->
-        <div class="rpanel-block">
-            <div class="rpanel-header">
-                <span class="panel-tag tag-green">FORCES</span>
-                <span class="rpanel-title">GROUND UNIT STATUS</span>
-            </div>
-            <div id="force-grid" class="force-grid">
-                <!-- populated by JS -->
-            </div>
-        </div>
-
-        <div class="rpanel-divider"></div>
-
-        <!-- ── BROADCAST COMMAND PANEL ───────────────────────── -->
-        <div class="rpanel-block">
-            <div class="rpanel-header">
-                <span class="panel-tag tag-red">BROADCAST</span>
-                <span class="rpanel-title">EMERGENCY BROADCAST</span>
-            </div>
-            <div class="broadcast-form">
-                <input type="text" id="bc-title" class="tac-input" placeholder="ALERT TITLE / EVENT TYPE" maxlength="80" />
-                <textarea id="bc-body" class="tac-textarea" rows="2" placeholder="Full message body for emergency broadcast…"></textarea>
-                <div class="bc-btn-row">
-                    <button class="tac-btn tac-btn-red" onclick="triggerBroadcast('PUSH')">
-                        <i class="fa-solid fa-satellite-dish"></i> PUSH ALL
-                    </button>
-                    <button class="tac-btn tac-btn-cyan" onclick="triggerBroadcast('LORA')">
-                        <i class="fa-solid fa-tower-cell"></i> LORA MESH
-                    </button>
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <!-- VIEW 7: SYSTEM DIAGNOSTIC STREAM (SYS)                     -->
+        <!-- ═══════════════════════════════════════════════════════════ -->
+        <div id="view-syslog" class="spa-view spa-full-view">
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-cyan"></span>
+                    <span>HARDWARE DIAGNOSTICS &amp; WEBSOCKET EVENT KERNEL</span>
                 </div>
-                <div id="bc-status" class="bc-status"></div>
+                <div class="view-header-meta">
+                    <span>UPTIME: <b class="status-green-text live-data-flicker">99.98%</b></span>
+                    <span>WS ROUND-TRIP: <b class="status-cyan-text live-data-flicker">28ms</b></span>
+                </div>
+            </div>
+            <div class="view-content-grid" style="grid-template-columns: 1fr;">
+                <div class="tac-col">
+                    <div class="tac-col-body" style="background:#020508; font-family:'JetBrains Mono',monospace; font-size:10px; color:#39FF14; line-height:1.8;">
+                        <div>[KERNEL] Linux 6.8.0-45-generic #45-Ubuntu SMP PREEMPT_DYNAMIC x86_64</div>
+                        <div>[SEOC CORE] Project Rakshak Autonomous Tactical Agent v4.0.0 initializing...</div>
+                        <div>[NETWORK] Listening on 0.0.0.0:3000 (FastAPI + Uvicorn worker threads)</div>
+                        <div>[SUBSYSTEM] WebSocket channel '/ws/live' connected with broadcast hub</div>
+                        <div>[AUTONOMOUS SENTINEL] 1-Hour High-Risk Zone Watcher: Kedarnath, Joshimath, Pithoragarh active</div>
+                        <div>[CWC TELEMETRY] Hydrological Polling frequency: 60s Interval</div>
+                        <div>[VAPID PUSH] WebPush ECDSA P-256 keys verified. Push notification dispatcher armed.</div>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="rpanel-divider"></div>
-
-        <!-- ── LORA NODE STATUS ──────────────────────────────── -->
-        <div class="rpanel-block rpanel-flex-grow">
-            <div class="rpanel-header">
-                <span class="panel-tag tag-amber">LORA</span>
-                <span class="rpanel-title">MESH NODE MATRIX</span>
-            </div>
-            <div id="lora-grid" class="lora-grid">
-                <!-- populated by JS -->
-            </div>
-        </div>
-
-    </aside>
+    </main>
 
 </div><!-- /main-grid -->
 
 <!-- ═══════════════════════════════════════════════════════════════ -->
-<!-- BOTTOM TERMINAL — SOS DISTRESS FEED                           -->
+<!-- SCROLLING HEX STREAM COCKPIT EFFECT                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="hex-stream-col"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- BOTTOM TERMINAL — GLOBAL ACROSS ALL VIEWS                       -->
 <!-- ═══════════════════════════════════════════════════════════════ -->
 <footer class="bottom-terminal">
     <div class="terminal-header">
         <div class="terminal-header-left">
+            <span class="led-blinker led-cyan"></span>
             <span class="panel-tag tag-cyan">TELEMETRY</span>
             <span class="terminal-title">SEOC TACTICAL C4ISR TERMINAL — REAL-TIME AUTONOMOUS AGENT STREAM &amp; INCIDENT FEED</span>
         </div>
         <div class="terminal-header-right">
-            <span class="hud-label">INCIDENTS:&nbsp;</span><span class="hud-mono" id="incident-count">0</span>
+            <span class="hud-label">INCIDENTS:&nbsp;</span><span class="hud-mono live-data-flicker" id="incident-count">0</span>
             <button class="hud-btn" onclick="clearTerminal()">CLR</button>
             <button class="hud-btn" onclick="pauseTerminal()" id="pause-btn">❚❚ PAUSE</button>
         </div>
     </div>
     <div class="terminal-body" id="terminal-body">
         <div class="terminal-init">
-            <span class="hud-mono">&gt; SEOC TACTICAL C4ISR ENGINE v4.0 INITIALIZED.</span><br/>
+            <span class="hud-mono">&gt; SEOC TACTICAL C4ISR COCKPIT v4.0 ONLINE.</span><br/>
             <span class="hud-mono">&gt; SATCOM UPLINK: INSAT-3DR CONNECTED — SIGNAL NOMINAL.</span><br/>
             <span class="hud-mono">&gt; LORA MESH UPLINK: 8 HIMALAYAN NODES REGISTERED.</span><br/>
             <span class="hud-mono">&gt; OPEN-METEO HYDROLOGICAL ENGINE: ACTIVE — CWC DATUMS LOCKED.</span><br/>
@@ -331,6 +1037,7 @@
 <div class="modal-overlay hidden" id="sos-modal">
     <div class="modal-box">
         <div class="modal-header">
+            <span class="led-blinker led-red"></span>
             <span class="panel-tag tag-red">SOS INCIDENT</span>
             <span class="modal-title" id="modal-title">---</span>
             <button class="modal-close" onclick="closeModal()">✕</button>
