@@ -956,11 +956,11 @@ function initTacticalMap() {
     leafletMap = L.map('map', { zoomControl: false }).setView([30.35, 79.15], 8);
     L.control.zoom({ position: 'topright' }).addTo(leafletMap);
 
-    // Layer 1: Dark Tactical Vector (100% Free, No Watermark, No API Key)
-    const darkLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; SEOC Rakshak | OpenStreetMap',
-        className: 'tactical-dark-tiles',
-        maxZoom: 18
+    // Layer 1: CartoDB Dark Matter (True dark tactical — no API key needed)
+    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; <a href="https://carto.com/">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        subdomains: 'abcd',
+        maxZoom: 19
     });
 
     // Layer 2: High-Resolution Satellite

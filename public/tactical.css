@@ -221,7 +221,7 @@ aside nav a.bg-indigo-600\/20 {
 }
 
 /* ── Tactical Buttons (Sharp Rectangles with 1px border) ──────────────────── */
-button, .btn-tactical {
+.btn-tactical {
     border-radius: 2px !important;
     font-family: 'JetBrains Mono', monospace !important;
     text-transform: uppercase !important;
@@ -230,7 +230,7 @@ button, .btn-tactical {
     transition: all 0.15s ease !important;
 }
 
-button:hover {
+.btn-tactical:hover {
     filter: brightness(1.15);
     transform: none !important;
 }
