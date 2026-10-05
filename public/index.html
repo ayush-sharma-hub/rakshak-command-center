@@ -3,316 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SEOC Uttarakhand | Rakshak Command Access</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        canvas: '#08090A',
-                        carbon: '#0F1115',
-                        surface: '#14171D',
-                        'surface-subtle': '#0D0F13',
-                        border: '#222731',
-                        'border-light': '#2D3340',
-                        'tactical-cyan': '#38BDF8',
-                        'tactical-green': '#4ADE80',
-                        'tactical-amber': '#F59E0B',
-                        'tactical-crimson': '#EF4444',
-                        'tactical-muted': '#64748B',
-                    },
-                    fontFamily: {
-                        mono: ['JetBrains Mono', 'Roboto Mono', 'ui-monospace', 'monospace'],
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                    }
-                }
-            }
-        };
-    </script>
+    <title>RAKSHAK UK-SEOC // Tactical Command Access & Civilian Safety Gateway</title>
+    <!-- Tactical C4ISR Design System -->
     <link rel="stylesheet" href="/tactical.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="/app.js" defer></script>
 </head>
-<body class="bg-[#08090A] text-[#F1F5F9] min-h-screen flex flex-col justify-between relative overflow-x-hidden">
+<body class="c4isr-container" style="height:auto; min-height:100vh; overflow-y:auto;">
 
-    <!-- TOP SITUATIONAL BANNER -->
-    <header class="w-full bg-slate-900/90 border-b border-slate-800 backdrop-blur-md px-4 sm:px-8 py-2.5 flex flex-wrap items-center justify-between text-xs z-20">
-        <div class="flex items-center gap-3">
-            <span class="flex h-2 w-2 relative">
-                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+    <!-- TOP TACTICAL READOUT BAR -->
+    <header class="c4isr-topbar">
+        <div style="display:flex; align-items:center; gap:10px;">
+            <span class="beacon-dot beacon-nominal"></span>
+            <span class="font-mono" style="font-weight:700; letter-spacing:0.15em; color:var(--text-primary);">
+                RAKSHAK UK-SEOC
             </span>
-            <span class="font-bold text-slate-300 tracking-wider uppercase text-[11px]">Uttarakhand State Disaster Management Authority (USDMA)</span>
-            <span class="hidden md:inline-block text-slate-600">|</span>
-            <span class="hidden md:inline-block text-slate-400 font-mono text-[11px]">SEOC Relay: SEC-DEHRADUN-HQ</span>
+            <span style="color:var(--border-active);">|</span>
+            <span class="tactical-meta" style="color:var(--accent-cyan);">
+                TERMINAL GATEWAY // DEHRADUN HQ
+            </span>
         </div>
-        <div class="flex items-center gap-4 text-slate-400 font-mono text-[11px]">
-            <div class="hidden sm:flex items-center gap-2">
-                <i class="fa-solid fa-cloud-bolt text-amber-400"></i>
-                <span>Chamoli: 18mm/hr (Watch)</span>
+
+        <div style="display:flex; align-items:center; gap:16px;">
+            <div id="tactical-clock" class="c4isr-clock font-mono" style="font-size:11px;">
+                <span style="color:var(--text-muted)">UTC</span> <span style="color:var(--accent-cyan); font-weight:700">--:--:--Z</span>
+                <span style="color:var(--border-active)">|</span>
+                <span style="color:var(--text-muted)">IST</span> <span style="color:var(--text-primary); font-weight:700">--:--:--</span>
             </div>
-            <div class="hidden sm:flex items-center gap-2">
-                <i class="fa-solid fa-mountain text-indigo-400"></i>
-                <span>Kedarnath: 4°C Rain</span>
+            <div class="tactical-meta" style="display:none; @media(min-width:768px){display:flex};">
+                <span style="color:var(--text-muted)">LAT</span> <span style="color:var(--text-primary)">30.3165°N</span>
+                <span style="color:var(--text-muted); margin-left:6px;">LON</span> <span style="color:var(--text-primary)">78.0322°E</span>
             </div>
-            <button class="audio-toggle-btn text-slate-400 hover:text-white transition px-2 py-1 bg-slate-800 rounded border border-slate-700">
-                <i class="fa-solid fa-volume-high"></i>
-            </button>
+            <div style="display:flex; align-items:center; gap:6px;">
+                <span class="badge-tactical badge-nominal">
+                    <span class="beacon-dot beacon-nominal"></span> SAT-UPLINK: ACTIVE
+                </span>
+                <button class="audio-toggle-btn btn-tactical" style="padding:2px 6px;" title="Toggle Tactical Audio">
+                    <i class="fa-solid fa-volume-high"></i>
+                </button>
+            </div>
         </div>
     </header>
 
-    <!-- MAIN CONTAINER -->
-    <main class="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 relative z-10 max-w-6xl mx-auto w-full">
+    <!-- MAIN WORKSTATION WRAPPER -->
+    <main style="max-width:1440px; margin:0 auto; padding:16px; width:100%; flex:1;">
         
-        <!-- SECURITY / LOGOUT ALERT BANNER (If Redirected) -->
-        <div id="auth-alert-banner" class="w-full hidden mb-6 bg-amber-950/80 border border-amber-500/50 rounded-2xl p-4 text-amber-200 flex items-center justify-between shadow-2xl backdrop-blur-md">
-            <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center text-lg shrink-0">
-                    <i class="fa-solid fa-shield-halved"></i>
-                </div>
-                <div>
-                    <div class="text-xs font-black uppercase tracking-wider text-amber-300" id="auth-alert-title">SEOC Officer Authentication Required</div>
-                    <div class="text-xs text-amber-200/80" id="auth-alert-desc">Command War Room, Evacuation Hub, Broadcast Center, Simulator, and LoRa Mesh Console are restricted to authorized disaster management personnel. Please log in below, or browse public emergency portals freely.</div>
-                </div>
-            </div>
-            <button onclick="document.getElementById('auth-alert-banner').classList.add('hidden')" class="text-amber-400 hover:text-white p-2">
-                <i class="fa-solid fa-xmark"></i>
-            </button>
-        </div>
-
-        <div class="text-center mb-8">
-            <div class="inline-flex items-center gap-2 bg-indigo-950/60 border border-indigo-500/30 px-3 py-1 rounded-full text-indigo-300 text-xs font-mono mb-2">
-                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span>SIH-2619 &bull; HIMALAYAN FLASH FLOOD DECISION SUPPORT</span>
-            </div>
-            <h1 class="text-3xl sm:text-4xl font-black tracking-tight text-white">PROJECT RAKSHAK</h1>
-            <p class="text-xs sm:text-sm text-slate-400 mt-1 max-w-xl mx-auto">
-                Uttarakhand State Emergency Operations Centre (SEOC) & Community Mutual Aid Network
-            </p>
-        </div>
-
-        <!-- DUAL GATEWAY GRID: CITIZEN SAFETY (PUBLIC) VS SEOC COMMAND (ADMIN) -->
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 w-full items-start">
-            
-            <!-- LEFT / TOP: PUBLIC CITIZEN & PILGRIM PORTAL (NO LOGIN REQUIRED) -->
-            <div class="lg:col-span-6 bg-slate-900/90 border border-emerald-500/30 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative overflow-hidden flex flex-col justify-between">
-                <div class="absolute -top-12 -right-12 w-48 h-48 bg-emerald-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
-                <div>
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-3 py-1 rounded-lg text-xs font-black uppercase tracking-wider">
-                            <i class="fa-solid fa-unlock-keyhole"></i> 100% Free Public Access (No Login)
+        <!-- SECURITY / AUTH REQUIRED BANNER -->
+        <div id="auth-alert-banner" class="tactical-panel" style="display:none; margin-bottom:14px; border-left:3px solid var(--accent-warning);">
+            <div style="padding:10px 14px; display:flex; align-items:center; justify-content:space-between; background:var(--bg-surface-elevated);">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <i class="fa-solid fa-shield-halved" style="color:var(--accent-warning); font-size:16px;"></i>
+                    <div>
+                        <div id="auth-alert-title" class="font-mono" style="font-size:11px; font-weight:700; color:var(--accent-warning); text-transform:uppercase; letter-spacing:0.1em;">
+                            SEOC Officer Authentication Required
                         </div>
-                        <span class="text-[10px] font-mono text-slate-400">For Citizens & Pilgrims</span>
+                        <div id="auth-alert-desc" style="font-size:11px; color:var(--text-muted); margin-top:2px;">
+                            The requested tactical module is restricted to authorized disaster management personnel. Please authenticate below.
+                        </div>
                     </div>
+                </div>
+                <button onclick="document.getElementById('auth-alert-banner').style.display='none'" class="btn-tactical" style="padding:2px 8px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
 
-                    <h2 class="text-xl font-black text-white mb-2 flex items-center gap-2">
-                        <span>Citizen & Pilgrim Safety Hub</span>
-                    </h2>
-                    <p class="text-xs text-slate-300 leading-relaxed mb-6">
-                        Access live Uttarakhand river flood risk maps, safe evacuation shelters, 1-tap SOS distress beacons, and community mutual aid without needing any account or login.
+        <!-- HERO HEADER -->
+        <div style="border-bottom:1px solid var(--border-tactical); padding-bottom:12px; margin-bottom:16px; display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:10px;">
+            <div>
+                <div class="tactical-meta" style="color:var(--accent-cyan); margin-bottom:4px; display:flex; align-items:center; gap:6px;">
+                    <span class="beacon-dot beacon-cyan"></span>
+                    HIMALAYAN EARLY WARNING SYSTEM // SIH-2619 PROTOCOL
+                </div>
+                <h1 class="font-mono" style="font-size:20px; font-weight:800; letter-spacing:0.08em; margin:0; color:var(--text-primary); text-transform:uppercase;">
+                    PROJECT RAKSHAK <span style="color:var(--accent-cyan);">C4ISR</span>
+                </h1>
+                <p style="font-size:11px; color:var(--text-muted); margin:4px 0 0 0;">
+                    Uttarakhand State Emergency Operations Centre (SEOC) &bull; Integrated Civilian Safety & Tactical Defense Grid
+                </p>
+            </div>
+            <div style="display:flex; gap:8px;">
+                <span class="badge-tactical badge-nominal">OPERATIONAL DEFENSE GRID</span>
+                <span class="badge-tactical">13 HILL DISTRICTS MONITORED</span>
+            </div>
+        </div>
+
+        <!-- 2-COLUMN TACTICAL TERMINAL SPLIT -->
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap:16px; align-items:stretch;">
+            
+            <!-- COLUMN 1: PUBLIC CITIZEN & PILGRIM SAFETY CORRIDOR -->
+            <div class="tactical-panel" style="display:flex; flex-direction:column; justify-content:space-between; border-top:2px solid var(--accent-nominal);">
+                <div class="tactical-panel-header">
+                    <span class="tactical-header">
+                        <i class="fa-solid fa-users" style="color:var(--accent-nominal);"></i>
+                        CIVILIAN & PILGRIM SAFETY CORRIDOR
+                    </span>
+                    <span class="badge-tactical badge-nominal">NO LOGIN REQUIRED</span>
+                </div>
+                
+                <div class="tactical-panel-body" style="padding:14px;">
+                    <p style="font-size:11px; color:var(--text-muted); line-height:1.5; margin:0 0 14px 0;">
+                        Direct public access to live Uttarakhand river flood risk telemetry, Char Dham pilgrimage route safety, 1-tap SOS distress beacons, and community mutual aid.
                     </p>
 
-                    <!-- PUBLIC ACTION CARDS -->
-                    <div class="space-y-3.5 mb-6">
-                        <!-- Card 1: Tactical GIS Map -->
-                        <a href="map.html" class="block p-4 rounded-2xl bg-slate-950/70 border border-slate-800 hover:border-emerald-500/60 transition group hover:bg-slate-950">
-                            <div class="flex items-start gap-3.5">
-                                <div class="w-10 h-10 rounded-xl bg-indigo-600/20 border border-indigo-500/40 text-indigo-400 flex items-center justify-center text-base shrink-0 group-hover:scale-110 transition">
-                                    <i class="fa-solid fa-map-location-dot"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-xs font-bold text-white group-hover:text-emerald-300 transition">Tactical GIS & Flood Hazard Map</span>
-                                        <span class="text-[9px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">115 SECTORS</span>
+                    <!-- DIRECT PORTAL TILES -->
+                    <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:14px;">
+                        <!-- Tile 1: Tactical GIS Map -->
+                        <a href="map.html" class="log-row-tactical log-row-nominal" style="text-decoration:none; display:block; padding:12px; margin:0;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <div style="width:28px; height:28px; background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); display:flex; align-items:center; justify-content:center; color:var(--accent-nominal);">
+                                        <i class="fa-solid fa-map-location-dot"></i>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 mt-0.5">Explore live river danger gauges, Char Dham choke points, and forward SDRF safe shelters.</p>
+                                    <div>
+                                        <div class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px; text-transform:uppercase;">
+                                            Tactical GIS & Flood Hazard Map
+                                        </div>
+                                        <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">
+                                            115 Monitored Himalayan Catchments, CWC datums, safe shelters
+                                        </div>
+                                    </div>
                                 </div>
-                                <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-white transition text-xs mt-3"></i>
+                                <span class="badge-tactical badge-nominal" style="font-size:9px;">115 SECTORS &rarr;</span>
                             </div>
                         </a>
 
-                        <!-- Card 2: Citizen Mobile SOS Companion -->
-                        <a href="citizen.html" class="block p-4 rounded-2xl bg-slate-950/70 border border-slate-800 hover:border-rose-500/60 transition group hover:bg-slate-950">
-                            <div class="flex items-start gap-3.5">
-                                <div class="w-10 h-10 rounded-xl bg-rose-600/20 border border-rose-500/40 text-rose-400 flex items-center justify-center text-base shrink-0 group-hover:scale-110 transition">
-                                    <i class="fa-solid fa-mobile-screen-button"></i>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center justify-between">
-                                        <span class="text-xs font-bold text-white group-hover:text-rose-300 transition">Citizen Mobile Companion & SOS Hub</span>
-                                        <span class="text-[9px] font-mono text-rose-400 bg-rose-500/10 px-2 py-0.5 rounded">COMMUNITY RADAR</span>
+                        <!-- Tile 2: Citizen Mobile SOS Companion -->
+                        <a href="citizen.html" class="log-row-tactical" style="text-decoration:none; display:block; padding:12px; margin:0; border-left-color:var(--accent-critical);">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div style="display:flex; gap:10px; align-items:center;">
+                                    <div style="width:28px; height:28px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); display:flex; align-items:center; justify-content:center; color:var(--accent-critical);">
+                                        <i class="fa-solid fa-mobile-screen-button"></i>
                                     </div>
-                                    <p class="text-[11px] text-slate-400 mt-0.5">1-tap emergency distress beacon, nearby volunteers ("Citizens helping citizens"), and state hotlines.</p>
+                                    <div>
+                                        <div class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px; text-transform:uppercase;">
+                                            Citizen Mobile Companion & SOS Hub
+                                        </div>
+                                        <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">
+                                            1-Tap GPS Distress Beacon, Nearby Volunteers ("Citizens Helping Citizens")
+                                        </div>
+                                    </div>
                                 </div>
-                                <i class="fa-solid fa-arrow-right text-slate-500 group-hover:text-white transition text-xs mt-3"></i>
+                                <span class="badge-tactical badge-critical" style="font-size:9px;">LIVE SOS &rarr;</span>
                             </div>
                         </a>
                     </div>
+
+                    <!-- HIMALAYAN TELEMETRY LIVE SNAPSHOT -->
+                    <div style="background:var(--bg-surface-subtle); border:1px solid var(--border-tactical); padding:10px; margin-bottom:14px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                            <span class="tactical-meta" style="color:var(--accent-cyan);">
+                                <i class="fa-solid fa-water"></i> CATCHMENT GAUGE PREVIEW
+                            </span>
+                            <span class="badge-tactical" style="font-size:9px;">CWC / OPEN-METEO</span>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-family:var(--font-mono); font-size:10px;">
+                            <div style="padding:6px; background:var(--bg-base); border:1px solid var(--border-subtle);">
+                                <div style="color:var(--text-muted);">ALAKNANDA @ RUDRAPRAYAG</div>
+                                <div style="font-size:13px; font-weight:700; color:var(--accent-nominal); margin-top:2px;">612.4 m <span style="font-size:9px; color:var(--text-dim);">[NOMINAL]</span></div>
+                            </div>
+                            <div style="padding:6px; background:var(--bg-base); border:1px solid var(--border-subtle);">
+                                <div style="color:var(--text-muted);">BHAGIRATHI @ UTTARKASHI</div>
+                                <div style="font-size:13px; font-weight:700; color:var(--accent-warning); margin-top:2px;">1157.8 m <span style="font-size:9px; color:var(--text-dim);">[WATCH]</span></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 1-TAP BROWSER FLOOD SIRENS ENROLLMENT -->
+                    <div style="border-top:1px solid var(--border-tactical); padding-top:10px; display:flex; justify-content:space-between; align-items:center; gap:8px;">
+                        <div>
+                            <div class="font-mono" style="font-size:10px; font-weight:700; color:var(--text-primary); text-transform:uppercase;">
+                                <i class="fa-solid fa-satellite-dish" style="color:var(--accent-cyan); margin-right:4px;"></i>
+                                PUSH EMERGENCY SIRENS
+                            </div>
+                            <div style="font-size:9px; color:var(--text-muted);">Receive immediate flood sirens on your phone</div>
+                        </div>
+                        <button onclick="requestCitizenNotificationPermission()" class="citizen-notif-status btn-tactical" style="background:rgba(245,158,11,0.1); border-color:var(--accent-warning); color:var(--accent-warning); padding:4px 8px; font-size:10px;">
+                            <i class="fa-solid fa-bell"></i> ENABLE SIRENS
+                        </button>
+                    </div>
+
                 </div>
 
-                <!-- 1-TAP PHONE NOTIFICATIONS ENROLLMENT -->
-                <div class="pt-4 border-t border-slate-800 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-950/50 -mx-6 -mb-6 p-5 rounded-b-3xl">
-                    <div>
-                        <div class="text-[11px] font-bold text-white flex items-center gap-1.5">
-                            <i class="fa-solid fa-satellite-dish text-cyan-400"></i> Instant Phone Alerts
-                        </div>
-                        <div class="text-[10px] text-slate-400">Allow once to receive urgent flood sirens on your phone.</div>
-                    </div>
-                    <button onclick="requestCitizenNotificationPermission()" class="citizen-notif-status px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 bg-amber-500/20 border border-amber-500/30 text-amber-300 hover:brightness-110 shrink-0">
-                        <i class="fa-solid fa-bell-slash text-amber-400 mr-1"></i>
-                        <span>Enable Phone Flood Alerts</span>
-                    </button>
+                <div style="padding:6px 12px; background:var(--bg-surface-subtle); border-top:1px solid var(--border-tactical); display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); font-family:var(--font-mono);">
+                    <span>USDMA CITIZEN CORRIDOR</span>
+                    <span>100% UNRESTRICTED</span>
                 </div>
             </div>
 
-    <!-- RIGHT / BOTTOM: SEOC OFFICER LOGIN (COMMAND OPERATIONS) -->
-            <div class="lg:col-span-6 bg-slate-900/95 border border-slate-800 p-6 sm:p-8 rounded-3xl shadow-2xl backdrop-blur-xl relative">
-                
-                <!-- Security watermark badge -->
-                <div class="flex items-center justify-between mb-4">
-                    <div class="text-[10px] font-mono font-bold bg-slate-800/80 border border-slate-700 px-2.5 py-1 rounded text-indigo-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-lock"></i> SEOC RAKSHAK PORTAL
-                    </div>
-                    <span class="text-[10px] font-mono text-emerald-400">SEOC Dehradun HQ</span>
-                </div>
-
-                <!-- Tab Toggle: Login / Signup -->
-                <div class="flex bg-slate-950/60 rounded-xl p-1 mb-5 border border-slate-800">
-                    <button id="tab-login" onclick="switchTab('login')"
-                        class="flex-1 py-2 text-xs font-bold rounded-lg transition bg-indigo-600 text-white shadow">
-                        <i class="fa-solid fa-right-to-bracket mr-1"></i> Login
-                    </button>
-                    <button id="tab-signup" onclick="switchTab('signup')"
-                        class="flex-1 py-2 text-xs font-bold rounded-lg transition text-slate-400 hover:text-white">
-                        <i class="fa-solid fa-user-plus mr-1"></i> Citizen Signup
-                    </button>
-                </div>
-
-                <!-- LOGIN FORM -->
-                <div id="form-login">
-                    <div class="mb-4">
-                        <h2 class="text-xl font-black text-white flex items-center gap-2">
-                            <i class="fa-solid fa-shield-halved text-indigo-400"></i>
-                            <span>Rakshak Login</span>
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-1">Admin gets full Command Center access. Citizens get the safety map & SOS hub.</p>
-                    </div>
-
-                    <form onsubmit="handleLogin(event)" class="space-y-3.5">
-                        <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
-                            <div class="relative">
-                                <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
-                                <input type="email" id="login-email" placeholder="your@email.com" autocomplete="email"
-                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
-                            <div class="relative">
-                                <i class="fa-solid fa-key absolute left-3.5 top-3 text-indigo-400 text-sm"></i>
-                                <input type="password" id="login-password" placeholder="Enter your password" autocomplete="current-password"
-                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-indigo-500 transition" required>
-                            </div>
-                        </div>
-
-                        <div id="login-error-msg" class="hidden text-rose-400 text-[11px] font-bold bg-rose-950/60 border border-rose-500/40 p-2.5 rounded-xl flex items-center gap-2">
-                            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
-                            <span id="login-error-text">Access Denied.</span>
-                        </div>
-
-                        <button type="submit" id="auth-btn"
-                                class="w-full mt-2 bg-gradient-to-r from-indigo-600 via-indigo-500 to-indigo-600 hover:from-indigo-500 hover:to-indigo-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-indigo-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
-                            <i class="fa-solid fa-fingerprint text-base"></i>
-                            <span id="auth-text">Login to Rakshak</span>
-                            <i class="fa-solid fa-arrow-right text-xs"></i>
-                        </button>
-                    </form>
-                </div>
-
-                <!-- SIGNUP FORM (Citizens only) -->
-                <div id="form-signup" class="hidden">
-                    <div class="mb-4">
-                        <h2 class="text-xl font-black text-white flex items-center gap-2">
-                            <i class="fa-solid fa-user-shield text-emerald-400"></i>
-                            <span>Citizen Registration</span>
-                        </h2>
-                        <p class="text-xs text-slate-400 mt-1">Create your account to receive emergency alerts & access the safety map.</p>
-                    </div>
-
-                    <form onsubmit="handleSignup(event)" class="space-y-3.5">
-                        <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Email Address</label>
-                            <div class="relative">
-                                <i class="fa-solid fa-envelope absolute left-3.5 top-3 text-emerald-400 text-sm"></i>
-                                <input type="email" id="signup-email" placeholder="your@email.com" autocomplete="email"
-                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-emerald-500 transition" required>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Password</label>
-                            <div class="relative">
-                                <i class="fa-solid fa-lock absolute left-3.5 top-3 text-emerald-400 text-sm"></i>
-                                <input type="password" id="signup-password" placeholder="Choose a strong password" autocomplete="new-password"
-                                       class="w-full bg-slate-950 border border-slate-700 rounded-xl py-2.5 pl-10 pr-4 text-xs font-mono text-white focus:outline-none focus:border-emerald-500 transition" required>
-                            </div>
-                        </div>
-
-                        <div id="signup-error-msg" class="hidden text-rose-400 text-[11px] font-bold bg-rose-950/60 border border-rose-500/40 p-2.5 rounded-xl flex items-center gap-2">
-                            <i class="fa-solid fa-triangle-exclamation text-rose-400 text-sm"></i>
-                            <span id="signup-error-text">Signup failed.</span>
-                        </div>
-                        <div id="signup-success-msg" class="hidden text-emerald-400 text-[11px] font-bold bg-emerald-950/60 border border-emerald-500/40 p-2.5 rounded-xl flex items-center gap-2">
-                            <i class="fa-solid fa-circle-check text-emerald-400 text-sm"></i>
-                            <span>Account created! Logging you in...</span>
-                        </div>
-
-                        <button type="submit" id="signup-btn"
-                                class="w-full mt-2 bg-gradient-to-r from-emerald-600 via-emerald-500 to-emerald-600 hover:from-emerald-500 hover:to-emerald-500 text-white font-extrabold text-xs py-3 px-6 rounded-xl transition duration-200 shadow-xl shadow-emerald-600/30 flex items-center justify-center gap-2.5 tracking-wider uppercase">
-                            <i class="fa-solid fa-user-plus text-base"></i>
-                            <span id="signup-text">Create Citizen Account</span>
-                        </button>
-                    </form>
-                </div>
-
-                <div class="mt-4 pt-3 border-t border-slate-800/80 flex items-center justify-between text-[11px] text-slate-500">
-                    <span class="flex items-center gap-1.5">
-                        <i class="fa-solid fa-tower-cell text-emerald-400"></i>
-                        <span>INSAT-3DR & LoRa Mesh Relay</span>
+            <!-- COLUMN 2: SEOC COMMAND OFFICER ACCESS TERMINAL -->
+            <div class="tactical-panel" style="display:flex; flex-direction:column; justify-content:space-between; border-top:2px solid var(--accent-cyan);">
+                <div class="tactical-panel-header">
+                    <span class="tactical-header">
+                        <i class="fa-solid fa-lock" style="color:var(--accent-cyan);"></i>
+                        COMMAND OFFICER TERMINAL // RESTRICTED
                     </span>
-                    <span class="font-mono">SEOC v3.2</span>
+                    <span class="badge-tactical">SEOC DEHRADUN</span>
+                </div>
+
+                <div class="tactical-panel-body" style="padding:14px;">
+                    
+                    <!-- TAB TOGGLE: LOGIN / SIGNUP -->
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:4px; margin-bottom:14px; background:var(--bg-base); padding:3px; border:1px solid var(--border-tactical);">
+                        <button id="tab-login" onclick="switchTab('login')" class="btn-tactical btn-tactical-primary" style="font-size:11px; padding:6px; border-color:var(--accent-cyan);">
+                            <i class="fa-solid fa-right-to-bracket mr-1"></i> OFFICER LOGIN
+                        </button>
+                        <button id="tab-signup" onclick="switchTab('signup')" class="btn-tactical" style="font-size:11px; padding:6px; color:var(--text-muted); background:transparent;">
+                            <i class="fa-solid fa-user-plus mr-1"></i> CITIZEN REGISTRATION
+                        </button>
+                    </div>
+
+                    <!-- LOGIN FORM -->
+                    <div id="form-login">
+                        <div style="margin-bottom:12px;">
+                            <div class="tactical-meta" style="color:var(--text-muted);">AUTHORITY CLEARANCE REQUIRED</div>
+                            <div class="font-mono" style="font-size:13px; font-weight:700; color:var(--text-primary); text-transform:uppercase;">
+                                SEOC Command War Room Login
+                            </div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">
+                                Authorized officers access C4ISR War Room, Crisis Sandbox, Evacuation Matrix & LoRa Mesh Console.
+                            </div>
+                        </div>
+
+                        <form onsubmit="handleLogin(event)" style="display:flex; flex-direction:column; gap:10px;">
+                            <div>
+                                <label class="tactical-meta" style="display:block; margin-bottom:4px;">OPERATOR CREDENTIAL / EMAIL</label>
+                                <div style="position:relative;">
+                                    <input type="email" id="login-email" placeholder="officer@seoc.uk.gov.in" autocomplete="email" required style="width:100%;">
+                                </div>
+                            </div>
+
+                            <div>
+                                <label class="tactical-meta" style="display:block; margin-bottom:4px;">SECURITY PASSPHRASE</label>
+                                <div style="position:relative;">
+                                    <input type="password" id="login-password" placeholder="••••••••••••" autocomplete="current-password" required style="width:100%;">
+                                </div>
+                            </div>
+
+                            <div id="login-error-msg" style="display:none; padding:8px 10px; background:rgba(239,68,68,0.1); border:1px solid var(--accent-critical); color:var(--accent-critical); font-family:var(--font-mono); font-size:11px;">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                                <span id="login-error-text">ACCESS DENIED // INVALID CLEARANCE</span>
+                            </div>
+
+                            <button type="submit" id="auth-btn" class="btn-tactical btn-tactical-primary" style="margin-top:6px; padding:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                <i class="fa-solid fa-fingerprint"></i>
+                                <span id="auth-text">AUTHENTICATE & ENTER WAR ROOM</span>
+                                <i class="fa-solid fa-arrow-right"></i>
+                            </button>
+                        </form>
+                    </div>
+
+                    <!-- SIGNUP FORM -->
+                    <div id="form-signup" style="display:none;">
+                        <div style="margin-bottom:12px;">
+                            <div class="tactical-meta" style="color:var(--accent-nominal);">PUBLIC CITIZEN ENROLLMENT</div>
+                            <div class="font-mono" style="font-size:13px; font-weight:700; color:var(--text-primary); text-transform:uppercase;">
+                                Register Emergency Aid Account
+                            </div>
+                            <div style="font-size:10px; color:var(--text-muted); margin-top:2px;">
+                                Register to enroll in high-priority civilian SOS rescue dispatch and emergency broadcasts.
+                            </div>
+                        </div>
+
+                        <form onsubmit="handleSignup(event)" style="display:flex; flex-direction:column; gap:10px;">
+                            <div>
+                                <label class="tactical-meta" style="display:block; margin-bottom:4px;">CITIZEN EMAIL / ID</label>
+                                <input type="email" id="signup-email" placeholder="citizen@uttarakhand.in" autocomplete="email" required style="width:100%;">
+                            </div>
+
+                            <div>
+                                <label class="tactical-meta" style="display:block; margin-bottom:4px;">CREATE PASSPHRASE</label>
+                                <input type="password" id="signup-password" placeholder="Choose a secure passphrase" autocomplete="new-password" required style="width:100%;">
+                            </div>
+
+                            <div id="signup-error-msg" style="display:none; padding:8px 10px; background:rgba(239,68,68,0.1); border:1px solid var(--accent-critical); color:var(--accent-critical); font-family:var(--font-mono); font-size:11px;">
+                                <i class="fa-solid fa-triangle-exclamation mr-1"></i>
+                                <span id="signup-error-text">REGISTRATION FAILED</span>
+                            </div>
+                            <div id="signup-success-msg" style="display:none; padding:8px 10px; background:rgba(16,185,129,0.1); border:1px solid var(--accent-nominal); color:var(--accent-nominal); font-family:var(--font-mono); font-size:11px;">
+                                <i class="fa-solid fa-circle-check mr-1"></i>
+                                <span>ACCOUNT REGISTERED // LOGGING IN...</span>
+                            </div>
+
+                            <button type="submit" id="signup-btn" class="btn-tactical btn-tactical-nominal" style="margin-top:6px; padding:10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                                <i class="fa-solid fa-user-plus"></i>
+                                <span id="signup-text">CREATE CITIZEN PROFILE</span>
+                            </button>
+                        </form>
+                    </div>
+
+                </div>
+
+                <div style="padding:6px 12px; background:var(--bg-surface-subtle); border-top:1px solid var(--border-tactical); display:flex; justify-content:space-between; font-size:10px; color:var(--text-dim); font-family:var(--font-mono);">
+                    <span>SECURITY: AES-256 GCM</span>
+                    <span>NDMA-2005 PROTOCOL</span>
                 </div>
             </div>
 
         </div>
+
     </main>
 
-    <!-- FOOTER HELPLINES -->
-    <footer class="w-full bg-slate-900/90 border-t border-slate-800 px-4 sm:px-8 py-3 text-xs flex flex-wrap items-center justify-between gap-3 text-slate-400 z-20">
-        <div class="flex items-center gap-2">
-            <span class="text-rose-400 font-bold uppercase tracking-wider text-[11px]"><i class="fa-solid fa-phone-volume mr-1"></i> State Emergency Hotlines:</span>
-            <span class="text-white font-mono font-bold">112</span> (National) &bull; 
-            <span class="text-white font-mono font-bold">1070</span> (USDMA Relief) &bull; 
-            <span class="text-white font-mono font-bold">1077</span> (District Control)
+    <!-- FOOTER HELPLINES & LEGAL TELEMETRY -->
+    <footer style="background:var(--bg-surface); border-top:1px solid var(--border-tactical); padding:8px 16px; font-family:var(--font-mono); font-size:11px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span style="color:var(--accent-critical); font-weight:700;"><i class="fa-solid fa-phone-volume mr-1"></i> EMERGENCY HOTLINES:</span>
+            <span style="color:var(--text-primary); font-weight:700;">112</span> <span style="color:var(--text-dim);">(National)</span>
+            <span style="color:var(--border-active);">|</span>
+            <span style="color:var(--text-primary); font-weight:700;">1070</span> <span style="color:var(--text-dim);">(USDMA Relief)</span>
+            <span style="color:var(--border-active);">|</span>
+            <span style="color:var(--text-primary); font-weight:700;">1077</span> <span style="color:var(--text-dim);">(District Control)</span>
         </div>
-        <div class="text-[11px] text-slate-500">
-            Authorized Personnel Only &bull; National Disaster Management Act 2005
+        <div style="color:var(--text-dim); font-size:10px;">
+            NATIONAL DISASTER MANAGEMENT ACT 2005 &bull; STATE EMERGENCY OPERATIONS CENTRE UTTARAKHAND
         </div>
     </footer>
 
+    <!-- INLINE TAB LOGIC -->
     <script>
         function switchTab(tab) {
             const isLogin = tab === 'login';
-            document.getElementById('form-login').classList.toggle('hidden', !isLogin);
-            document.getElementById('form-signup').classList.toggle('hidden', isLogin);
-            document.getElementById('tab-login').className = `flex-1 py-2 text-xs font-bold rounded-lg transition ${isLogin ? 'bg-indigo-600 text-white shadow' : 'text-slate-400 hover:text-white'}`;
-            document.getElementById('tab-signup').className = `flex-1 py-2 text-xs font-bold rounded-lg transition ${!isLogin ? 'bg-emerald-600 text-white shadow' : 'text-slate-400 hover:text-white'}`;
+            document.getElementById('form-login').style.display = isLogin ? 'block' : 'none';
+            document.getElementById('form-signup').style.display = isLogin ? 'none' : 'block';
+            
+            const tabLogin = document.getElementById('tab-login');
+            const tabSignup = document.getElementById('tab-signup');
+            
+            if (isLogin) {
+                tabLogin.className = 'btn-tactical btn-tactical-primary';
+                tabLogin.style.borderColor = 'var(--accent-cyan)';
+                tabLogin.style.background = '#1E293B';
+                tabLogin.style.color = '#F8FAFC';
+                
+                tabSignup.className = 'btn-tactical';
+                tabSignup.style.background = 'transparent';
+                tabSignup.style.color = 'var(--text-muted)';
+                tabSignup.style.borderColor = 'transparent';
+            } else {
+                tabSignup.className = 'btn-tactical btn-tactical-nominal';
+                tabSignup.style.borderColor = 'var(--accent-nominal)';
+                tabSignup.style.background = 'rgba(16,185,129,0.15)';
+                tabSignup.style.color = 'var(--accent-nominal)';
+                
+                tabLogin.className = 'btn-tactical';
+                tabLogin.style.background = 'transparent';
+                tabLogin.style.color = 'var(--text-muted)';
+                tabLogin.style.borderColor = 'transparent';
+            }
         }
 
         // Check URL parameters for redirect alerts
@@ -326,12 +364,13 @@
                 const target = params.get('target') || 'Command Center';
                 title.textContent = `SEOC Officer Authentication Required for ${target}`;
                 desc.textContent = `The requested module (${target}) is restricted to authorized personnel. Please login below.`;
-                banner.classList.remove('hidden');
+                banner.style.display = 'block';
             } else if (params.get('logged_out') === 'true') {
-                title.textContent = `Session Ended`;
-                desc.textContent = `You have successfully logged out.`;
-                banner.className = "w-full mb-6 bg-emerald-950/80 border border-emerald-500/50 rounded-2xl p-4 text-emerald-200 flex items-center justify-between shadow-2xl backdrop-blur-md";
-                banner.classList.remove('hidden');
+                title.textContent = `Session Terminated`;
+                desc.textContent = `You have logged off from the SEOC terminal.`;
+                banner.style.borderLeftColor = 'var(--accent-nominal)';
+                title.style.color = 'var(--accent-nominal)';
+                banner.style.display = 'block';
             }
         });
 
@@ -344,9 +383,9 @@
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
 
-            errorBox.classList.add('hidden');
+            errorBox.style.display = 'none';
             btn.disabled = true;
-            text.textContent = 'AUTHENTICATING...';
+            text.textContent = 'AUTHENTICATING CLEARANCE...';
 
             try {
                 const resp = await fetch('/api/auth/login', {
@@ -358,39 +397,36 @@
                 const data = await resp.json();
 
                 if (!resp.ok) {
-                    errorText.textContent = data.detail || 'Access Denied: Invalid email or password.';
-                    errorBox.classList.remove('hidden');
+                    errorText.textContent = data.detail || 'Access Denied // Invalid Credentials.';
+                    errorBox.style.display = 'block';
                     btn.disabled = false;
-                    text.textContent = 'Login to Rakshak';
+                    text.textContent = 'AUTHENTICATE & ENTER WAR ROOM';
                     return;
                 }
 
-                // Save session
                 localStorage.setItem('rakshak_auth', JSON.stringify({
                     role: data.role,
                     email: data.email,
                     loginTime: new Date().toISOString()
                 }));
 
-                text.textContent = 'ACCESS GRANTED. REDIRECTING...';
+                text.textContent = 'ACCESS GRANTED // INITIALIZING TERMINAL...';
 
-                // Redirect based on role
                 const params = new URLSearchParams(window.location.search);
                 const target = params.get('target');
                 
                 if (data.role === 'admin') {
                     const dest = (target && target.endsWith('.html')) ? target : 'dashboard.html';
-                    setTimeout(() => window.location.href = dest, 600);
+                    setTimeout(() => window.location.href = dest, 500);
                 } else {
-                    // Citizens only get citizen hub and map
-                    setTimeout(() => window.location.href = 'citizen.html', 600);
+                    setTimeout(() => window.location.href = 'citizen.html', 500);
                 }
 
             } catch (err) {
-                errorText.textContent = 'Network error. Is the server running?';
-                errorBox.classList.remove('hidden');
+                errorText.textContent = 'Network communication error with SEOC relay.';
+                errorBox.style.display = 'block';
                 btn.disabled = false;
-                text.textContent = 'Login to Rakshak';
+                text.textContent = 'AUTHENTICATE & ENTER WAR ROOM';
             }
         }
 
@@ -404,10 +440,10 @@
             const email = document.getElementById('signup-email').value.trim();
             const password = document.getElementById('signup-password').value;
 
-            errorBox.classList.add('hidden');
-            successBox.classList.add('hidden');
+            errorBox.style.display = 'none';
+            successBox.style.display = 'none';
             btn.disabled = true;
-            text.textContent = 'CREATING ACCOUNT...';
+            text.textContent = 'REGISTERING RECORD...';
 
             try {
                 const resp = await fetch('/api/auth/signup', {
@@ -419,16 +455,15 @@
                 const data = await resp.json();
 
                 if (!resp.ok) {
-                    errorText.textContent = data.detail || 'Signup failed. Please try again.';
-                    errorBox.classList.remove('hidden');
+                    errorText.textContent = data.detail || 'Registration failed. Try again.';
+                    errorBox.style.display = 'block';
                     btn.disabled = false;
-                    text.textContent = 'Create Citizen Account';
+                    text.textContent = 'CREATE CITIZEN PROFILE';
                     return;
                 }
 
-                successBox.classList.remove('hidden');
+                successBox.style.display = 'block';
 
-                // Auto-login after signup
                 const loginResp = await fetch('/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -441,14 +476,14 @@
                         email: loginData.email,
                         loginTime: new Date().toISOString()
                     }));
-                    setTimeout(() => window.location.href = 'citizen.html', 1000);
+                    setTimeout(() => window.location.href = 'citizen.html', 800);
                 }
 
             } catch (err) {
-                errorText.textContent = 'Network error. Is the server running?';
-                errorBox.classList.remove('hidden');
+                errorText.textContent = 'Network failure during registration.';
+                errorBox.style.display = 'block';
                 btn.disabled = false;
-                text.textContent = 'Create Citizen Account';
+                text.textContent = 'CREATE CITIZEN PROFILE';
             }
         }
     </script>

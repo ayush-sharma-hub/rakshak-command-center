@@ -66,46 +66,49 @@ print("[PASS] Rich terminal warning executed cleanly without encoding errors")
 print("\n--- TEST 3: Auto-Alert Creation in Database, WS, Push, and LoRa ---")
 import asyncio
 
-async def test_alert_creation():
-    with patch("backend.tasks.background._broadcast_ws", new_callable=AsyncMock) as mock_ws, \
-         patch("backend.core.push_service.send_push_to_all", return_value={"sent": 1, "failed": 0, "total": 1}) as mock_push, \
-         patch("backend.services.lora_engine.broadcast_lora_mesh") as mock_lora:
+def test_alert_creation():
+    async def _run():
+        with patch("backend.tasks.background._broadcast_ws", new_callable=AsyncMock) as mock_ws, \
+             patch("backend.core.push_service.send_push_to_all", return_value={"sent": 1, "failed": 0, "total": 1}) as mock_push, \
+             patch("backend.services.lora_engine.broadcast_lora_mesh") as mock_lora:
 
-        incident_id = await create_sentinel_alert("Kedarnath, Uttarakhand", mock_severe_assessment)
-        assert incident_id is not None, "Failed to get incident ID"
-        print(f"Created incident ID: {incident_id}")
+            incident_id = await create_sentinel_alert("Kedarnath, Uttarakhand", mock_severe_assessment)
+            assert incident_id is not None, "Failed to get incident ID"
+            print(f"Created incident ID: {incident_id}")
 
-        # Verify DB insertion
-        conn = get_db()
-        row = conn.execute("SELECT * FROM incidents WHERE id=?", (incident_id,)).fetchone()
-        assert row is not None, "Incident not found in database!"
-        assert row["type"] == "SENTINEL_SEVERE"
-        assert row["priority"] == "CRITICAL"
-        assert "Kedarnath" in row["zone"]
-        print("[PASS] DB incident verified with CRITICAL priority")
+            # Verify DB insertion
+            conn = get_db()
+            row = conn.execute("SELECT * FROM incidents WHERE id=?", (incident_id,)).fetchone()
+            assert row is not None, "Incident not found in database!"
+            assert row["type"] == "SENTINEL_SEVERE"
+            assert row["priority"] == "CRITICAL"
+            assert "Kedarnath" in row["zone"]
+            print("[PASS] DB incident verified with CRITICAL priority")
 
-        # Verify Broadcasts table insertion
-        b_row = conn.execute("SELECT * FROM broadcasts WHERE target_city=?", ("Kedarnath, Uttarakhand",)).fetchone()
-        assert b_row is not None, "Broadcast record not found in database!"
-        conn.close()
-        print("[PASS] DB broadcast record verified")
+            # Verify Broadcasts table insertion
+            b_row = conn.execute("SELECT * FROM broadcasts WHERE target_city=?", ("Kedarnath, Uttarakhand",)).fetchone()
+            assert b_row is not None, "Broadcast record not found in database!"
+            conn.close()
+            print("[PASS] DB broadcast record verified")
 
-        # Verify WebSocket broadcast
-        mock_ws.assert_called_once()
-        ws_payload = mock_ws.call_args[0][0]
-        assert ws_payload["type"] == "emergency_broadcast"
-        assert "Kedarnath" in ws_payload["title"]
-        print("[PASS] WebSocket broadcast verified")
+            # Verify WebSocket broadcast
+            mock_ws.assert_called_once()
+            ws_payload = mock_ws.call_args[0][0]
+            assert ws_payload["type"] == "emergency_broadcast"
+            assert "Kedarnath" in ws_payload["title"]
+            print("[PASS] WebSocket broadcast verified")
 
-        # Verify Push notification
-        mock_push.assert_called_once()
-        print("[PASS] Mobile WebPush notification verified")
+            # Verify Push notification
+            mock_push.assert_called_once()
+            print("[PASS] Mobile WebPush notification verified")
 
-        # Verify LoRa Mesh fallback
-        mock_lora.assert_called_once()
-        print("[PASS] LoRa mesh broadcast verified")
+            # Verify LoRa Mesh fallback
+            mock_lora.assert_called_once()
+            print("[PASS] LoRa mesh broadcast verified")
 
-asyncio.run(test_alert_creation())
+    asyncio.run(_run())
+
+test_alert_creation()
 
 
 print("\n--- TEST 4: Full Sentinel Cycle with Mocked Agent ---")
@@ -136,24 +139,27 @@ mock_results_by_zone = {
 def fake_disaster_analysis(location, verbose=False):
     return mock_results_by_zone.get(location, mock_severe_assessment)
 
-async def test_sentinel_cycle():
-    with patch("backend.services.agent_service.run_disaster_analysis", side_effect=fake_disaster_analysis), \
-         patch("backend.tasks.background._broadcast_ws", new_callable=AsyncMock), \
-         patch("backend.core.push_service.send_push_to_all"), \
-         patch("backend.services.lora_engine.broadcast_lora_mesh"):
+def test_sentinel_cycle():
+    async def _run():
+        with patch("backend.services.agent_service.run_disaster_analysis", side_effect=fake_disaster_analysis), \
+             patch("backend.tasks.background._broadcast_ws", new_callable=AsyncMock), \
+             patch("backend.core.push_service.send_push_to_all"), \
+             patch("backend.services.lora_engine.broadcast_lora_mesh"):
 
-        res = await run_sentinel_cycle()
-        print("Cycle completed. Status:", res["status"])
-        print("Scanned zones:", list(res["scanned_zones"].keys()))
-        print("Active threats count:", len(res["active_threats"]))
-        assert res["status"] == "idle"
-        assert res["total_scans_completed"] >= 1
-        assert "Kedarnath, Uttarakhand" in res["scanned_zones"]
-        assert len(res["active_threats"]) == 1
-        assert res["active_threats"][0]["zone"] == "Kedarnath, Uttarakhand"
-        print("[PASS] Full sentinel scan cycle verified")
+            res = await run_sentinel_cycle()
+            print("Cycle completed. Status:", res["status"])
+            print("Scanned zones:", list(res["scanned_zones"].keys()))
+            print("Active threats count:", len(res["active_threats"]))
+            assert res["status"] == "idle"
+            assert res["total_scans_completed"] >= 1
+            assert "Kedarnath, Uttarakhand" in res["scanned_zones"]
+            assert len(res["active_threats"]) == 1
+            assert res["active_threats"][0]["zone"] == "Kedarnath, Uttarakhand"
+            print("[PASS] Full sentinel scan cycle verified")
 
-asyncio.run(test_sentinel_cycle())
+    asyncio.run(_run())
+
+test_sentinel_cycle()
 
 
 print("\n--- TEST 5: Verify Cached Status via HTTP endpoint ---")

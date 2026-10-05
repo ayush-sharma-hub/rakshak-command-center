@@ -880,24 +880,18 @@ function addLog(msg, type = 'sys') {
 // 5. DOM INITIALIZATION
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Dual Real-time Tactical Clock (UTC & Indian Standard Time)
-    const clockEl = document.getElementById('clock');
-    if (clockEl) {
-        setInterval(() => {
-            const now = new Date();
-            const istStr = now.toLocaleTimeString('en-GB', { hour12: false, timeZone: 'Asia/Kolkata' });
-            const utcStr = now.toISOString().substring(11, 19) + 'Z';
-            clockEl.innerHTML = `
-                <div class="flex items-center gap-2">
-                    <span class="text-[#64748B]">UTC</span>
-                    <span class="text-[#F1F5F9] font-mono font-bold">${utcStr}</span>
-                    <span class="text-[#334155]">|</span>
-                    <span class="text-[#64748B]">IST</span>
-                    <span class="text-[#38BDF8] font-mono font-bold">${istStr}</span>
-                </div>
-            `;
-        }, 1000);
+    // 1. Dual Clock: Indian Standard Time (IST) & UTC Tactical Telemetry
+    function updateTacticalClocks() {
+        const now = new Date();
+        const istStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
+        const utcStr = now.toISOString().slice(11, 19);
+        const clockEls = document.querySelectorAll('#clock, #tactical-clock, .c4isr-clock');
+        clockEls.forEach(el => {
+            el.innerHTML = `<span style="color:var(--text-muted)">UTC</span> <span style="color:var(--accent-cyan);font-weight:700">${utcStr}Z</span> <span style="color:var(--border-active)">|</span> <span style="color:var(--text-muted)">IST</span> <span style="color:var(--text-primary);font-weight:700">${istStr}</span>`;
+        });
     }
+    updateTacticalClocks();
+    setInterval(updateTacticalClocks, 1000);
 
     // 2. Audio button listener
     const audioBtns = document.querySelectorAll('.audio-toggle-btn');
@@ -965,11 +959,11 @@ function initTacticalMap() {
     leafletMap = L.map('map', { zoomControl: false }).setView([30.35, 79.15], 8);
     L.control.zoom({ position: 'topright' }).addTo(leafletMap);
 
-    // Layer 1: Dark Tactical Vector (CartoDB Dark Matter // Palantir C4ISR Standard)
-    const darkLayer = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; CartoDB Dark Matter | SEOC C4ISR Recon',
-        subdomains: 'abcd',
-        maxZoom: 20
+    // Layer 1: Dark Tactical Vector (100% Free, No Watermark, No API Key)
+    const darkLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; SEOC Rakshak | OpenStreetMap',
+        className: 'tactical-dark-tiles',
+        maxZoom: 18
     });
 
     // Layer 2: High-Resolution Satellite
@@ -1687,39 +1681,37 @@ function renderRiverBasins(basins) {
         const curr = parseFloat(b.current_level ?? b.currentLevel ?? 0);
         const dang = parseFloat(b.danger_level ?? b.dangerLevel ?? 100);
         const percent = Math.min(100, Math.round((curr / dang) * 100));
-        const status = b.status || 'SAFE';
+        const status = (b.status || 'SAFE').toUpperCase();
         const trend = b.trend || 'Steady';
 
-        let badgeHtml = '<span class="badge-tactical badge-operational">SAFE</span>';
-        let barColor = 'bg-[#4ADE80]';
-        let borderIndicator = 'border-[#222731]';
+        let badgeClass = 'badge-nominal';
+        let barColor = 'var(--accent-nominal)';
+        let borderLeft = 'border-left: 2px solid var(--accent-nominal);';
         if (status === 'WARNING') {
-            badgeHtml = '<span class="badge-tactical badge-hazard">STAGE-1 WATCH</span>';
-            barColor = 'bg-[#F59E0B]';
-            borderIndicator = 'border-[#F59E0B]/50';
-        } else if (status === 'CRITICAL' || status === 'DANGER') {
-            badgeHtml = '<span class="badge-tactical badge-critical animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>CRIT DANGER</span>';
-            barColor = 'bg-[#EF4444]';
-            borderIndicator = 'border-[#EF4444]/60';
+            badgeClass = 'badge-warning';
+            barColor = 'var(--accent-warning)';
+            borderLeft = 'border-left: 2px solid var(--accent-warning);';
+        } else if (status === 'CRITICAL' || status === 'DANGER' || status === 'EXTREME_FLOOD') {
+            badgeClass = 'badge-critical';
+            barColor = 'var(--accent-critical)';
+            borderLeft = 'border-left: 2px solid var(--accent-critical);';
         }
 
         return `
-            <div class="bg-[#101318] p-3.5 border ${borderIndicator} flex flex-col justify-between transition hover:border-[#38BDF8]/40">
-                <div class="flex justify-between items-start mb-2">
+            <div class="log-row-tactical" style="margin-bottom:4px; padding:6px 8px; ${borderLeft}">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
                     <div>
-                        <span class="text-xs font-mono font-bold text-white block uppercase tracking-wider">${b.river}</span>
-                        <span class="text-[10px] text-[#64748B] font-mono">DANGER MARK: <span class="text-[#94A3B8]">${dang.toFixed(1)}m</span></span>
+                        <span class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px;">${b.river}</span>
+                        <span class="tactical-meta" style="margin-left:6px; font-size:9px;">DANGER: ${dang}m</span>
                     </div>
-                    ${badgeHtml}
+                    <span class="badge-tactical ${badgeClass}" style="font-size:9px;">${status}</span>
                 </div>
-                <div class="mt-1">
-                    <div class="flex justify-between text-xs font-mono mb-1.5">
-                        <span class="text-[#F1F5F9] font-bold tabular-nums text-sm">${curr.toFixed(2)} m</span>
-                        <span class="text-[#64748B] text-[11px]">${trend}</span>
-                    </div>
-                    <div class="w-full bg-[#181D26] h-1.5 overflow-hidden border border-[#222731]">
-                        <div class="${barColor} h-full transition-all duration-500" style="width: ${percent}%"></div>
-                    </div>
+                <div style="display:flex; justify-content:space-between; align-items:baseline; font-family:var(--font-mono); font-size:10px; margin-top:2px;">
+                    <span style="font-weight:700; color:var(--text-primary);">${curr.toFixed(1)} m</span>
+                    <span style="color:var(--text-muted); font-size:9px;">TREND: ${trend}</span>
+                </div>
+                <div style="width:100%; height:3px; background:var(--bg-base); border:1px solid var(--border-tactical); margin-top:4px;">
+                    <div style="height:100%; width:${percent}%; background:${barColor}; transition:width 0.5s ease;"></div>
                 </div>
             </div>
         `;
@@ -1732,12 +1724,9 @@ function renderLiveSOSList(sosSignals) {
 
     if (sosSignals.length === 0) {
         container.innerHTML = `
-            <div class="text-center py-6 text-[#64748B] font-mono text-xs border border-[#222731] bg-[#0F1115] p-4">
-                <div class="flex items-center justify-center gap-2 mb-1">
-                    <span class="tactical-beacon-green"></span>
-                    <span class="font-bold text-[#4ADE80] uppercase">TRIAGE QUEUE NOMINAL</span>
-                </div>
-                <p class="text-[11px] text-[#64748B]">No active civilian distress signals pending action.</p>
+            <div style="text-align:center; padding:16px; color:var(--text-dim); font-family:var(--font-mono); font-size:11px;">
+                <i class="fa-solid fa-circle-check" style="color:var(--accent-nominal); margin-right:4px;"></i>
+                NO ACTIVE CIVILIAN DISTRESS SIGNALS PENDING TRIAGE
             </div>
         `;
         return;
@@ -1745,58 +1734,59 @@ function renderLiveSOSList(sosSignals) {
 
     container.innerHTML = sosSignals.map(sos => {
         const caller = sos.caller_name ?? sos.callerName ?? 'Civilian Caller';
-        const loc = sos.location_name ?? sos.locationName ?? 'Sector Unspecified';
-        const assigned = sos.assigned_unit ?? sos.assignedUnit ?? 'UNASSIGNED';
-        const timeVal = sos.time ?? (sos.created_at ? sos.created_at.split('T')[1].slice(0, 5) + 'Z' : 'RECENT');
+        const loc = sos.location_name ?? sos.locationName ?? 'Sector Point';
+        const assigned = sos.assigned_unit ?? sos.assignedUnit ?? 'Unassigned';
+        const timeVal = sos.time ?? (sos.created_at ? sos.created_at.split('T')[1].slice(0, 5) : 'Recent');
         const phone = sos.phone || '1077';
-        const lat = sos.lat ? Number(sos.lat).toFixed(4) : '30.3165';
-        const lng = sos.lng ? Number(sos.lng).toFixed(4) : '78.0322';
 
-        let statusClass = 'border-l-[var(--tactical-crimson)]';
-        let statusBadge = '<span class="badge-tactical badge-critical animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>CRIT-PENDING</span>';
-        if (sos.status === 'DISPATCHED') {
-            statusClass = 'border-l-[var(--tactical-cyan)]';
-            statusBadge = '<span class="badge-tactical badge-nominal"><span class="w-1.5 h-1.5 rounded-full bg-sky-400"></span>DISPATCHED</span>';
-        } else if (sos.status === 'EN ROUTE') {
-            statusClass = 'border-l-[var(--tactical-amber)]';
-            statusBadge = '<span class="badge-tactical badge-hazard"><span class="w-1.5 h-1.5 rounded-full bg-amber-400"></span>EN ROUTE</span>';
-        } else if (sos.status === 'CLEARED' || sos.status === 'RESOLVED') {
-            statusClass = 'border-l-[var(--tactical-green)]';
-            statusBadge = '<span class="badge-tactical badge-operational">CLEARED</span>';
+        const isPending = sos.status === 'PENDING' || !sos.status;
+        const isDispatched = sos.status === 'DISPATCHED' || sos.status === 'EN ROUTE';
+        const isCleared = sos.status === 'CLEARED' || sos.status === 'RESOLVED';
+
+        let badgeClass = 'badge-warning';
+        let borderLeftColor = 'var(--accent-warning)';
+        if (isPending) {
+            badgeClass = 'badge-critical';
+            borderLeftColor = 'var(--accent-critical)';
+        } else if (isDispatched) {
+            badgeClass = 'badge-warning';
+            borderLeftColor = 'var(--accent-cyan)';
+        } else if (isCleared) {
+            badgeClass = 'badge-nominal';
+            borderLeftColor = 'var(--accent-nominal)';
         }
 
         return `
-            <div class="tactical-log-row ${statusClass} flex flex-col gap-2">
-                <div class="flex flex-wrap items-center justify-between gap-2 border-b border-[#1E232B] pb-1.5">
-                    <div class="flex items-center gap-2">
-                        <span class="font-mono text-[10px] text-[#64748B] bg-[#0A0C0F] px-1.5 py-0.5 border border-[#1E232B]">${timeVal}</span>
-                        <span class="font-mono font-bold text-white text-xs tracking-tight">${caller}</span>
-                        <span class="font-mono text-[10px] text-[#38BDF8]">[${lat}°N, ${lng}°E]</span>
+            <div class="log-row-tactical terminal-entry ${isPending ? 'critical-pulse' : ''}" style="margin-bottom:6px; border-left:2px solid ${borderLeftColor};">
+                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                    <div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px;">${caller}</span>
+                            <span class="tactical-meta" style="font-size:9px;">${timeVal}</span>
+                        </div>
+                        <div class="tactical-meta" style="color:var(--accent-cyan); margin-top:2px; font-size:10px;">
+                            <i class="fa-solid fa-location-crosshairs mr-1"></i> ${loc}
+                        </div>
                     </div>
-                    <div class="flex items-center gap-2">
-                        <span class="font-mono text-[10px] text-[#94A3B8] uppercase">${loc}</span>
-                        ${statusBadge}
-                    </div>
+                    <span class="badge-tactical ${badgeClass}">${sos.status || 'PENDING'}</span>
                 </div>
-                <div class="font-mono text-[11px] text-[#CBD5E1] bg-[#0A0C0F] px-2.5 py-1.5 border border-[#1A1E26] leading-relaxed">
-                    ${sos.details || 'Distress signal received via C4ISR network.'}
+                <div style="background:var(--bg-base); padding:6px; border:1px solid var(--border-tactical); font-family:var(--font-mono); font-size:10px; color:var(--text-primary); margin:6px 0;">
+                    ${sos.details}
                 </div>
-                <div class="flex flex-wrap items-center justify-between pt-1 text-[11px] font-mono">
-                    <div class="text-[#64748B]">
-                        ASSIGNED: <span class="text-[#F1F5F9] font-bold">${assigned}</span>
-                    </div>
-                    <div class="flex items-center gap-1.5">
+                <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:10px; border-top:1px solid var(--border-tactical); padding-top:4px;">
+                    <span style="color:var(--text-muted);">UNIT: <b style="color:var(--text-primary);">${assigned}</b></span>
+                    <div style="display:flex; gap:4px;">
                         ${sos.status === 'PENDING' ? `
-                            <button onclick="dispatchRescueTeam('${sos.id}', 'SDRF High Altitude Unit')" class="px-2.5 py-1 bg-[#EF4444] hover:bg-[#DC2626] text-white font-mono text-[10px] font-bold uppercase transition border border-[#DC2626]">
-                                <i class="fa-solid fa-person-running mr-1"></i> [DISPATCH UNIT]
+                            <button onclick="dispatchRescueTeam('${sos.id}', 'SDRF High Altitude Unit')" class="btn-tactical btn-critical" style="padding:2px 6px; font-size:9px;">
+                                <i class="fa-solid fa-person-running mr-1"></i> DEPLOY
                             </button>
                         ` : `
-                            <button onclick="resolveDistressCall('${sos.id}')" class="px-2.5 py-1 bg-[#1E293B] hover:bg-[#334155] text-[#4ADE80] border border-[#334155] font-mono text-[10px] font-bold uppercase transition">
-                                <i class="fa-solid fa-check mr-1"></i> [ACK / CLEAR]
+                            <button onclick="resolveDistressCall('${sos.id}')" class="btn-tactical btn-nominal" style="padding:2px 6px; font-size:9px;">
+                                <i class="fa-solid fa-check mr-1"></i> CLEAR
                             </button>
                         `}
-                        <a href="tel:${phone}" class="px-2.5 py-1 bg-[#14171D] hover:bg-[#1E232B] text-[#94A3B8] border border-[#222731] font-mono text-[10px] transition">
-                            <i class="fa-solid fa-phone mr-1"></i> [COMMS]
+                        <a href="tel:${phone}" class="btn-tactical" style="padding:2px 6px; font-size:9px; text-decoration:none;">
+                            <i class="fa-solid fa-phone mr-1"></i> COMMS
                         </a>
                     </div>
                 </div>
@@ -1907,50 +1897,37 @@ async function loadLiveRiverTelemetry() {
             const bedDatum = Math.round((r.current_level - r.gauge_height_m) * 100) / 100;
             const pct = Math.min(100, Math.max(5, (r.current_level / r.danger_level_m) * 100));
 
-            let statusBadge = '<span class="badge-tactical badge-operational">SAFE</span>';
-            let barColor = 'bg-[#4ADE80]';
-            let borderStyle = 'border-[#222731]';
-            if (isDanger) {
-                statusBadge = '<span class="badge-tactical badge-critical animate-pulse"><span class="w-1.5 h-1.5 rounded-full bg-red-500"></span>CRIT SURGE</span>';
-                barColor = 'bg-[#EF4444]';
-                borderStyle = 'border-[#EF4444]/60';
-            } else if (isWarning) {
-                statusBadge = '<span class="badge-tactical badge-hazard">STAGE-1 WATCH</span>';
-                barColor = 'bg-[#F59E0B]';
-                borderStyle = 'border-[#F59E0B]/50';
-            }
+            const statusBadgeClass = isDanger ? 'badge-critical' : (isWarning ? 'badge-warning' : 'badge-nominal');
+            const statusBorder = isDanger ? 'border-left: 2px solid var(--accent-critical);' : (isWarning ? 'border-left: 2px solid var(--accent-warning);' : 'border-left: 2px solid var(--accent-nominal);');
 
             return `
-            <div class="bg-[#14171D] border ${borderStyle} p-3.5 flex flex-col justify-between transition hover:border-[#38BDF8]/40">
-                <div>
-                    <div class="flex justify-between items-center mb-2">
-                        <div class="flex items-center gap-1.5">
-                            <span class="w-1.5 h-1.5 rounded-full ${isDanger ? 'bg-red-500 animate-ping' : (isWarning ? 'bg-amber-400' : 'bg-emerald-400')}"></span>
-                            <span class="font-mono font-bold text-white text-xs uppercase tracking-wider">${r.river}</span>
-                        </div>
-                        ${statusBadge}
+            <div class="tactical-panel ${isDanger ? 'critical-pulse' : ''}" style="margin-bottom:6px; ${statusBorder}">
+                <div style="padding:6px 8px; display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-tactical);">
+                    <span class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px;">${r.river}</span>
+                    <span class="badge-tactical ${statusBadgeClass}" style="font-size:9px;">${r.status}</span>
+                </div>
+                <div style="padding:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
+                        <span class="font-mono" style="font-size:18px; font-weight:800; color:var(--text-primary);">${r.current_level} <span style="font-size:9px; color:var(--text-muted);">m MSL</span></span>
+                        <span class="tactical-meta" style="font-size:9px;">GAUGE: ${r.gauge_height_m}m</span>
                     </div>
-                    <div class="text-2xl font-black text-white font-mono tabular-nums leading-none tracking-tight my-1">
-                        ${r.current_level} <span class="text-[11px] text-[#64748B] font-mono font-normal">m MSL</span>
+                    <div class="tactical-meta" style="margin-top:2px; font-size:9px;">
+                        RAIN: <span style="color:var(--text-primary);">${r.upstream_precip_mmhr} mm/h</span> | DISCHARGE: <span style="color:var(--text-primary);">${r.discharge_m3s} m³/s</span>
                     </div>
-                    <div class="text-[10px] text-[#94A3B8] font-mono mt-1 flex justify-between">
-                        <span>RAIN: <b class="text-white">${r.upstream_precip_mmhr} mm/h</b></span>
-                        <span>DISCHARGE: <b class="text-white">${r.discharge_m3s} m³/s</b></span>
+                    <div style="width:100%; height:3px; background:var(--bg-base); border:1px solid var(--border-tactical); margin-top:4px;">
+                        <div style="height:100%; width:${pct}%; background:${isDanger ? 'var(--accent-critical)' : (isWarning ? 'var(--accent-warning)' : 'var(--accent-nominal)')}; transition:width 0.4s ease;"></div>
                     </div>
-                    <div class="w-full bg-[#0A0C0F] h-1.5 overflow-hidden border border-[#222731] mt-2">
-                        <div class="h-full ${barColor} transition-all duration-500" style="width: ${pct}%"></div>
-                    </div>
-                    <div class="flex justify-between text-[9px] text-[#64748B] font-mono mt-1.5">
-                        <span>DATUM: ${bedDatum}m</span>
+                    <div style="display:flex; justify-content:space-between; margin-top:3px; font-size:8px; color:var(--text-dim);" class="font-mono">
+                        <span>BED: ${bedDatum}m</span>
                         <span>WARN: ${r.warning_level_m}m</span>
-                        <span>CRIT: ${r.danger_level_m}m</span>
+                        <span>DANGER: ${r.danger_level_m}m</span>
                     </div>
                 </div>
-                <div class="mt-2.5 pt-2 border-t border-[#1E232B] flex items-center justify-between text-[10px] font-mono">
-                    <span class="text-[#94A3B8] truncate max-w-[200px]" title="${r.action_required}">
-                        <i class="fa-solid fa-radar mr-1 text-[#38BDF8]"></i> ${r.action_required}
+                <div style="padding:4px 8px; background:var(--bg-surface-subtle); border-top:1px solid var(--border-tactical); font-size:9px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
+                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;" title="${r.action_required}">
+                        <i class="fa-solid fa-triangle-exclamation mr-1" style="color:var(--accent-cyan);"></i>${r.action_required}
                     </span>
-                    <span class="text-[#64748B] shrink-0">STN: ${r.gauge_height_m}m</span>
+                    <span class="tactical-meta" style="font-size:8px; color:var(--accent-nominal);">VERIFIED</span>
                 </div>
             </div>
             `;
