@@ -72,6 +72,26 @@ async def lifespan(app: FastAPI):
     else:
         logger.warning("[WARN] GEMINI_API_KEY not set — AI features using fallback templates.")
 
+    # Start Autonomous Sentinel Scheduler (APScheduler daemon)
+    try:
+        from backend.services.sentinel_service import (
+            start_sentinel_scheduler,
+            shutdown_sentinel_scheduler,
+            run_sentinel_cycle,
+        )
+        start_sentinel_scheduler()
+        logger.info("[OK] Autonomous Sentinel System online — monitoring high-risk Himalayan zones hourly.")
+
+        # Trigger non-blocking initial scan shortly after startup
+        async def _initial_sentinel_kickoff():
+            await asyncio.sleep(5.0)
+            logger.info("[SENTINEL] Running initial autonomous risk scan...")
+            await run_sentinel_cycle()
+
+        asyncio.create_task(_initial_sentinel_kickoff())
+    except Exception as e:
+        logger.error("[FAIL] Autonomous Sentinel Scheduler initialization error: %s", e)
+
     logger.info("=" * 60)
     logger.info("  RAKSHAK BACKEND ONLINE — http://localhost:3000")
     logger.info("=" * 60)
@@ -79,6 +99,13 @@ async def lifespan(app: FastAPI):
     yield  # ── Application is running ──
 
     # Shutdown
+    try:
+        from backend.services.sentinel_service import shutdown_sentinel_scheduler
+        shutdown_sentinel_scheduler()
+        logger.info("[OK] Autonomous Sentinel Scheduler stopped.")
+    except Exception as e:
+        logger.warning("Error stopping sentinel scheduler: %s", e)
+
     if _background_task:
         _background_task.cancel()
         logger.info("[OK] Background tasks stopped.")

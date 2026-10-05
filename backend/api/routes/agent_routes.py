@@ -155,3 +155,40 @@ async def analyze_location(request: AgentAnalysisRequest):
                 "message": "Disaster analysis engine could not complete the request. Please retry shortly.",
             },
         )
+
+
+# ── Autonomous Sentinel System Endpoints ─────────────────────────────────────
+
+@router.get(
+    "/sentinel-status",
+    status_code=status.HTTP_200_OK,
+    summary="Get Autonomous Sentinel System Status and Latest Scan",
+    description=(
+        "Returns the operational status of the background sentinel daemon, "
+        "timestamp of the last scan cycle, and cached threat assessments for "
+        "high-risk Himalayan zones."
+    ),
+)
+async def get_sentinel_daemon_status():
+    """
+    GET /api/agent/sentinel-status
+    Returns the latest cached autonomous scan results and the timestamp of the last scan.
+    """
+    from backend.services.sentinel_service import get_sentinel_status
+    return get_sentinel_status()
+
+
+@router.post(
+    "/sentinel-scan",
+    status_code=status.HTTP_200_OK,
+    summary="Trigger Immediate Autonomous Sentinel Scan Cycle",
+    description="Forces an on-demand background sentinel cycle across all monitored high-risk zones.",
+)
+async def trigger_manual_sentinel_scan():
+    """
+    POST /api/agent/sentinel-scan
+    Triggers an immediate sentinel scan cycle and returns the scan results.
+    """
+    from backend.services.sentinel_service import trigger_sentinel_scan
+    return await trigger_sentinel_scan()
+
