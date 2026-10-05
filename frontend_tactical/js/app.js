@@ -90,11 +90,10 @@ function initMap() {
         attributionControl: false
     });
 
-    // CartoDB Dark Matter — zero API key, military-grade dark base
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        subdomains: 'abcd',
-        className: 'map-tiles'
+    // ESRI World Dark Gray Canvas — free, no API key, military-grade dark base
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 16,
+        attribution: ''
     }).addTo(leafletMap);
 
     // Track cursor coordinates
