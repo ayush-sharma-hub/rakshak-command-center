@@ -1,556 +1,423 @@
 /* ==============================================================================
-   RAKSHAK UK-SEOC // MILITARY C4ISR TACTICAL COMMAND CENTER
-   Bespoke Design System inspired by Palantir Gotham, Bloomberg Terminal & Aerospace HUDs
+   RAKSHAK C4ISR // PALANTIR GOTHAM DESIGN SYSTEM (tactical.css)
+   Military Command & Control Tactical Theme Engine
    ============================================================================== */
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700;800;900&display=swap');
 
-/* ── 1. GLOBAL DESIGN SYSTEM VARIABLES ─────────────────────────────────────── */
 :root {
     color-scheme: dark;
+    /* Strict Monochrome Base */
+    --canvas: #08090A;
+    --carbon: #0F1115;
+    --surface: #14171D;
+    --surface-elevated: #1B1F27;
+    --surface-subtle: #0D0F13;
+    
+    /* Precision Borders (Strict 1px Sharp) */
+    --border: #222731;
+    --border-light: #2D3340;
+    --border-subtle: #181C23;
 
-    /* Base Surfaces */
-    --bg-base: #030508;              /* Pitch Black / Void */
-    --bg-surface: #0A0E17;           /* Deep Carbon Surface */
-    --bg-surface-elevated: #111726;  /* Elevated Carbon Panel */
-    --bg-surface-subtle: #06090F;    /* Deep Recessed Well */
+    /* Typographic Hierarchy */
+    --text-primary: #F1F5F9;
+    --text-secondary: #94A3B8;
+    --text-muted: #64748B;
+    --text-dim: #475569;
 
-    /* Strict 1px Borders */
-    --border-tactical: #1E293B;      /* Dark Slate for 1px sharp borders */
-    --border-active: #334155;        /* Active Focused Border */
-    --border-subtle: #141B28;        /* Subtle divider */
-
-    /* Typography */
-    --text-primary: #E2E8F0;         /* High-contrast crisp data text */
-    --text-muted: #64748B;           /* Military metadata gray */
-    --text-dim: #475569;             /* Sub-labels & datums */
-
-    /* Tactical Indicators (Strictly for telemetry & critical states) */
-    --accent-nominal: #10B981;       /* Emerald - for safe/operational states */
-    --accent-warning: #F59E0B;       /* Amber - for active watch/stage-1 alerts */
-    --accent-critical: #EF4444;      /* Crimson - for SOS/breach/severe alerts */
-    --accent-cyan: #38BDF8;          /* Stealth Cyan - for radar & satcom */
-
-    /* Font Families */
-    --font-ui: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-mono: 'JetBrains Mono', 'Roboto Mono', ui-monospace, monospace;
+    /* Tactical Signaling (Restricted to Telemetry & Critical Data States) */
+    --tactical-cyan: #38BDF8;      /* Nominal / Operational Radar */
+    --tactical-green: #4ADE80;     /* Safe / Ready / Normal */
+    --tactical-amber: #F59E0B;     /* Stage-1 Hazard / Warning Watch */
+    --tactical-crimson: #EF4444;   /* Critical Alert / SOS Breach */
+    --tactical-purple-kill: none;  /* Zero generic AI-purple/indigo glows */
 }
 
-/* ── 2. BRUTALIST ARCHITECTURAL BASE & RESET ───────────────────────────────── */
-*, *::before, *::after {
-    box-sizing: border-box;
-    border-radius: 0 !important;   /* ZERO rounded corners by default */
-    box-shadow: none !important;    /* Eliminate soft drop-shadows */
-    text-shadow: none !important;
-}
-
-/* Allow strictly maximum 2px radius only when explicitly declared */
-.rounded-sm, .rounded-2px, .badge-tactical, .btn-tactical {
-    border-radius: 2px !important;
-}
-
-html, body {
-    width: 100%;
-    min-height: 100%;
+/* ── Base Canvas ───────────────────────────────────────────────────────────── */
+body {
+    background-color: var(--canvas) !important;
+    background-image: 
+        linear-gradient(to right, rgba(34, 39, 49, 0.25) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(34, 39, 49, 0.25) 1px, transparent 1px) !important;
+    background-size: 32px 32px !important;
+    color: var(--text-primary) !important;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
     margin: 0;
     padding: 0;
-    background-color: var(--bg-base) !important;
-    color: var(--text-primary) !important;
-    font-family: var(--font-ui) !important;
-    font-size: 13px;
-    line-height: 1.4;
     -webkit-font-smoothing: antialiased;
-    overflow-x: hidden;
 }
 
-/* Tactical Canvas Grid Pattern */
-body {
-    background-image: 
-        linear-gradient(to right, rgba(30, 41, 59, 0.3) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(30, 41, 59, 0.3) 1px, transparent 1px),
-        linear-gradient(to right, rgba(30, 41, 59, 0.1) 1px, transparent 1px),
-        linear-gradient(to bottom, rgba(30, 41, 59, 0.1) 1px, transparent 1px) !important;
-    background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px !important;
-}
-
-/* Subtle CRT Scanline Overlay */
-body::before {
-    content: " ";
-    display: block;
-    position: fixed;
-    top: 0; left: 0; bottom: 0; right: 0;
-    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.32) 50%);
-    background-size: 100% 3px;
-    z-index: 99999;
-    pointer-events: none;
-    opacity: 0.35;
-}
-
-/* ── 3. TYPOGRAPHY & TELEMETRY STANDARDS ───────────────────────────────────── */
-.font-mono,
+/* Force Monospace on all telemetry numbers & codes */
+.font-mono, 
 [data-mono],
 .tabular-nums {
-    font-family: var(--font-mono) !important;
+    font-family: 'JetBrains Mono', 'Roboto Mono', ui-monospace, monospace !important;
     font-variant-numeric: tabular-nums !important;
 }
 
-/* Tactical Section Headers: UPPERCASE, 11px, tracking-0.2em, muted gray */
-h1.tactical-title,
-h2.tactical-title,
-.tactical-header {
-    font-family: var(--font-mono) !important;
+/* ── Eliminate Soft Rounded SaaS Bubbles (Strict Gotham Geometry) ──────────── */
+.rounded-3xl,
+.rounded-2xl,
+.rounded-xl,
+.rounded-lg {
+    border-radius: 2px !important;
+}
+.rounded-md,
+.rounded {
+    border-radius: 2px !important;
+}
+.rounded-sm {
+    border-radius: 1px !important;
+}
+.rounded-full {
+    /* Preserve circles only for small indicator beacons */
+    border-radius: 9999px;
+}
+
+/* ── Suppress All Generic SaaS Glows & Heavy Blur Bubbles ───────────────────── */
+.blur-\[140px\],
+.blur-3xl,
+.blur-2xl,
+.blur-xl,
+div[class*="bg-indigo-600/10"],
+div[class*="bg-emerald-600/10"] {
+    display: none !important;
+}
+
+/* ── Tactical Surface Architecture ─────────────────────────────────────────── */
+.tactical-surface,
+.bg-slate-900,
+aside,
+header,
+main > div,
+.bg-slate-900\/90 {
+    background: var(--surface) !important;
+    border-color: var(--border) !important;
+    box-shadow: none !important;
+}
+
+.tactical-surface-dark,
+.bg-slate-950 {
+    background: var(--carbon) !important;
+    border-color: var(--border) !important;
+}
+
+/* ── Tactical 1px Borders ─────────────────────────────────────────────────── */
+.border-slate-800,
+.border-slate-700,
+.border-indigo-500\/30,
+.border-indigo-800,
+.border-emerald-500\/30 {
+    border-color: var(--border) !important;
+}
+
+/* ── Tactical Headers (Compact, Uppercase, Muted Slate) ────────────────────── */
+.tactical-header,
+h2, h3, h4 {
+    letter-spacing: 0.08em !important;
     text-transform: uppercase !important;
+    color: var(--text-primary) !important;
+}
+
+.tactical-meta-label {
     font-size: 11px !important;
     font-weight: 700 !important;
-    letter-spacing: 0.2em !important;
-    color: var(--text-muted) !important;
-    margin: 0;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-}
-
-.tactical-meta {
-    font-family: var(--font-mono) !important;
-    font-size: 10px !important;
     text-transform: uppercase !important;
-    letter-spacing: 0.15em !important;
+    letter-spacing: 0.1em !important;
     color: var(--text-muted) !important;
 }
 
-/* ── 4. HIGH-DENSITY CSS GRID DASHBOARD ARCHITECTURE ──────────────────────── */
-.c4isr-container {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
-    background: var(--bg-base);
+/* ── Beacons & Heartbeat Signals ───────────────────────────────────────────── */
+@keyframes tacticalHeartbeat {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.35; transform: scale(0.85); }
 }
 
-/* Top Tactical Readout Bar */
-.c4isr-topbar {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 6px 14px;
-    background: var(--bg-surface);
-    border-bottom: 1px solid var(--border-tactical);
-    height: 38px;
-    flex-shrink: 0;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    z-index: 50;
-}
-
-/* High-Density 3-Column Bloomberg Grid */
-.c4isr-grid-3col {
-    display: grid;
-    grid-template-columns: 310px 1fr 340px;
-    flex: 1;
-    height: calc(100vh - 38px - 28px);
-    overflow: hidden;
-    background: var(--bg-base);
-}
-
-@media (max-width: 1200px) {
-    .c4isr-grid-3col {
-        grid-template-columns: 280px 1fr 300px;
-    }
-}
-
-@media (max-width: 900px) {
-    .c4isr-grid-3col {
-        grid-template-columns: 1fr;
-        height: auto;
-        overflow-y: auto;
-    }
-}
-
-/* Tactical Panel */
-.tactical-panel {
-    background: var(--bg-surface);
-    border: 1px solid var(--border-tactical);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.tactical-panel-header {
-    background: var(--bg-surface-subtle);
-    border-bottom: 1px solid var(--border-tactical);
-    padding: 6px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex-shrink: 0;
-}
-
-.tactical-panel-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 8px;
-    background: var(--bg-surface);
-}
-
-/* Zero Wasted Space Dividers */
-.tactical-col-left {
-    border-right: 1px solid var(--border-tactical);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    background: var(--bg-surface);
-}
-
-.tactical-col-center {
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    background: var(--bg-base);
-}
-
-.tactical-col-right {
-    border-left: 1px solid var(--border-tactical);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-    background: var(--bg-surface);
-}
-
-/* ── 5. DYNAMIC MICRO-INTERACTIONS & KEYFRAME ANIMATIONS ──────────────────── */
-/* Heartbeat Border Pulse for SOS/Critical elements */
-@keyframes criticalHeartbeat {
+@keyframes tacticalCrimsonPulse {
     0%, 100% {
-        border-color: var(--accent-critical);
-        box-shadow: inset 0 0 6px rgba(239, 68, 68, 0.25), 0 0 4px rgba(239, 68, 68, 0.3) !important;
+        box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+        border-color: #EF4444;
     }
     50% {
-        border-color: #7F1D1D;
-        box-shadow: inset 0 0 1px rgba(239, 68, 68, 0.05), 0 0 1px rgba(239, 68, 68, 0.05) !important;
+        box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+        border-color: #F87171;
     }
 }
 
-.critical-pulse,
-.critical-heartbeat {
-    animation: criticalHeartbeat 2.0s infinite ease-in-out !important;
-}
-
-/* Subtle Heartbeat Indicator Beacon */
-@keyframes beaconBlink {
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.2; transform: scale(0.85); }
-}
-
-.beacon-dot {
+.tactical-beacon-green {
     display: inline-block;
     width: 6px;
     height: 6px;
-    border-radius: 50% !important;
-    animation: beaconBlink 1.8s infinite ease-in-out;
+    border-radius: 50%;
+    background-color: var(--tactical-green);
+    animation: tacticalHeartbeat 2s infinite ease-in-out;
 }
 
-.beacon-nominal { background-color: var(--accent-nominal); }
-.beacon-warning { background-color: var(--accent-warning); }
-.beacon-critical { background-color: var(--accent-critical); animation-duration: 0.9s; }
-.beacon-cyan { background-color: var(--accent-cyan); }
-
-/* Terminal Output Slide-In Animation for New SOS / Alert Entries */
-@keyframes terminalSlideIn {
-    0% {
-        opacity: 0;
-        transform: translateY(-8px);
-        background-color: rgba(239, 68, 68, 0.15);
-    }
-    100% {
-        opacity: 1;
-        transform: translateY(0);
-        background-color: var(--bg-surface-subtle);
-    }
+.tactical-beacon-cyan {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--tactical-cyan);
+    animation: tacticalHeartbeat 2s infinite ease-in-out;
 }
 
-.terminal-entry {
-    animation: terminalSlideIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.tactical-beacon-crimson {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--tactical-crimson);
+    animation: tacticalHeartbeat 1s infinite ease-in-out;
 }
 
-/* ── 6. TACTICAL TERMINAL SITUATIONAL LOG ROWS ────────────────────────────── */
-.log-row-tactical {
-    background: var(--bg-surface-subtle);
-    border: 1px solid var(--border-tactical);
-    border-left: 2px solid var(--accent-critical);
-    padding: 8px 10px;
-    margin-bottom: 6px;
-    font-family: var(--font-mono);
-    font-size: 11px;
-    transition: background 0.12s ease;
+.tactical-beacon-amber {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background-color: var(--tactical-amber);
+    animation: tacticalHeartbeat 1.5s infinite ease-in-out;
 }
 
-.log-row-tactical:hover {
-    background: var(--bg-surface-elevated);
-    border-color: var(--border-active);
+.pulse-crimson {
+    animation: tacticalCrimsonPulse 2s infinite ease-in-out;
 }
 
-.log-row-nominal { border-left-color: var(--accent-nominal); }
-.log-row-warning { border-left-color: var(--accent-warning); }
-.log-row-cyan { border-left-color: var(--accent-cyan); }
+/* ── Tactical Nav Items (Palantir Gotham Vertical Strip) ──────────────────── */
+aside {
+    background: #0B0D11 !important;
+    border-right: 1px solid var(--border) !important;
+}
 
-/* Tactical Status Badges */
+aside nav a {
+    border-radius: 2px !important;
+    border-left: 2px solid transparent !important;
+    border-top: none !important;
+    border-bottom: none !important;
+    border-right: none !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+    letter-spacing: 0.05em !important;
+    color: var(--text-secondary) !important;
+    transition: all 0.12s ease-in-out !important;
+    padding: 8px 12px !important;
+}
+
+aside nav a:hover {
+    background: #151820 !important;
+    color: var(--text-primary) !important;
+    border-left-color: var(--text-muted) !important;
+    transform: none !important;
+}
+
+aside nav a.active,
+aside nav a.bg-indigo-600\/20 {
+    background: #171B24 !important;
+    color: #FFFFFF !important;
+    border-left-color: var(--tactical-cyan) !important;
+    font-weight: 700 !important;
+    box-shadow: none !important;
+}
+
+/* ── Tactical Buttons (Sharp Rectangles with 1px border) ──────────────────── */
+button, .btn-tactical {
+    border-radius: 2px !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.06em !important;
+    font-size: 11px !important;
+    transition: all 0.15s ease !important;
+}
+
+button:hover {
+    filter: brightness(1.15);
+    transform: none !important;
+}
+
+/* ── Tactical Situational Log Row (SOS Triage Desk) ────────────────────────── */
+.tactical-log-row {
+    background: #101318 !important;
+    border: 1px solid var(--border) !important;
+    border-left: 2px solid var(--tactical-crimson) !important;
+    border-radius: 2px !important;
+    padding: 10px 14px !important;
+    transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.tactical-log-row:hover {
+    background: #161A22 !important;
+    border-color: #2D3340 !important;
+}
+
+.tactical-log-row.status-dispatched {
+    border-left-color: var(--tactical-cyan) !important;
+}
+
+.tactical-log-row.status-cleared {
+    border-left-color: var(--tactical-green) !important;
+}
+
+/* ── Tactical Badges ───────────────────────────────────────────────────────── */
 .badge-tactical {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 10px !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.05em !important;
+    padding: 2px 6px !important;
+    border-radius: 2px !important;
     display: inline-flex;
     align-items: center;
     gap: 4px;
-    font-family: var(--font-mono);
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
-    padding: 1px 6px;
-    border: 1px solid var(--border-tactical);
-    background: var(--bg-surface);
-    color: var(--text-primary);
 }
 
 .badge-nominal {
-    border-color: rgba(16, 185, 129, 0.4);
-    color: var(--accent-nominal);
-    background: rgba(16, 185, 129, 0.08);
+    background: rgba(56, 189, 248, 0.1) !important;
+    color: var(--tactical-cyan) !important;
+    border: 1px solid rgba(56, 189, 248, 0.3) !important;
 }
 
-.badge-warning {
-    border-color: rgba(245, 158, 11, 0.4);
-    color: var(--accent-warning);
-    background: rgba(245, 158, 11, 0.08);
+.badge-operational {
+    background: rgba(74, 222, 128, 0.1) !important;
+    color: var(--tactical-green) !important;
+    border: 1px solid rgba(74, 222, 128, 0.3) !important;
+}
+
+.badge-hazard {
+    background: rgba(245, 158, 11, 0.1) !important;
+    color: var(--tactical-amber) !important;
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
 }
 
 .badge-critical {
-    border-color: rgba(239, 68, 68, 0.5);
-    color: var(--accent-critical);
-    background: rgba(239, 68, 68, 0.12);
+    background: rgba(239, 68, 68, 0.12) !important;
+    color: var(--tactical-crimson) !important;
+    border: 1px solid rgba(239, 68, 68, 0.4) !important;
 }
 
-/* Tactical Micro-Action Buttons */
-button, .btn-tactical {
-    background: var(--bg-surface-elevated);
-    border: 1px solid var(--border-tactical);
-    color: var(--text-primary);
-    font-family: var(--font-mono);
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    padding: 4px 10px;
-    cursor: pointer;
-    transition: background 0.1s ease, border-color 0.1s ease, color 0.1s ease;
-}
-
-button:hover, .btn-tactical:hover {
-    background: #1E293B;
-    border-color: var(--accent-cyan);
-    color: #FFFFFF;
-}
-
-.btn-critical {
-    background: rgba(239, 68, 68, 0.12);
-    border-color: var(--accent-critical);
-    color: var(--accent-critical);
-}
-
-.btn-critical:hover {
-    background: var(--accent-critical);
-    color: #FFFFFF;
-}
-
-.btn-nominal {
-    background: rgba(16, 185, 129, 0.12);
-    border-color: var(--accent-nominal);
-    color: var(--accent-nominal);
-}
-
-.btn-nominal:hover {
-    background: var(--accent-nominal);
-    color: #FFFFFF;
-}
-
-/* ── 7. MAP & GIS STYLING (EXACT HIGH-CONTRAST FILTER DIRECTIVE) ──────────── */
+/* ── Tactical Radar Map & Crosshairs ───────────────────────────────────────── */
 #map {
-    width: 100%;
-    height: 100%;
-    background: #030508 !important;
+    background: #08090A !important;
 }
 
 .leaflet-container {
-    background: #030508 !important;
-    font-family: var(--font-ui) !important;
+    background: #08090A !important;
+    font-family: 'Inter', sans-serif !important;
 }
 
-/* Required Map Tile Filter Override */
-.leaflet-tile,
-.leaflet-tile-pane,
-.tactical-dark-tiles {
-    filter: invert(100%) hue-rotate(180deg) brightness(95%) contrast(90%) grayscale(80%) !important;
+/* Dark Tactical Map Tiles (CartoDB Dark Matter / Invert) */
+.leaflet-tile {
+    filter: brightness(0.85) contrast(1.15) !important;
 }
 
-/* Leaflet Dark HUD Overrides */
-.leaflet-control-zoom {
-    border: 1px solid var(--border-tactical) !important;
-}
-
-.leaflet-control-zoom a {
-    background: var(--bg-surface) !important;
-    color: var(--text-primary) !important;
-    border-bottom: 1px solid var(--border-tactical) !important;
-    font-family: var(--font-mono) !important;
-}
-
-.leaflet-control-zoom a:hover {
-    background: var(--bg-surface-elevated) !important;
-    color: var(--accent-cyan) !important;
-}
-
-.leaflet-control-layers {
-    background: var(--bg-surface) !important;
-    border: 1px solid var(--border-tactical) !important;
-    color: var(--text-primary) !important;
-    font-family: var(--font-mono) !important;
-    font-size: 11px !important;
-}
-
-.leaflet-popup-content-wrapper {
-    background: var(--bg-surface) !important;
-    color: var(--text-primary) !important;
-    border: 1px solid var(--border-tactical) !important;
-    padding: 0 !important;
-}
-
-.leaflet-popup-tip {
-    background: var(--bg-surface) !important;
-    border: 1px solid var(--border-tactical) !important;
-}
-
-/* Radar Reticle Crosshair HUD */
-.map-radar-hud {
+/* Tactical Map Crosshair Overlay */
+.tactical-crosshair-overlay {
     position: absolute;
     inset: 0;
     pointer-events: none;
-    z-index: 450;
+    z-index: 500;
 }
 
-.map-radar-hud::after {
+.tactical-crosshair-overlay::before {
     content: '';
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 16px;
-    height: 16px;
+    width: 140px;
+    height: 140px;
+    transform: translate(-50%, -50%);
+    border: 1px dashed rgba(56, 189, 248, 0.25);
+    border-radius: 50%;
+}
+
+.tactical-crosshair-overlay::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
     transform: translate(-50%, -50%);
     background-image: 
-        linear-gradient(to right, transparent 7px, rgba(56, 189, 248, 0.7) 7px, rgba(56, 189, 248, 0.7) 9px, transparent 9px),
-        linear-gradient(to bottom, transparent 7px, rgba(56, 189, 248, 0.7) 7px, rgba(56, 189, 248, 0.7) 9px, transparent 9px);
+        linear-gradient(to right, transparent 9px, rgba(56, 189, 248, 0.6) 9px, rgba(56, 189, 248, 0.6) 11px, transparent 11px),
+        linear-gradient(to bottom, transparent 9px, rgba(56, 189, 248, 0.6) 9px, rgba(56, 189, 248, 0.6) 11px, transparent 11px);
 }
 
-.corner-bracket {
+.radar-corner-reticle {
     position: absolute;
-    width: 10px;
-    height: 10px;
-    border-color: rgba(56, 189, 248, 0.45);
+    width: 12px;
+    height: 12px;
+    border-color: rgba(56, 189, 248, 0.5);
     border-style: solid;
     pointer-events: none;
+    z-index: 500;
 }
-.corner-tl { top: 8px; left: 8px; border-width: 2px 0 0 2px; }
-.corner-tr { top: 8px; right: 8px; border-width: 2px 2px 0 0; }
-.corner-bl { bottom: 8px; left: 8px; border-width: 0 0 2px 2px; }
-.corner-br { bottom: 8px; right: 8px; border-width: 0 2px 2px 0; }
+.radar-reticle-tl { top: 12px; left: 12px; border-width: 2px 0 0 2px; }
+.radar-reticle-tr { top: 12px; right: 12px; border-width: 2px 2px 0 0; }
+.radar-reticle-bl { bottom: 12px; left: 12px; border-width: 0 0 2px 2px; }
+.radar-reticle-br { bottom: 12px; right: 12px; border-width: 0 2px 2px 0; }
 
-/* ── 8. SCROLLBARS ─────────────────────────────────────────────────────────── */
-::-webkit-scrollbar {
-    width: 4px;
-    height: 4px;
-}
-::-webkit-scrollbar-track {
-    background: var(--bg-base);
-}
-::-webkit-scrollbar-thumb {
-    background: var(--border-tactical);
-}
-::-webkit-scrollbar-thumb:hover {
-    background: var(--border-active);
-}
-
-/* ── 9. TACTICAL INPUTS & CONTROLS ────────────────────────────────────────── */
-input[type="text"],
-input[type="email"],
-input[type="password"],
-input[type="search"],
-input[type="number"],
-select,
-textarea {
-    background-color: var(--bg-surface-subtle) !important;
-    border: 1px solid var(--border-tactical) !important;
-    color: var(--text-primary) !important;
-    font-family: var(--font-mono) !important;
-    font-size: 11px !important;
-    border-radius: 0 !important;
-    padding: 7px 10px !important;
-    transition: border-color 0.15s ease, background-color 0.15s ease;
-}
-
-input:focus, select:focus, textarea:focus {
-    border-color: var(--accent-cyan) !important;
-    outline: none !important;
-    background-color: var(--bg-surface) !important;
-}
-
-/* ── 10. TACTICAL BUTTONS & LINKS OVERRIDES ────────────────────────────────── */
-.btn-tactical-primary {
-    background: #1E293B !important;
-    border: 1px solid #334155 !important;
-    color: #F8FAFC !important;
-    font-family: var(--font-mono) !important;
-    font-size: 11px !important;
-    font-weight: 700 !important;
-    letter-spacing: 0.1em !important;
-    text-transform: uppercase !important;
-    padding: 8px 14px !important;
+/* Tactical Leaflet Controls */
+.leaflet-control-zoom {
+    border: 1px solid var(--border) !important;
     border-radius: 2px !important;
-    cursor: pointer;
-    transition: all 0.15s ease;
-}
-
-.btn-tactical-primary:hover {
-    background: #334155 !important;
-    border-color: var(--accent-cyan) !important;
-    color: #FFFFFF !important;
-}
-
-.btn-tactical-danger {
-    background: rgba(239, 68, 68, 0.15) !important;
-    border: 1px solid var(--accent-critical) !important;
-    color: #EF4444 !important;
-}
-.btn-tactical-danger:hover {
-    background: var(--accent-critical) !important;
-    color: #FFFFFF !important;
-}
-
-.btn-tactical-nominal {
-    background: rgba(16, 185, 129, 0.15) !important;
-    border: 1px solid var(--accent-nominal) !important;
-    color: #10B981 !important;
-}
-.btn-tactical-nominal:hover {
-    background: var(--accent-nominal) !important;
-    color: #FFFFFF !important;
-}
-
-/* ── 11. NEUTRALIZE GENERIC SAAS UTILITIES ───────────────────────────────── */
-.blur, .blur-sm, .blur-md, .blur-lg, .blur-xl, .blur-2xl, .blur-3xl {
-    filter: none !important;
-}
-.backdrop-blur, .backdrop-blur-sm, .backdrop-blur-md, .backdrop-blur-lg, .backdrop-blur-xl {
-    backdrop-filter: none !important;
-}
-.rounded-3xl, .rounded-2xl, .rounded-xl, .rounded-lg, .rounded-md, .rounded {
-    border-radius: 0 !important;
-}
-.shadow-2xl, .shadow-xl, .shadow-lg, .shadow-md, .shadow-sm, .shadow {
+    overflow: hidden !important;
     box-shadow: none !important;
 }
+
+.leaflet-control-zoom a {
+    background: #0F1115 !important;
+    color: var(--text-primary) !important;
+    border-bottom: 1px solid var(--border) !important;
+    border-radius: 0 !important;
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+.leaflet-control-zoom a:hover {
+    background: #1B1F27 !important;
+    color: var(--tactical-cyan) !important;
+}
+
+.leaflet-control-layers {
+    background: #0F1115 !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 2px !important;
+    color: var(--text-primary) !important;
+    box-shadow: none !important;
+    font-family: 'JetBrains Mono', monospace !important;
+    font-size: 11px !important;
+}
+
+.leaflet-popup-content-wrapper {
+    background: #0C0E12 !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 2px !important;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.8) !important;
+    padding: 0 !important;
+}
+
+.leaflet-popup-tip {
+    background: #0C0E12 !important;
+    border: 1px solid var(--border) !important;
+}
+
+/* ── Scrollbars ────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+::-webkit-scrollbar-track {
+    background: #08090A;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #1E232B;
+    border-radius: 1px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #2D3340;
+}
+

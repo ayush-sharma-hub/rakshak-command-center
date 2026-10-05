@@ -880,18 +880,15 @@ function addLog(msg, type = 'sys') {
 // 5. DOM INITIALIZATION
 // =========================================================================
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Dual Clock: Indian Standard Time (IST) & UTC Tactical Telemetry
-    function updateTacticalClocks() {
-        const now = new Date();
-        const istStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
-        const utcStr = now.toISOString().slice(11, 19);
-        const clockEls = document.querySelectorAll('#clock, #tactical-clock, .c4isr-clock');
-        clockEls.forEach(el => {
-            el.innerHTML = `<span style="color:var(--text-muted)">UTC</span> <span style="color:var(--accent-cyan);font-weight:700">${utcStr}Z</span> <span style="color:var(--border-active)">|</span> <span style="color:var(--text-muted)">IST</span> <span style="color:var(--text-primary);font-weight:700">${istStr}</span>`;
-        });
+    // 1. Clock with Indian Standard Time (IST)
+    const clockEl = document.getElementById('clock');
+    if (clockEl) {
+        setInterval(() => {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour12: false, timeZone: 'Asia/Kolkata' });
+            clockEl.innerHTML = `<span class="text-slate-400">IST</span> <span class="text-white font-bold">${timeStr}</span>`;
+        }, 1000);
     }
-    updateTacticalClocks();
-    setInterval(updateTacticalClocks, 1000);
 
     // 2. Audio button listener
     const audioBtns = document.querySelectorAll('.audio-toggle-btn');
@@ -1681,37 +1678,36 @@ function renderRiverBasins(basins) {
         const curr = parseFloat(b.current_level ?? b.currentLevel ?? 0);
         const dang = parseFloat(b.danger_level ?? b.dangerLevel ?? 100);
         const percent = Math.min(100, Math.round((curr / dang) * 100));
-        const status = (b.status || 'SAFE').toUpperCase();
+        const status = b.status || 'SAFE';
         const trend = b.trend || 'Steady';
 
-        let badgeClass = 'badge-nominal';
-        let barColor = 'var(--accent-nominal)';
-        let borderLeft = 'border-left: 2px solid var(--accent-nominal);';
+        let badgeColor = 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30';
+        let barColor = 'bg-emerald-500';
         if (status === 'WARNING') {
-            badgeClass = 'badge-warning';
-            barColor = 'var(--accent-warning)';
-            borderLeft = 'border-left: 2px solid var(--accent-warning);';
-        } else if (status === 'CRITICAL' || status === 'DANGER' || status === 'EXTREME_FLOOD') {
-            badgeClass = 'badge-critical';
-            barColor = 'var(--accent-critical)';
-            borderLeft = 'border-left: 2px solid var(--accent-critical);';
+            badgeColor = 'text-amber-400 bg-amber-500/10 border-amber-500/30';
+            barColor = 'bg-amber-500';
+        } else if (status === 'CRITICAL' || status === 'DANGER') {
+            badgeColor = 'text-rose-400 bg-rose-500/10 border-rose-500/30';
+            barColor = 'bg-rose-500';
         }
 
         return `
-            <div class="log-row-tactical" style="margin-bottom:4px; padding:6px 8px; ${borderLeft}">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:2px;">
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 flex flex-col justify-between group relative overflow-hidden">
+                <div class="flex justify-between items-start mb-2">
                     <div>
-                        <span class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px;">${b.river}</span>
-                        <span class="tactical-meta" style="margin-left:6px; font-size:9px;">DANGER: ${dang}m</span>
+                        <span class="text-xs font-bold text-white block">${b.river}</span>
+                        <span class="text-[10px] text-slate-400">Danger Mark: ${dang}m</span>
                     </div>
-                    <span class="badge-tactical ${badgeClass}" style="font-size:9px;">${status}</span>
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${badgeColor}">${status}</span>
                 </div>
-                <div style="display:flex; justify-content:space-between; align-items:baseline; font-family:var(--font-mono); font-size:10px; margin-top:2px;">
-                    <span style="font-weight:700; color:var(--text-primary);">${curr.toFixed(1)} m</span>
-                    <span style="color:var(--text-muted); font-size:9px;">TREND: ${trend}</span>
-                </div>
-                <div style="width:100%; height:3px; background:var(--bg-base); border:1px solid var(--border-tactical); margin-top:4px;">
-                    <div style="height:100%; width:${percent}%; background:${barColor}; transition:width 0.5s ease;"></div>
+                <div class="mt-2">
+                    <div class="flex justify-between text-xs font-mono mb-1">
+                        <span class="text-white font-bold">${curr.toFixed(1)} m</span>
+                        <span class="text-slate-400">${trend}</span>
+                    </div>
+                    <div class="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden shadow-inner">
+                        <div class="${barColor} h-full transition-all duration-700 ease-out" style="width: ${percent}%"></div>
+                    </div>
                 </div>
             </div>
         `;
@@ -1724,9 +1720,9 @@ function renderLiveSOSList(sosSignals) {
 
     if (sosSignals.length === 0) {
         container.innerHTML = `
-            <div style="text-align:center; padding:16px; color:var(--text-dim); font-family:var(--font-mono); font-size:11px;">
-                <i class="fa-solid fa-circle-check" style="color:var(--accent-nominal); margin-right:4px;"></i>
-                NO ACTIVE CIVILIAN DISTRESS SIGNALS PENDING TRIAGE
+            <div class="text-center py-6 text-slate-500 text-xs">
+                <i class="fa-solid fa-check-circle text-2xl mb-2 text-emerald-500/40"></i>
+                <p>No active civilian distress signals pending triage.</p>
             </div>
         `;
         return;
@@ -1739,54 +1735,42 @@ function renderLiveSOSList(sosSignals) {
         const timeVal = sos.time ?? (sos.created_at ? sos.created_at.split('T')[1].slice(0, 5) : 'Recent');
         const phone = sos.phone || '1077';
 
-        const isPending = sos.status === 'PENDING' || !sos.status;
-        const isDispatched = sos.status === 'DISPATCHED' || sos.status === 'EN ROUTE';
-        const isCleared = sos.status === 'CLEARED' || sos.status === 'RESOLVED';
-
-        let badgeClass = 'badge-warning';
-        let borderLeftColor = 'var(--accent-warning)';
-        if (isPending) {
-            badgeClass = 'badge-critical';
-            borderLeftColor = 'var(--accent-critical)';
-        } else if (isDispatched) {
-            badgeClass = 'badge-warning';
-            borderLeftColor = 'var(--accent-cyan)';
-        } else if (isCleared) {
-            badgeClass = 'badge-nominal';
-            borderLeftColor = 'var(--accent-nominal)';
-        }
+        let statusBadge = 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+        if (sos.status === 'DISPATCHED') statusBadge = 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
+        if (sos.status === 'EN ROUTE') statusBadge = 'bg-cyan-500/20 text-cyan-300 border-cyan-500/40';
+        if (sos.status === 'CLEARED' || sos.status === 'RESOLVED') statusBadge = 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
 
         return `
-            <div class="log-row-tactical terminal-entry ${isPending ? 'critical-pulse' : ''}" style="margin-bottom:6px; border-left:2px solid ${borderLeftColor};">
-                <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+            <div class="p-4 rounded-xl bg-slate-950 border border-slate-800/90 hover:border-rose-400/50 hover:-translate-y-0.5 transition duration-200 flex flex-col gap-2.5 shadow-lg shadow-black/10">
+                <div class="flex justify-between items-start">
                     <div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <span class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px;">${caller}</span>
-                            <span class="tactical-meta" style="font-size:9px;">${timeVal}</span>
+                        <div class="flex items-center gap-2">
+                            <span class="font-bold text-white text-xs">${caller}</span>
+                            <span class="text-[10px] font-mono text-slate-400">${timeVal}</span>
                         </div>
-                        <div class="tactical-meta" style="color:var(--accent-cyan); margin-top:2px; font-size:10px;">
-                            <i class="fa-solid fa-location-crosshairs mr-1"></i> ${loc}
+                        <div class="text-[11px] text-indigo-400 font-medium mt-0.5">
+                            <i class="fa-solid fa-location-dot mr-1"></i> ${loc}
                         </div>
                     </div>
-                    <span class="badge-tactical ${badgeClass}">${sos.status || 'PENDING'}</span>
+                    <span class="text-[10px] font-bold uppercase px-2 py-0.5 rounded border ${statusBadge}">${sos.status}</span>
                 </div>
-                <div style="background:var(--bg-base); padding:6px; border:1px solid var(--border-tactical); font-family:var(--font-mono); font-size:10px; color:var(--text-primary); margin:6px 0;">
+                <p class="text-xs text-slate-300 bg-slate-900/60 p-2 rounded-lg border border-slate-800/60 leading-relaxed">
                     ${sos.details}
-                </div>
-                <div style="display:flex; justify-content:space-between; align-items:center; font-family:var(--font-mono); font-size:10px; border-top:1px solid var(--border-tactical); padding-top:4px;">
-                    <span style="color:var(--text-muted);">UNIT: <b style="color:var(--text-primary);">${assigned}</b></span>
-                    <div style="display:flex; gap:4px;">
+                </p>
+                <div class="flex items-center justify-between pt-1 border-t border-slate-800/80 text-[11px]">
+                    <span class="text-slate-400">Assigned: <b class="text-slate-200">${assigned}</b></span>
+                    <div class="flex gap-2">
                         ${sos.status === 'PENDING' ? `
-                            <button onclick="dispatchRescueTeam('${sos.id}', 'SDRF High Altitude Unit')" class="btn-tactical btn-critical" style="padding:2px 6px; font-size:9px;">
-                                <i class="fa-solid fa-person-running mr-1"></i> DEPLOY
+                            <button onclick="dispatchRescueTeam('${sos.id}', 'SDRF High Altitude Unit')" class="px-2.5 py-1 bg-rose-600 hover:bg-rose-500 text-white rounded-lg font-bold text-[10px] shadow transition">
+                                <i class="fa-solid fa-person-running mr-1"></i> Deploy Team
                             </button>
                         ` : `
-                            <button onclick="resolveDistressCall('${sos.id}')" class="btn-tactical btn-nominal" style="padding:2px 6px; font-size:9px;">
-                                <i class="fa-solid fa-check mr-1"></i> CLEAR
+                            <button onclick="resolveDistressCall('${sos.id}')" class="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-600 text-white rounded-lg font-bold text-[10px] transition">
+                                <i class="fa-solid fa-check mr-1"></i> Mark Cleared
                             </button>
                         `}
-                        <a href="tel:${phone}" class="btn-tactical" style="padding:2px 6px; font-size:9px; text-decoration:none;">
-                            <i class="fa-solid fa-phone mr-1"></i> COMMS
+                        <a href="tel:${phone}" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-lg text-[10px] transition">
+                            <i class="fa-solid fa-phone mr-1"></i> Call Back
                         </a>
                     </div>
                 </div>
@@ -1897,37 +1881,32 @@ async function loadLiveRiverTelemetry() {
             const bedDatum = Math.round((r.current_level - r.gauge_height_m) * 100) / 100;
             const pct = Math.min(100, Math.max(5, (r.current_level / r.danger_level_m) * 100));
 
-            const statusBadgeClass = isDanger ? 'badge-critical' : (isWarning ? 'badge-warning' : 'badge-nominal');
-            const statusBorder = isDanger ? 'border-left: 2px solid var(--accent-critical);' : (isWarning ? 'border-left: 2px solid var(--accent-warning);' : 'border-left: 2px solid var(--accent-nominal);');
-
             return `
-            <div class="tactical-panel ${isDanger ? 'critical-pulse' : ''}" style="margin-bottom:6px; ${statusBorder}">
-                <div style="padding:6px 8px; display:flex; justify-content:space-between; align-items:center; background:var(--bg-surface-subtle); border-bottom:1px solid var(--border-tactical);">
-                    <span class="font-mono" style="font-weight:700; color:var(--text-primary); font-size:11px;">${r.river}</span>
-                    <span class="badge-tactical ${statusBadgeClass}" style="font-size:9px;">${r.status}</span>
-                </div>
-                <div style="padding:8px;">
-                    <div style="display:flex; justify-content:space-between; align-items:baseline;">
-                        <span class="font-mono" style="font-size:18px; font-weight:800; color:var(--text-primary);">${r.current_level} <span style="font-size:9px; color:var(--text-muted);">m MSL</span></span>
-                        <span class="tactical-meta" style="font-size:9px;">GAUGE: ${r.gauge_height_m}m</span>
+            <div class="bg-slate-900 border ${isDanger ? 'border-rose-500 shadow-[0_0_22px_rgba(244,63,94,0.22)]' : (isWarning ? 'border-amber-500 shadow-[0_0_18px_rgba(245,158,11,0.12)]' : 'border-slate-800')} p-4 rounded-2xl flex flex-col justify-between transition duration-200 hover:-translate-y-0.5">
+                <div>
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="font-bold text-white text-sm">${r.river}</span>
+                        <span class="px-2 py-0.5 rounded text-[10px] font-mono font-bold ${isDanger ? 'bg-rose-950 text-rose-400 border border-rose-800' : (isWarning ? 'bg-amber-950 text-amber-400 border border-amber-800' : 'bg-emerald-950 text-emerald-400 border border-emerald-800')}">
+                            ${r.status}
+                        </span>
                     </div>
-                    <div class="tactical-meta" style="margin-top:2px; font-size:9px;">
-                        RAIN: <span style="color:var(--text-primary);">${r.upstream_precip_mmhr} mm/h</span> | DISCHARGE: <span style="color:var(--text-primary);">${r.discharge_m3s} m³/s</span>
+                    <div class="text-2xl font-black text-white font-mono">${r.current_level} <span class="text-xs text-slate-400 font-sans">m MSL</span></div>
+                    <div class="text-[11px] text-slate-400 mt-1">Upstream Rain: <span class="text-white font-mono">${r.upstream_precip_mmhr} mm/h</span> | Discharge: <span class="text-white font-mono">${r.discharge_m3s} m³/s</span></div>
+                    <div class="w-full bg-slate-950 h-2 rounded-full mt-3 overflow-hidden shadow-inner">
+                        <div class="h-full ${isDanger ? 'bg-rose-500' : (isWarning ? 'bg-amber-500' : 'bg-emerald-500')} transition-all duration-700 ease-out"
+                             style="width: ${pct}%"></div>
                     </div>
-                    <div style="width:100%; height:3px; background:var(--bg-base); border:1px solid var(--border-tactical); margin-top:4px;">
-                        <div style="height:100%; width:${pct}%; background:${isDanger ? 'var(--accent-critical)' : (isWarning ? 'var(--accent-warning)' : 'var(--accent-nominal)')}; transition:width 0.4s ease;"></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:3px; font-size:8px; color:var(--text-dim);" class="font-mono">
-                        <span>BED: ${bedDatum}m</span>
-                        <span>WARN: ${r.warning_level_m}m</span>
-                        <span>DANGER: ${r.danger_level_m}m</span>
+                    <div class="flex justify-between text-[9px] text-slate-500 font-mono mt-1">
+                        <span>Bed: ${bedDatum}m</span>
+                        <span>Warning: ${r.warning_level_m}m</span>
+                        <span>Danger: ${r.danger_level_m}m</span>
                     </div>
                 </div>
-                <div style="padding:4px 8px; background:var(--bg-surface-subtle); border-top:1px solid var(--border-tactical); font-size:9px; color:var(--text-muted); display:flex; justify-content:space-between; align-items:center;">
-                    <span style="overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:200px;" title="${r.action_required}">
-                        <i class="fa-solid fa-triangle-exclamation mr-1" style="color:var(--accent-cyan);"></i>${r.action_required}
+                <div class="mt-3 pt-2 border-t border-slate-800/80 flex items-center justify-between text-[10px]">
+                    <span class="text-slate-400 truncate max-w-[220px]" title="${r.action_required}">
+                        <i class="fa-solid fa-gauge-high mr-1 text-cyan-400"></i> ${r.action_required}
                     </span>
-                    <span class="tactical-meta" style="font-size:8px; color:var(--accent-nominal);">VERIFIED</span>
+                    <span class="font-mono text-slate-500 shrink-0 font-semibold">Gauge: ${r.gauge_height_m}m</span>
                 </div>
             </div>
             `;
