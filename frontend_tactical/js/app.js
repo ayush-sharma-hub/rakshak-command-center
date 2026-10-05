@@ -9,13 +9,10 @@
 // ═══════════════════════════════════════════════════════════════════
 // CONFIG
 // ═══════════════════════════════════════════════════════════════════
-const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-const API = (isLocal && window.location.port !== '3000' && window.location.protocol === 'file:')
-    ? 'http://localhost:3000'
-    : (window.location.origin || 'http://localhost:3000');
-
+const isFile = window.location.protocol === 'file:' || !window.location.host || window.location.origin === 'null';
+const API = isFile ? 'http://localhost:3000' : window.location.origin;
 const wsProto = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-const wsHost = window.location.host || 'localhost:3000';
+const wsHost = isFile ? 'localhost:3000' : window.location.host;
 const WS_URL = `${wsProto}//${wsHost}/ws/live`;
 const AGENT_WS_URL = `${wsProto}//${wsHost}/api/agent/stream`;
 const AGENT_WS_FALLBACK = `${wsProto}//${wsHost}/stream`;
@@ -305,14 +302,27 @@ async function fetchIncidents() {
 // 5. AUTONOMOUS AGENT API & WEBSOCKET TELEMETRY
 // ═══════════════════════════════════════════════════════════════════
 let agentWs = null;
+let agentWsTimer = null;
 
 function connectAgentWebSocket() {
+    if (agentWs && (agentWs.readyState === WebSocket.OPEN || agentWs.readyState === WebSocket.CONNECTING)) {
+        return;
+    }
+    if (agentWsTimer) {
+        clearTimeout(agentWsTimer);
+        agentWsTimer = null;
+    }
+
     function tryConnect(url, isFallback = false) {
+        if (agentWs && (agentWs.readyState === WebSocket.OPEN || agentWs.readyState === WebSocket.CONNECTING)) {
+            return;
+        }
         try {
             const ws = new WebSocket(url);
 
             ws.onopen = () => {
                 agentWs = ws;
+                if (agentWsTimer) { clearTimeout(agentWsTimer); agentWsTimer = null; }
                 console.log(`[Agent WS] Connected to ${url}`);
                 addTerminalEntry('AGENT WS', 'Autonomous Agent telemetry stream link established.', 'sys');
             };
@@ -337,10 +347,11 @@ function connectAgentWebSocket() {
 
             ws.onclose = () => {
                 agentWs = null;
+                if (agentWsTimer) clearTimeout(agentWsTimer);
                 if (!isFallback) {
-                    setTimeout(() => tryConnect(AGENT_WS_FALLBACK, true), 3000);
+                    agentWsTimer = setTimeout(() => tryConnect(AGENT_WS_FALLBACK, true), 3000);
                 } else {
-                    setTimeout(() => tryConnect(AGENT_WS_URL, false), 5000);
+                    agentWsTimer = setTimeout(() => tryConnect(AGENT_WS_URL, false), 5000);
                 }
             };
 
@@ -348,6 +359,7 @@ function connectAgentWebSocket() {
                 console.warn('[Agent WS] Connection state event:', e);
             };
         } catch (e) {
+            agentWs = null;
             console.warn('[Agent WS] Init failed:', e);
         }
     }
@@ -536,35 +548,51 @@ async function fetchSystemState() {
 // ═══════════════════════════════════════════════════════════════════
 // 7. WEBSOCKET LIVE FEED
 // ═══════════════════════════════════════════════════════════════════
+let liveWs = null;
+let liveWsTimer = null;
+
 function connectWebSocket() {
+    if (liveWs && (liveWs.readyState === WebSocket.OPEN || liveWs.readyState === WebSocket.CONNECTING)) {
+        return;
+    }
+    if (liveWsTimer) {
+        clearTimeout(liveWsTimer);
+        liveWsTimer = null;
+    }
     const wsEl = document.getElementById('ws-status');
-    let ws;
 
     function connect() {
+        if (liveWs && (liveWs.readyState === WebSocket.OPEN || liveWs.readyState === WebSocket.CONNECTING)) {
+            return;
+        }
         try {
-            ws = new WebSocket(WS_URL);
+            liveWs = new WebSocket(WS_URL);
 
-            ws.onopen = () => {
+            liveWs.onopen = () => {
+                if (liveWsTimer) { clearTimeout(liveWsTimer); liveWsTimer = null; }
                 if (wsEl) { wsEl.textContent = 'ACTIVE'; wsEl.style.color = 'var(--alert-green)'; }
                 addTerminalEntry('SYS', 'WebSocket live feed connected — SEOC data stream active.', 'sys');
             };
 
-            ws.onmessage = (evt) => {
+            liveWs.onmessage = (evt) => {
                 try {
                     const msg = JSON.parse(evt.data);
                     handleWsMessage(msg);
                 } catch (e) { /* ignore */ }
             };
 
-            ws.onclose = () => {
+            liveWs.onclose = () => {
+                liveWs = null;
                 if (wsEl) { wsEl.textContent = 'RECONNECTING'; wsEl.style.color = 'var(--alert-amber)'; }
-                setTimeout(connect, 4000);
+                if (liveWsTimer) clearTimeout(liveWsTimer);
+                liveWsTimer = setTimeout(connect, 4000);
             };
 
-            ws.onerror = () => {
+            liveWs.onerror = () => {
                 if (wsEl) { wsEl.textContent = 'DISCONNECTED'; wsEl.style.color = 'var(--alert-red)'; }
             };
         } catch (e) {
+            liveWs = null;
             if (wsEl) { wsEl.textContent = 'N/A'; wsEl.style.color = 'var(--text-dim)'; }
         }
     }
