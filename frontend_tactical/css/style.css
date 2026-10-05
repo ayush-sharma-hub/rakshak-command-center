@@ -348,6 +348,7 @@ body::after {
     color: var(--text-muted);
     font-size: 14px;
     transition: all 0.15s;
+    text-decoration: none;
 }
 .nav-btn:hover {
     color: var(--text-main);
@@ -357,7 +358,8 @@ body::after {
 .nav-btn.active {
     color: var(--alert-cyan);
     border-color: var(--alert-cyan);
-    background: rgba(6,182,212,0.08);
+    background: rgba(6,182,212,0.12);
+    box-shadow: 0 0 10px rgba(6,182,212,0.25) inset;
 }
 .nav-label {
     font-size: 7px;

@@ -182,17 +182,10 @@ def health():
 
 # ─── Serve Tactical Frontend at Root / (must be LAST — catches all unmatched routes) ──
 TACTICAL_DIR = os.path.join(os.path.dirname(__file__), "frontend_tactical")
-PUBLIC_DIR = os.path.join(os.path.dirname(__file__), "public")
-
-if os.path.isdir(PUBLIC_DIR):
-    app.mount("/public", StaticFiles(directory=PUBLIC_DIR, html=True), name="public_legacy")
 
 if os.path.isdir(TACTICAL_DIR):
     app.mount("/", StaticFiles(directory=TACTICAL_DIR, html=True), name="tactical_root")
     logger.info("[OK] Tactical C4ISR Frontend mounted at root / from: %s", TACTICAL_DIR)
-elif os.path.isdir(PUBLIC_DIR):
-    app.mount("/", StaticFiles(directory=PUBLIC_DIR, html=True), name="static")
-    logger.info("[OK] Frontend served from: %s", PUBLIC_DIR)
 else:
     logger.warning("[WARN] No frontend directory found — frontend not mounted.")
 

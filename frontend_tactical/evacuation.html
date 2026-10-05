@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROJECT RAKSHAK — STATEWIDE EVACUATION LOGISTICS COMMAND</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/motion.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TOP HUD BAR — SATELLITE UPLINK · CLOCKS · THREAT LEVEL        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<header class="hud-bar">
+    <div class="hud-left">
+        <div class="hud-logo">
+            <span class="hud-logo-icon">◈</span>
+            <div class="hud-logo-text">
+                <span class="hud-logo-main">PROJECT RAKSHAK</span>
+                <span class="hud-logo-sub">SEOC · UTTARAKHAND STATE EMERGENCY OPERATIONS CENTER</span>
+            </div>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-uplink">
+            <span class="led-blinker led-cyan"></span>
+            <span class="hud-label">SAT-UPLINK</span>
+            <span class="hud-mono live-data-flicker" id="uplink-status" data-flicker="signal">INSAT-3DR · NOMINAL</span>
+        </div>
+        <div class="hud-uplink">
+            <span class="led-blinker led-green"></span>
+            <span class="hud-label">SEOC-NET</span>
+            <span class="hud-mono">CONN · <span id="ws-status" class="live-data-flicker" data-flicker="status">ACTIVE</span></span>
+        </div>
+        <div class="hud-uplink">
+            <span class="led-blinker led-amber" id="lora-dot"></span>
+            <span class="hud-label">LORA-MESH</span>
+            <span class="hud-mono live-data-flicker" data-flicker="nodes">865MHz · 8 NODES</span>
+        </div>
+    </div>
+
+    <div class="hud-center">
+        <div class="threat-indicator" id="threat-indicator">
+            <span class="threat-label">THREAT LEVEL</span>
+            <span class="threat-value" id="threat-value" style="color:var(--alert-amber);">ELEVATED</span>
+            <div class="threat-bars">
+                <div class="threat-bar tb-active"></div>
+                <div class="threat-bar tb-active"></div>
+                <div class="threat-bar tb-active"></div>
+                <div class="threat-bar"></div>
+                <div class="threat-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hud-right">
+        <div class="hud-clock-group">
+            <div class="hud-clock">
+                <span class="hud-label">IST</span>
+                <span class="hud-clock-value hud-mono" id="clock-ist">--:--:--</span>
+            </div>
+            <div class="hud-clock">
+                <span class="hud-label">UTC</span>
+                <span class="hud-clock-value hud-mono" id="clock-utc">--:--:--</span>
+            </div>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-date hud-mono" id="hud-date">---</div>
+        <div class="hud-divider"></div>
+        <div class="hud-operator">
+            <span class="hud-label">OPERATOR</span>
+            <span class="hud-mono">LOGISTICS-DUTY-02</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- MAIN COCKPIT GRID & SPA VIEWPORT                                -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="main-grid">
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- LEFT SIDEBAR — ICON-BASED MULTI-PAGE NAVIGATION             -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <nav class="left-sidebar">
+        <div class="nav-section">
+            <a href="index.html" class="nav-btn" title="Tactical GIS Radar Map">
+                <i class="fa-solid fa-map"></i>
+                <span class="nav-label">GIS</span>
+            </a>
+            <a href="sos.html" class="nav-btn" title="Civilian Triage Desk">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span class="nav-label">SOS</span>
+            </a>
+            <a href="evacuation.html" class="nav-btn active" title="Statewide Ground Logistics">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span class="nav-label">EVAC</span>
+            </a>
+            <a href="lora.html" class="nav-btn" title="Offline LoRa Mesh Network">
+                <i class="fa-solid fa-tower-cell"></i>
+                <span class="nav-label">LORA</span>
+            </a>
+            <a href="broadcast.html" class="nav-btn" title="Civil Defense Broadcast Hub">
+                <i class="fa-solid fa-satellite-dish"></i>
+                <span class="nav-label">BCAST</span>
+            </a>
+        </div>
+        <div class="nav-section nav-bottom">
+            <a href="index.html" class="nav-btn" title="System Status Console">
+                <i class="fa-solid fa-terminal"></i>
+                <span class="nav-label">SYS</span>
+            </a>
+            <div class="nav-system-info">
+                <div class="sys-metric">
+                    <span class="hud-label">CPU</span>
+                    <span class="hud-mono sys-val live-data-flicker" id="cpu-val" data-flicker="cpu">19%</span>
+                </div>
+                <div class="sys-metric">
+                    <span class="hud-label">MEM</span>
+                    <span class="hud-mono sys-val live-data-flicker" id="mem-val" data-flicker="mem">43%</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- CENTRAL EVACUATION LOGISTICS VIEWPORT                       -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <main class="spa-viewport">
+        <div class="spa-full-view" style="display:flex;">
+            
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-amber"></span>
+                    <span>STATEWIDE EVACUATION LOGISTICS &amp; TRANSIT CORRIDOR DISPATCH</span>
+                </div>
+                <div class="view-header-meta">
+                    <span>STATEWIDE CAPACITY: <b class="status-cyan-text">16,700 SHELTER BEDS</b></span>
+                    <span>FLEET READY: <b class="status-green-text live-data-flicker">92 BUSES / 24 AMB</b></span>
+                    <span>AIR SORTIES: <b class="status-amber-text">4 MI-17 READY</b></span>
+                </div>
+            </div>
+
+            <div class="view-content-grid" style="grid-template-columns: 1.3fr 1fr 1fr;">
+                
+                <!-- Evacuation Corridors -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-route text-amber-400"></i> HIGH-RISK EVACUATION CORRIDORS</span>
+                        <span class="hud-mono text-xs">UK-SEOC TRANSIT</span>
+                    </div>
+                    <div class="tac-col-body">
+                        
+                        <div class="evac-corridor-card danger">
+                            <div class="corridor-head">
+                                <span class="corridor-name">KEDARNATH ➔ SONPRAYAG CORRIDOR (NH-107)</span>
+                                <span class="status-badge critical">HIGH RISK · FLASH CHOKE</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Pilgrims in Sector: <b class="text-red-400 live-data-flicker">1,420 PAX</b></span>
+                                <span>Evacuated Today: <b>3,840 PAX (73%)</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 73%; background: var(--alert-red);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Choke Points: <b class="text-amber-400">Rambara Gorge Debris Footpath</b></span>
+                                <span>Escort Team: <b>SDRF-UKH-7 / 24 Guides</b></span>
+                            </div>
+                            <div style="display:flex; gap:6px; margin-top:4px;">
+                                <button class="tac-btn tac-btn-red" style="flex:1" onclick="addTerminalEntry('DISPATCH', 'Emergency Convoy dispatched to Sonprayag. 12 UKSRTC Buses rolling.', 'critical')">
+                                    <i class="fa-solid fa-bus"></i> DISPATCH BUS CONVOY
+                                </button>
+                                <button class="tac-btn tac-btn-amber" style="flex:1" onclick="addTerminalEntry('HELI EVAC', 'IAF Mi-17 sortie requested for Kedarnath Helipad triage.', 'warning')">
+                                    <i class="fa-solid fa-helicopter"></i> REQUEST AIRLIFT
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card warning">
+                            <div class="corridor-head">
+                                <span class="corridor-name">JOSHIMATH ➔ PIPALKOTI HIGHWAY (NH-07)</span>
+                                <span class="status-badge warning">MODERATE · SUBSIDENCE</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Queue at Helang: <b>42 Buses En Route</b></span>
+                                <span>Subsidence Sensors: <b class="text-amber-400">ACTIVE MONITORING</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 61%; background: var(--alert-amber);"></div></div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">UTTARKASHI ➔ DHARASU BEND AXIS</span>
+                                <span class="status-badge nominal">CLEAR</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Traffic Flow: <b class="text-emerald-400">UNRESTRICTED (45 km/h)</b></span>
+                                <span>BRO Earthmovers: <b>4 Standing By at Nalupani</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 95%; background: var(--alert-green);"></div></div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">DHARCHULA ➔ PITHORAGARH BORDER ROUTE</span>
+                                <span class="status-badge nominal">NORMAL</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Kali River Bank: <b>River level nominal (939.55m)</b></span>
+                                <span>ITBP Patrol: <b>Active along Ghat road</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 88%; background: var(--alert-green);"></div></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Emergency Shelters & Relief Camps -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-campground text-cyan-400"></i> RELIEF CAMPS &amp; SHELTER MATRIX</span>
+                        <span class="hud-mono text-xs">STATE DISASTER MGMT</span>
+                    </div>
+                    <div class="tac-col-body">
+                        
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">GUPTKASHI MEGA RELIEF SHELTER</span>
+                                <span class="status-badge nominal">OCCUPIED: 62%</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Capacity: <b>5,000 BEDS</b></span>
+                                <span>Current Inmates: <b class="live-data-flicker">3,120 PAX</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 62%; background: var(--alert-cyan);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Rations Reserve: <b>8 Days</b></span>
+                                <span>Medical Team: <b>14 Doctors / AIIMS Camp</b></span>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">RISHIKESH IDPL TRANSIT HUB</span>
+                                <span class="status-badge nominal">OCCUPIED: 23%</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Capacity: <b>8,000 BEDS</b></span>
+                                <span>Current Inmates: <b class="live-data-flicker">1,840 PAX</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 23%; background: var(--alert-green);"></div></div>
+                            <div class="corridor-stat-row text-xs">
+                                <span>Rations Reserve: <b>15 Days</b></span>
+                                <span>Helipad: <b class="text-emerald-400">OPERATIONAL</b></span>
+                            </div>
+                        </div>
+
+                        <div class="evac-corridor-card warning">
+                            <div class="corridor-head">
+                                <span class="corridor-name">CHAMOLI SPORTS STADIUM CAMP</span>
+                                <span class="status-badge warning">CAPACITY STRAIN: 84%</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Capacity: <b>2,500 BEDS</b></span>
+                                <span>Current Inmates: <b class="text-amber-400 live-data-flicker">2,100 PAX</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 84%; background: var(--alert-amber);"></div></div>
+                        </div>
+
+                        <div class="evac-corridor-card nominal">
+                            <div class="corridor-head">
+                                <span class="corridor-name">PAURI GARHWAL YOUTH HOSTEL CAMP</span>
+                                <span class="status-badge nominal">OCCUPIED: 35%</span>
+                            </div>
+                            <div class="corridor-stat-row">
+                                <span>Capacity: <b>1,200 BEDS</b></span>
+                                <span>Current Inmates: <b>420 PAX</b></span>
+                            </div>
+                            <div class="progress-bar-bg"><div class="progress-bar-fill" style="width: 35%; background: var(--alert-green);"></div></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Convoy Tracking & Fleet Allocation -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-truck text-emerald-400"></i> VEHICLE FLEET &amp; DRIVER TELEMETRY</span>
+                        <span class="hud-mono text-xs">GPS AIS-140</span>
+                    </div>
+                    <div class="tac-col-body">
+                        
+                        <div style="font-family:'JetBrains Mono',monospace; font-size:10px; line-height:1.7;">
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding-bottom:4px;">
+                                <span>UKSRTC EVAC BUSES:</span>
+                                <b class="text-emerald-400 live-data-flicker">68 Active / 12 Standby</b>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding:4px 0;">
+                                <span>4x4 MOUNTAIN AMBULANCES:</span>
+                                <b class="text-cyan-400 live-data-flicker">24 Deployed / 6 In Depot</b>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding:4px 0;">
+                                <span>IAF HELICOPTER SORTIES:</span>
+                                <b class="text-amber-400">4 Airframes Ready (Gauchar)</b>
+                            </div>
+                            <div style="display:flex; justify-content:space-between; border-bottom:1px solid var(--border-dim); padding:4px 0;">
+                                <span>NDRF INFLATABLE RAFTS:</span>
+                                <b class="text-emerald-400">16 Waterborne Units</b>
+                            </div>
+                        </div>
+
+                        <div class="broadcast-form" style="margin-top:14px;">
+                            <span class="hud-label">DISPATCH CONVOY TO SECTOR:</span>
+                            <input type="text" class="tac-input" id="evac-target-sec" placeholder="Destination sector (e.g. Sonprayag)" value="Sonprayag, Uttarakhand" />
+                            <div class="bc-btn-row">
+                                <button class="tac-btn tac-btn-cyan" onclick="addTerminalEntry('FLEET', 'Dispatched 8 UKSRTC Emergency Buses to: ' + document.getElementById('evac-target-sec').value, 'warning')">
+                                    <i class="fa-solid fa-paper-plane"></i> DISPATCH 8 BUSES
+                                </button>
+                                <button class="tac-btn tac-btn-red" onclick="addTerminalEntry('AMBULANCE', 'Dispatched 4 ALS Mountain Ambulances with EMTs.', 'critical')">
+                                    <i class="fa-solid fa-truck-medical"></i> DISPATCH 4 ALS
+                                </button>
+                            </div>
+                        </div>
+
+                        <div style="margin-top:14px; border:1px solid var(--border-dim); padding:10px; background:var(--panel-bg-2);">
+                            <span class="hud-label">ROUTE CLEARANCE NOTICES:</span>
+                            <div style="font-family:'JetBrains Mono',monospace; font-size:9.5px; line-height:1.7; color:var(--text-muted); margin-top:4px;">
+                                <div>• NH-107: Closed above Sonprayag to private vehicles.</div>
+                                <div>• NH-07: Light motor vehicles permitted; heavy convoys regulated.</div>
+                                <div>• Rishikesh-Badrinath: Open for SDRF convoy traffic.</div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+</div><!-- /main-grid -->
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCROLLING HEX STREAM COCKPIT EFFECT                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="hex-stream-col"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- BOTTOM TERMINAL — GLOBAL ACROSS ALL PAGES                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<footer class="bottom-terminal">
+    <div class="terminal-header">
+        <div class="terminal-header-left">
+            <span class="led-blinker led-cyan"></span>
+            <span class="panel-tag tag-cyan">TELEMETRY</span>
+            <span class="terminal-title">SEOC TACTICAL C4ISR TERMINAL — REAL-TIME AUTONOMOUS AGENT STREAM &amp; INCIDENT FEED</span>
+        </div>
+        <div class="terminal-header-right">
+            <span class="hud-label">INCIDENTS:&nbsp;</span><span class="hud-mono live-data-flicker" id="incident-count">0</span>
+            <button class="hud-btn" onclick="clearTerminal()">CLR</button>
+            <button class="hud-btn" onclick="pauseTerminal()" id="pause-btn">❚❚ PAUSE</button>
+        </div>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+        <div class="terminal-init">
+            <span class="hud-mono">&gt; STATEWIDE EVACUATION LOGISTICS COMMAND ONLINE.</span><br/>
+            <span class="hud-mono">&gt; 115 HIMALAYAN SECTORS MONITORED FOR CHOKE POINTS &amp; DEBRIS SURGES.</span><br/>
+            <span class="hud-mono">&gt; AWAITING LOGISTICS DIRECTIVES…</span>
+        </div>
+    </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- MODAL — SOS DETAIL POPUP                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="sos-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="led-blinker led-red"></span>
+            <span class="panel-tag tag-red">SOS INCIDENT</span>
+            <span class="modal-title" id="modal-title">---</span>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer">
+            <button class="tac-btn tac-btn-amber" onclick="dispatchUnit()">
+                <i class="fa-solid fa-helicopter"></i> DISPATCH SDRF UNIT
+            </button>
+            <button class="tac-btn tac-btn-cyan" onclick="loraAck()">
+                <i class="fa-solid fa-tower-cell"></i> LORA ACK BROADCAST
+            </button>
+            <button class="tac-btn" onclick="closeModal()">DISMISS</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
+

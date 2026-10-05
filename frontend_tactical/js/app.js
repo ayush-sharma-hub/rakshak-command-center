@@ -83,17 +83,19 @@ function startClock() {
 // 2. TACTICAL LEAFLET MAP
 // ═══════════════════════════════════════════════════════════════════
 function initMap() {
+    const mapEl = document.getElementById('tactical-map');
+    if (!mapEl || typeof L === 'undefined') return;
+
     leafletMap = L.map('tactical-map', {
         center: [30.0668, 79.0193],
-        zoom: 8,
+        zoom: 7,
         zoomControl: false,
         attributionControl: false
     });
 
-    // CartoDB Dark Matter — crisp, true military contrast without watermark/API key
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-        maxZoom: 19,
-        subdomains: 'abcd',
+    // ESRI World Dark Gray Canvas — free, no API key, military-grade dark base
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}', {
+        maxZoom: 16,
         attribution: ''
     }).addTo(leafletMap);
 
@@ -112,9 +114,9 @@ function initMap() {
         if (zEl) zEl.textContent = leafletMap.getZoom();
     });
 
-    // River monitoring station markers with vibrant glowing pulsing circles
+    // River monitoring station markers
     const riverStations = [
-        { name: 'Mandakini at Rudraprayag', lat: 30.2844, lng: 78.9811, status: 'WARNING' },
+        { name: 'Mandakini at Rudraprayag', lat: 30.2844, lng: 78.9811, status: 'NORMAL' },
         { name: 'Alaknanda at Joshimath',   lat: 30.5599, lng: 79.5644, status: 'NORMAL' },
         { name: 'Bhagirathi at Uttarkashi', lat: 30.7260, lng: 78.4370, status: 'NORMAL' },
         { name: 'THDC Tehri Dam Reservoir', lat: 30.3784, lng: 78.4808, status: 'NORMAL' },
@@ -124,34 +126,29 @@ function initMap() {
     riverStations.forEach(s => {
         const color = s.status === 'DANGER' ? '#EF4444' :
                       s.status === 'WARNING' ? '#F59E0B' : '#06B6D4';
-        const pulseClass = s.status === 'DANGER' ? 'pin-red' :
-                           s.status === 'WARNING' ? 'pin-amber' : 'pin-cyan';
 
         const icon = L.divIcon({
             className: '',
-            html: `<div class="map-pin-circle ${pulseClass}" style="
-                width:14px; height:14px;
-                background:${color};
-                border:2px solid #ffffff;
-                box-shadow:0 0 14px ${color};
+            html: `<div style="
+                width:10px;height:10px;background:${color};
+                border:1px solid rgba(255,255,255,0.3);
+                box-shadow:0 0 8px ${color};
                 position:relative;
             ">
-                <div style="
-                    position:absolute; inset:-4px;
-                    border:1px solid ${color};
-                    border-radius:50%;
-                    opacity:0.6;
-                    animation:dot-blink 1.8s infinite;
-                "></div>
+            <div style="
+                position:absolute;top:-1px;left:-1px;right:-1px;bottom:-1px;
+                border:1px solid ${color};opacity:0.4;
+                animation:dot-blink 2s infinite;
+            "></div>
             </div>`,
-            iconSize: [14, 14],
-            iconAnchor: [7, 7]
+            iconSize: [10, 10],
+            iconAnchor: [5, 5]
         });
 
         const m = L.marker([s.lat, s.lng], { icon })
             .bindPopup(`
                 <div style="padding:4px 0;">
-                    <div style="font-weight:800;color:${color};margin-bottom:4px;letter-spacing:0.06em;">${s.name}</div>
+                    <div style="font-weight:700;color:#06B6D4;margin-bottom:4px;">${s.name}</div>
                     <div>STATUS: <b style="color:${color}">${s.status}</b></div>
                     <div>LAT: ${s.lat} | LNG: ${s.lng}</div>
                 </div>
@@ -160,32 +157,28 @@ function initMap() {
         riverMarkers.push(m);
     });
 
-    // NDRF/SDRF unit markers with illuminated tactical beacons
+    // NDRF/SDRF unit markers
     const unitPositions = [
-        { id: 'NDRF-11/C', lat: 30.28, lng: 78.98, name: 'Rudraprayag NDRF Alpha' },
-        { id: 'SDRF-UKH-3', lat: 30.73, lng: 78.44, name: 'Uttarkashi SDRF Bravo' },
-        { id: 'SDRF-UKH-7', lat: 30.42, lng: 79.32, name: 'Chamoli Quick Response' },
+        { id: 'NDRF-11/C', lat: 30.28, lng: 78.98 },
+        { id: 'SDRF-UKH-3', lat: 30.73, lng: 78.44 },
+        { id: 'SDRF-UKH-7', lat: 30.42, lng: 79.32 },
     ];
 
     unitPositions.forEach(u => {
         const icon = L.divIcon({
             className: '',
             html: `<div style="
-                display:inline-flex; align-items:center; gap:4px;
-                font-size:9px; font-weight:800; font-family:'JetBrains Mono', Courier New, monospace;
-                color:#22C55E; background:rgba(13,17,23,0.92);
+                font-size:9px;font-weight:800;font-family:Courier New;
+                color:#22C55E;background:#0D1117;
                 border:1px solid #22C55E;
-                padding:2px 6px;
-                box-shadow:0 0 10px rgba(34,197,94,0.5);
-                backdrop-filter:blur(4px);
-            ">
-                <span class="led-blinker led-green"></span>
-                <span>${u.id}</span>
-            </div>`,
-            iconAnchor: [34, 10]
+                padding:2px 4px;
+                white-space:nowrap;
+                box-shadow:0 0 6px rgba(34,197,94,0.4);
+            ">${u.id}</div>`,
+            iconAnchor: [28, 8]
         });
         L.marker([u.lat, u.lng], { icon })
-            .bindPopup(`<div>UNIT: <b>${u.id}</b><br>${u.name}<br>STATUS: <span style="color:#22C55E; font-weight:800;">DEPLOYED</span></div>`)
+            .bindPopup(`<div>UNIT: <b>${u.id}</b><br>STATUS: DEPLOYED</div>`)
             .addTo(leafletMap);
     });
 }
@@ -846,223 +839,17 @@ function dismissBanner() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 13. SPA VIEW ROUTER & NAVIGATION CONTROLLER
+// 13. NAVIGATION PANEL SWITCHER
 // ═══════════════════════════════════════════════════════════════════
-function switchView(viewId) {
-    // 1. Hide all spa-views, show target view with animation
-    const views = document.querySelectorAll('.spa-view');
-    views.forEach(v => {
-        v.classList.remove('active-view');
-        v.style.display = 'none';
-    });
-    
-    const target = document.getElementById(viewId);
-    if (target) {
-        target.classList.add('active-view');
-        target.style.display = 'flex';
-    }
-
-    // 2. Update nav buttons with glowing cyan indicator
-    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-    const btn = document.querySelector(`.nav-btn[data-view="${viewId}"]`);
-    if (btn) btn.classList.add('active');
-
-    // 3. Recalculate Leaflet map dimensions if switching back to GIS
-    if (viewId === 'view-gis' && leafletMap) {
-        setTimeout(() => leafletMap.invalidateSize(), 80);
-    }
-
-    // 4. View-specific renders
-    if (viewId === 'view-lora') {
-        renderFullLoraNodes();
-    }
-
-    // 5. Announce viewport transition in C4ISR bottom terminal
-    const labels = {
-        'view-gis': 'TACTICAL GIS RADAR & AI COMMAND ZONE',
-        'view-hydro': 'HIMALAYAN HYDROLOGICAL & DAM BASIN MATRIX',
-        'view-evacuation': 'STATEWIDE EVACUATION LOGISTICS & TRANSIT COMMAND',
-        'view-lora': 'OFFLINE LORA MESH RELAY TOPOLOGY & SNIFFER',
-        'view-broadcast': 'INTEGRATED CIVIL DEFENSE BROADCAST HUB (CAP-UK)',
-        'view-forces': 'TACTICAL QUICK RESPONSE FORCES (NDRF/SDRF/IAF)',
-        'view-syslog': 'HARDWARE DIAGNOSTICS & WEBSOCKET EVENT KERNEL'
-    };
-    addTerminalEntry('NAV ROUTER', `Viewport shifted ➔ ${labels[viewId] || viewId.toUpperCase()}`, 'sys');
-}
-window.switchView = switchView;
-
 function switchPanel(panel) {
-    const map = {
-        'map': 'view-gis',
-        'rivers': 'view-hydro',
-        'sos': 'view-gis',
-        'lora': 'view-lora',
-        'broadcast': 'view-broadcast',
-        'forces': 'view-forces',
-        'syslog': 'view-syslog'
-    };
-    switchView(map[panel] || 'view-gis');
-}
-window.switchPanel = switchPanel;
-
-// ═══════════════════════════════════════════════════════════════════
-// 14. LIVE TELEMETRY SIMULATION (Anti-Template Life Effect)
-// ═══════════════════════════════════════════════════════════════════
-function initTelemetryFlicker() {
-    setInterval(() => {
-        const elements = document.querySelectorAll('.live-data-flicker');
-        if (!elements.length) return;
-
-        // Randomly pick 2 to 4 elements to fluctuate
-        const count = Math.min(elements.length, Math.floor(Math.random() * 3) + 2);
-        for (let i = 0; i < count; i++) {
-            const el = elements[Math.floor(Math.random() * elements.length)];
-            const type = el.getAttribute('data-flicker');
-
-            if (type === 'cpu') {
-                const val = (14 + Math.random() * 12).toFixed(0);
-                el.textContent = `${val}%`;
-            } else if (type === 'mem') {
-                const val = (40 + Math.random() * 7).toFixed(0);
-                el.textContent = `${val}%`;
-            } else if (type === 'signal') {
-                const snr = (9.2 + (Math.random() * 0.8 - 0.4)).toFixed(1);
-                el.textContent = `INSAT-3DR · SNR +${snr}dB`;
-            } else if (type === 'coord') {
-                const lat = (30.2840 + Math.random() * 0.0010).toFixed(4);
-                const lng = (78.9810 + Math.random() * 0.0010).toFixed(4);
-                el.textContent = `LAT: ${lat} · LNG: ${lng}`;
-            } else if (type === 'sectors') {
-                el.textContent = 115 + (Math.random() > 0.8 ? 1 : 0);
-            } else if (el.textContent.includes('m³/s')) {
-                const parts = el.textContent.split(' ');
-                const base = parseFloat(parts[0]) || 40;
-                const jitter = (base + (Math.random() * 0.6 - 0.3)).toFixed(1);
-                el.textContent = `${jitter} m³/s`;
-            } else if (el.textContent.includes('dBm')) {
-                const base = parseInt(el.textContent) || -84;
-                const jitter = base + Math.floor(Math.random() * 3 - 1);
-                el.textContent = `${jitter} dBm`;
-            }
-
-            el.classList.add('data-update');
-            setTimeout(() => el.classList.remove('data-update'), 200);
-        }
-    }, 1400);
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`.nav-btn[data-panel="${panel}"]`);
+    if (btn) btn.classList.add('active');
+    addTerminalEntry('SYS', `Panel switched: ${panel.toUpperCase()}`, 'sys');
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 15. SCROLLING HEX STREAM COCKPIT EFFECT
-// ═══════════════════════════════════════════════════════════════════
-function initHexStream() {
-    const col = document.getElementById('hex-stream-col');
-    if (!col) return;
-
-    function genHexWord() {
-        const hex = Math.floor(Math.random() * 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
-        return `0x${hex}`;
-    }
-
-    col.innerHTML = Array.from({ length: 28 }, () => {
-        const dur = (4 + Math.random() * 4).toFixed(1);
-        const delay = (Math.random() * 3).toFixed(1);
-        return `<div class="hex-cell" style="--hex-dur:${dur}s; --hex-delay:${delay}s">${genHexWord()}</div>`;
-    }).join('');
-
-    setInterval(() => {
-        const cells = col.querySelectorAll('.hex-cell');
-        if (!cells.length) return;
-        const cell = cells[Math.floor(Math.random() * cells.length)];
-        cell.textContent = genHexWord();
-    }, 800);
-}
-
-// ═══════════════════════════════════════════════════════════════════
-// 16. LORA & CIVIL DEFENSE BROADCAST HELPERS
-// ═══════════════════════════════════════════════════════════════════
-function renderFullLoraNodes() {
-    const list = document.getElementById('lora-full-node-list');
-    if (!list) return;
-    list.innerHTML = LORA_NODES_STATIC.map(n => {
-        const dotClass = n.status === 'ACTIVE' ? 'status-green' : 'status-amber';
-        return `
-        <div class="lora-row">
-            <span class="status-dot ${dotClass}"></span>
-            <span class="lora-id">${n.id}</span>
-            <span class="lora-sector" title="${n.sector}">${n.sector}</span>
-            <span class="hud-mono text-xs" style="color:var(--alert-cyan);">${(1.8 + Math.random() * 6).toFixed(1)} km</span>
-            <span class="lora-rssi live-data-flicker">${n.rssi} dBm</span>
-            <span class="hud-mono text-xs" style="color:var(--alert-green);">BATT: ${(3.9 + Math.random() * 0.25).toFixed(2)}V</span>
-        </div>`;
-    }).join('');
-}
-
-function injectLoraPacket() {
-    const input = document.getElementById('lora-inject-input');
-    const val = (input ? input.value : '').trim() || 'TEST_FRAME';
-    const term = document.getElementById('lora-raw-terminal');
-    const hex = Array.from(val).slice(0, 6).map(c => '0x' + c.charCodeAt(0).toString(16).toUpperCase()).join(' ');
-    
-    if (term) {
-        const row = document.createElement('div');
-        row.style.color = 'var(--alert-cyan)';
-        row.textContent = `[TX 865.200] ${hex} -> PAYLOAD: ${val} (ACK_OK)`;
-        term.prepend(row);
-    }
-    addTerminalEntry('LORA TX', `Injected field packet to 865MHz mesh: ${val}`, 'warning', '865.2MHz');
-}
-window.injectLoraPacket = injectLoraPacket;
-
-async function triggerFullCapBroadcast() {
-    const title = document.getElementById('bcast-hub-title').value.trim();
-    const body = document.getElementById('bcast-hub-body').value.trim();
-    const sector = document.getElementById('bcast-hub-sector').value.trim();
-    const status = document.getElementById('bcast-hub-status');
-
-    if (status) status.innerHTML = `<span style="color:var(--alert-amber)"><i class="fa-solid fa-satellite-dish fa-spin"></i> TRANSMITTING STATEWIDE CELL BROADCAST (CAP)...</span>`;
-
-    try {
-        const res = await fetch(`${API}/api/push/broadcast`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ title, body, sector })
-        });
-        const data = await res.json();
-        if (status) {
-            status.innerHTML = `<span style="color:var(--alert-green)">✔ BROADCAST DELIVERED: Sent: ${data.sent || 1}, Push/ntfy: ACTIVE. Jurisdiction: ${sector}</span>`;
-        }
-        addTerminalEntry('CAP BROADCAST', `${title} (Jurisdiction: ${sector})`, 'critical', sector);
-        showAlertBanner(`STATEWIDE CAP ALERT TRANSMITTED: ${title}`);
-    } catch (e) {
-        if (status) {
-            status.innerHTML = `<span style="color:var(--alert-cyan)">✔ SIMULATED CAP TRANSMISSION OK: Cell Towers (BSNL/Jio/Airtel) Broadcasted to ${sector}.</span>`;
-        }
-        addTerminalEntry('CAP BROADCAST', `[SIMULATED] ${title} delivered to ${sector}`, 'critical', sector);
-    }
-}
-window.triggerFullCapBroadcast = triggerFullCapBroadcast;
-
-function previewTtsAudio() {
-    try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(880, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(440, ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.35);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.35);
-    } catch(e){}
-    addTerminalEntry('AUDIO SYNTH', 'Synthesized Hindi alert chime dispatched to FM 100.5 MHz.', 'info');
-}
-window.previewTtsAudio = previewTtsAudio;
-
-// ═══════════════════════════════════════════════════════════════════
-// 17. MODAL
+// 14. MODAL
 // ═══════════════════════════════════════════════════════════════════
 function openModal(title, bodyHTML) {
     const modal = document.getElementById('sos-modal');
@@ -1090,7 +877,7 @@ function loraAck() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 18. SIMULATION — RANDOM SOS FEED (for demo when backend offline)
+// 15. SIMULATION — RANDOM SOS FEED (for demo when backend offline)
 // ═══════════════════════════════════════════════════════════════════
 const SIM_EVENTS = [
     { type: 'WEATHER', msg: 'Cloudburst warning: Kedarnath sector — 84mm/hr rainfall detected.', level: 'warning', zone: 'Kedarnath' },
@@ -1110,28 +897,25 @@ function runSimulationFeed() {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// 19. MASTER BOOT SEQUENCE
+// BOOT SEQUENCE
 // ═══════════════════════════════════════════════════════════════════
 async function boot() {
-    // 1. Start live dual UTC/IST clock
+    // 1. Start live clock
     startClock();
 
-    // 2. Render static grids & hardware streams
+    // 2. Render static grids
     renderForceGrid();
     renderLoraGrid();
-    renderFullLoraNodes();
-    initHexStream();
-    initTelemetryFlicker();
 
-    // 3. Init Leaflet tactical GIS map
+    // 3. Init Leaflet map
     initMap();
 
-    // 4. Initial telemetry fetch from backend
+    // 4. Initial data fetch
     await fetchRiverTelemetry();
     await fetchSystemState();
     await fetchIncidents();
 
-    // 5. Connect WebSockets (Telemetry & Autonomous Agent)
+    // 5. Connect WebSockets
     connectWebSocket();
     connectAgentWebSocket();
 
@@ -1140,13 +924,12 @@ async function boot() {
     setInterval(fetchIncidents, 8000);           // Incidents every 8s
     setInterval(fetchSystemState, 15000);        // State every 15s
 
-    // 7. Simulation feed (adds 1 entry every 14s)
-    setInterval(runSimulationFeed, 14000);
+    // 7. Simulation feed (injected if backend is offline — adds 1 entry every 12s)
+    setInterval(runSimulationFeed, 12000);
 
     // Boot message
-    addTerminalEntry('BOOT', 'SEOC C4ISR Cockpit Engine online. All 6 SPA views active.', 'sys');
+    addTerminalEntry('BOOT', 'SEOC C4ISR Engine online. All systems nominal. Standing by for field events.', 'sys');
 }
 
 // Start on DOM ready
 document.addEventListener('DOMContentLoaded', boot);
-

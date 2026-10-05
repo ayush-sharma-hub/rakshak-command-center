@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>PROJECT RAKSHAK — CIVIL DEFENSE EMERGENCY BROADCAST HUB</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/motion.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- TOP HUD BAR — SATELLITE UPLINK · CLOCKS · THREAT LEVEL        -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<header class="hud-bar">
+    <div class="hud-left">
+        <div class="hud-logo">
+            <span class="hud-logo-icon">◈</span>
+            <div class="hud-logo-text">
+                <span class="hud-logo-main">PROJECT RAKSHAK</span>
+                <span class="hud-logo-sub">SEOC · UTTARAKHAND STATE EMERGENCY OPERATIONS CENTER</span>
+            </div>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-uplink">
+            <span class="led-blinker led-cyan"></span>
+            <span class="hud-label">SAT-UPLINK</span>
+            <span class="hud-mono live-data-flicker" id="uplink-status" data-flicker="signal">INSAT-3DR · NOMINAL</span>
+        </div>
+        <div class="hud-uplink">
+            <span class="led-blinker led-green"></span>
+            <span class="hud-label">SEOC-NET</span>
+            <span class="hud-mono">CONN · <span id="ws-status" class="live-data-flicker" data-flicker="status">ACTIVE</span></span>
+        </div>
+        <div class="hud-uplink">
+            <span class="led-blinker led-amber" id="lora-dot"></span>
+            <span class="hud-label">LORA-MESH</span>
+            <span class="hud-mono live-data-flicker" data-flicker="nodes">865MHz · 8 NODES</span>
+        </div>
+    </div>
+
+    <div class="hud-center">
+        <div class="threat-indicator" id="threat-indicator">
+            <span class="threat-label">THREAT LEVEL</span>
+            <span class="threat-value" id="threat-value" style="color:var(--alert-red);">CRITICAL</span>
+            <div class="threat-bars">
+                <div class="threat-bar tb-critical"></div>
+                <div class="threat-bar tb-critical"></div>
+                <div class="threat-bar tb-critical"></div>
+                <div class="threat-bar tb-critical"></div>
+                <div class="threat-bar"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="hud-right">
+        <div class="hud-clock-group">
+            <div class="hud-clock">
+                <span class="hud-label">IST</span>
+                <span class="hud-clock-value hud-mono" id="clock-ist">--:--:--</span>
+            </div>
+            <div class="hud-clock">
+                <span class="hud-label">UTC</span>
+                <span class="hud-clock-value hud-mono" id="clock-utc">--:--:--</span>
+            </div>
+        </div>
+        <div class="hud-divider"></div>
+        <div class="hud-date hud-mono" id="hud-date">---</div>
+        <div class="hud-divider"></div>
+        <div class="hud-operator">
+            <span class="hud-label">OPERATOR</span>
+            <span class="hud-mono">BCAST-AUTH-01</span>
+        </div>
+    </div>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- MAIN COCKPIT GRID & SPA VIEWPORT                                -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="main-grid">
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- LEFT SIDEBAR — ICON-BASED MULTI-PAGE NAVIGATION             -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <nav class="left-sidebar">
+        <div class="nav-section">
+            <a href="index.html" class="nav-btn" title="Tactical GIS Radar Map">
+                <i class="fa-solid fa-map"></i>
+                <span class="nav-label">GIS</span>
+            </a>
+            <a href="sos.html" class="nav-btn" title="Civilian Triage Desk">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span class="nav-label">SOS</span>
+            </a>
+            <a href="evacuation.html" class="nav-btn" title="Statewide Ground Logistics">
+                <i class="fa-solid fa-truck-fast"></i>
+                <span class="nav-label">EVAC</span>
+            </a>
+            <a href="lora.html" class="nav-btn" title="Offline LoRa Mesh Network">
+                <i class="fa-solid fa-tower-cell"></i>
+                <span class="nav-label">LORA</span>
+            </a>
+            <a href="broadcast.html" class="nav-btn active" title="Civil Defense Broadcast Hub">
+                <i class="fa-solid fa-satellite-dish"></i>
+                <span class="nav-label">BCAST</span>
+            </a>
+        </div>
+        <div class="nav-section nav-bottom">
+            <a href="index.html" class="nav-btn" title="System Status Console">
+                <i class="fa-solid fa-terminal"></i>
+                <span class="nav-label">SYS</span>
+            </a>
+            <div class="nav-system-info">
+                <div class="sys-metric">
+                    <span class="hud-label">CPU</span>
+                    <span class="hud-mono sys-val live-data-flicker" id="cpu-val" data-flicker="cpu">24%</span>
+                </div>
+                <div class="sys-metric">
+                    <span class="hud-label">MEM</span>
+                    <span class="hud-mono sys-val live-data-flicker" id="mem-val" data-flicker="mem">48%</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <!-- CENTRAL BROADCAST HUB VIEWPORT                              -->
+    <!-- ─────────────────────────────────────────────────────────── -->
+    <main class="spa-viewport">
+        <div class="spa-full-view" style="display:flex;">
+            
+            <div class="view-header">
+                <div class="view-header-title">
+                    <span class="led-blinker led-red"></span>
+                    <span>INTEGRATED CIVIL DEFENSE PUBLIC WARNING &amp; BROADCAST HUB (CAP-UK-SEOC)</span>
+                </div>
+                <div class="view-header-meta">
+                    <span>CELL BROADCAST: <b class="status-green-text">BSNL / JIO / AIRTEL ARMED</b></span>
+                    <span>AIR RADIO OVERRIDE: <b class="status-cyan-text">FM 100.5 MHz ACTIVE</b></span>
+                    <span>ACOUSTIC SIRENS: <b class="status-amber-text">14 TOWERS ONLINE</b></span>
+                </div>
+            </div>
+
+            <!-- Massive Action Trigger Strip -->
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap:6px; padding:8px 10px; background:var(--panel-bg-2); border-bottom:1px solid var(--border-dim);">
+                <button class="tac-btn tac-btn-red" style="padding:10px; font-size:10px; font-weight:900;" onclick="addTerminalEntry('KLAXON ALL', 'SOUNDING ALL 14 HIGH-DECIBEL SIREN TOWERS ACROSS MANDAKINI VALLEY.', 'critical', 'ALL SECTORS')">
+                    <i class="fa-solid fa-bullhorn fa-beat"></i> 🚨 TRIGGER 130dB VALLEY SIRENS
+                </button>
+                <button class="tac-btn tac-btn-cyan" style="padding:10px; font-size:10px; font-weight:900;" onclick="triggerFullCapBroadcast()">
+                    <i class="fa-solid fa-satellite-dish"></i> 📡 SMS GEOFENCE BLAST
+                </button>
+                <button class="tac-btn tac-btn-amber" style="padding:10px; font-size:10px; font-weight:900;" onclick="previewTtsAudio()">
+                    <i class="fa-solid fa-radio"></i> 📻 OVERRIDE AIR FM 100.5 MHz
+                </button>
+                <button class="tac-btn" style="padding:10px; font-size:10px; font-weight:900; color:var(--alert-green); border-color:var(--alert-green);" onclick="triggerBroadcast('LORA')">
+                    <i class="fa-solid fa-tower-cell"></i> ⚡ LORA PACKET FLOOD
+                </button>
+            </div>
+
+            <div class="view-content-grid" style="grid-template-columns: 1.25fr 1fr;">
+                
+                <!-- Broadcast Form & CAP Controls -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-tower-broadcast text-red-500"></i> COMMON ALERTING PROTOCOL (NDMA CAP v1.2)</span>
+                        <span class="hud-mono text-xs">JURISDICTION: UTTARAKHAND SEOC</span>
+                    </div>
+                    <div class="tac-col-body">
+                        
+                        <div class="bcast-channel-switch">
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-mobile-screen"></i> CELL BROADCAST (CBS)
+                            </div>
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-tower-broadcast"></i> FM RADIO OVERRIDE
+                            </div>
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-bullhorn"></i> SIREN ARRAYS
+                            </div>
+                            <div class="bcast-switch-btn active" onclick="this.classList.toggle('active')">
+                                <i class="fa-solid fa-tower-cell"></i> LORA FIELD MESH
+                            </div>
+                        </div>
+
+                        <div class="broadcast-form" style="gap:10px;">
+                            <div>
+                                <span class="hud-label">TARGET JURISDICTION SECTOR:</span>
+                                <input type="text" id="bcast-hub-sector" class="tac-input" value="Kedarnath, Mandakini Valley, Sonprayag" />
+                            </div>
+
+                            <div>
+                                <span class="hud-label">ALERT SEVERITY LEVEL:</span>
+                                <select class="tac-input" id="bcast-hub-severity" style="width:100%; background:var(--bg-void);">
+                                    <option value="CRITICAL">RED SIGNAL — FLASH FLOOD / CLOUDBURST (IMMEDIATE LIFE THREAT)</option>
+                                    <option value="WARNING">AMBER ADVISORY — HEAVY PRECIPITATION / DEBRIS FLOW</option>
+                                    <option value="INFO">YELLOW WATCH — RIVER LEVEL ELEVATED ADVISORY</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <span class="hud-label">BROADCAST HEADLINE (ENGLISH &amp; HINDI):</span>
+                                <input type="text" id="bcast-hub-title" class="tac-input" value="🚨 URGENT: FLASH FLOOD ADVISORY — EVACUATE TO HIGHER GROUND" />
+                            </div>
+
+                            <div>
+                                <span class="hud-label">FULL ALERT PAYLOAD:</span>
+                                <textarea id="bcast-hub-body" class="tac-textarea" rows="4">SEOC UTTARAKHAND WARNING: Severe river level rise detected in Mandakini River. All citizens and pilgrims between Kedarnath and Rudraprayag must immediately move at least 50 meters away from riverbanks. Listen to sirens and follow SDRF guidance.</textarea>
+                            </div>
+
+                            <div style="display:flex; gap:8px;">
+                                <button class="tac-btn tac-btn-red" style="flex:2; padding:10px;" onclick="triggerFullCapBroadcast()">
+                                    <i class="fa-solid fa-tower-broadcast"></i> TRANSMIT STATEWIDE CAP ALERT
+                                </button>
+                                <button class="tac-btn tac-btn-cyan" style="flex:1" onclick="previewTtsAudio()">
+                                    <i class="fa-solid fa-volume-high"></i> TEST TTS HINDI
+                                </button>
+                            </div>
+
+                            <div id="bcast-hub-status" class="bc-status" style="font-size:10px;"></div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Acoustic Siren Array Control -->
+                <div class="tac-col">
+                    <div class="tac-col-header">
+                        <span><i class="fa-solid fa-volume-high text-amber-400"></i> HIGH-DECIBEL ACOUSTIC SIREN ARRAYS (130 dB)</span>
+                        <button class="hud-btn" onclick="addTerminalEntry('SIREN TEST', 'Diagnostic silent pulse sent to 14 Siren Towers. All online.', 'info')">TEST ALL</button>
+                    </div>
+                    <div class="tac-col-body">
+                        <div style="font-size:9.5px; color:var(--text-muted); margin-bottom:6px;">
+                            Solar-powered siren towers placed every 3-5 km along Himalayan gorge bottlenecks:
+                        </div>
+
+                        <div style="display:flex; flex-direction:column; gap:6px;">
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #01 · KEDARNATH TEMPLE COMPLEX</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN KEDARNATH', 'Kedarnath Temple Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>98% (Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #02 · RAMBARA GORGE RELAY</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN RAMBARA', 'Rambara Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>92% (Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #03 · SONPRAYAG PARKING COMPLEX</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN SONPRAYAG', 'Sonprayag Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>95% (Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #04 · RUDRAPRAYAG SANGAM</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN RUDRAPRAYAG', 'Rudraprayag Sangam Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>99% (Mains+Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #05 · KARNAPRAYAG CONFLUENCE</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN KARNAPRAYAG', 'Karnaprayag Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>96% (Solar)</b></span></div>
+                            </div>
+
+                            <div class="evac-corridor-card nominal" style="padding:6px 10px;">
+                                <div class="corridor-head">
+                                    <span class="corridor-name">TOWER #06 · SRINAGAR DAM FLOODPLAIN</span>
+                                    <button class="tac-btn tac-btn-red" style="padding:2px 8px;" onclick="addTerminalEntry('SIREN SRINAGAR', 'Srinagar Dam Klaxon sounding 130dB Evac tone.', 'critical')">KLAXON</button>
+                                </div>
+                                <div class="corridor-stat-row"><span>Status: <b class="text-emerald-400">ONLINE</b></span><span>Battery: <b>97% (Solar)</b></span></div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+</div><!-- /main-grid -->
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- SCROLLING HEX STREAM COCKPIT EFFECT                            -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div id="hex-stream-col"></div>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- BOTTOM TERMINAL — GLOBAL ACROSS ALL PAGES                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<footer class="bottom-terminal">
+    <div class="terminal-header">
+        <div class="terminal-header-left">
+            <span class="led-blinker led-cyan"></span>
+            <span class="panel-tag tag-cyan">TELEMETRY</span>
+            <span class="terminal-title">SEOC TACTICAL C4ISR TERMINAL — REAL-TIME AUTONOMOUS AGENT STREAM &amp; INCIDENT FEED</span>
+        </div>
+        <div class="terminal-header-right">
+            <span class="hud-label">INCIDENTS:&nbsp;</span><span class="hud-mono live-data-flicker" id="incident-count">0</span>
+            <button class="hud-btn" onclick="clearTerminal()">CLR</button>
+            <button class="hud-btn" onclick="pauseTerminal()" id="pause-btn">❚❚ PAUSE</button>
+        </div>
+    </div>
+    <div class="terminal-body" id="terminal-body">
+        <div class="terminal-init">
+            <span class="hud-mono">&gt; CIVIL DEFENSE BROADCAST GATEWAY ARMED.</span><br/>
+            <span class="hud-mono">&gt; CAP-UK SUITE: CELLULAR BROADCAST, AIR RADIO OVERRIDE &amp; 14 ACOUSTIC SIREN ARRAYS ACTIVE.</span><br/>
+            <span class="hud-mono">&gt; AWAITING BROADCAST DIRECTIVES…</span>
+        </div>
+    </div>
+</footer>
+
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<!-- MODAL — SOS DETAIL POPUP                                       -->
+<!-- ═══════════════════════════════════════════════════════════════ -->
+<div class="modal-overlay hidden" id="sos-modal">
+    <div class="modal-box">
+        <div class="modal-header">
+            <span class="led-blinker led-red"></span>
+            <span class="panel-tag tag-red">SOS INCIDENT</span>
+            <span class="modal-title" id="modal-title">---</span>
+            <button class="modal-close" onclick="closeModal()">✕</button>
+        </div>
+        <div class="modal-body" id="modal-body"></div>
+        <div class="modal-footer">
+            <button class="tac-btn tac-btn-amber" onclick="dispatchUnit()">
+                <i class="fa-solid fa-helicopter"></i> DISPATCH SDRF UNIT
+            </button>
+            <button class="tac-btn tac-btn-cyan" onclick="loraAck()">
+                <i class="fa-solid fa-tower-cell"></i> LORA ACK BROADCAST
+            </button>
+            <button class="tac-btn" onclick="closeModal()">DISMISS</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
